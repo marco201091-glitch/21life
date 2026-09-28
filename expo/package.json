@@ -1,6 +1,6 @@
 {
   "name": "phyrexian-arena-app",
-  "version": "9.0.1",
+  "version": "9.0.2",
   "private": true,
   "packageManager": "npm@11.16.0",
   "engines": {
@@ -32,7 +32,7 @@
     "android:stop-gradle": "cd android && .\\gradlew.bat --stop && cd ..",
     "android:clean": "npm run android:stop-gradle && cd android && gradlew.bat clean --no-build-cache && cd ..",
     "android:install": "adb install -r android/app/build/outputs/apk/debug/app-debug.apk",
-    "build:apk:production": "cd android && .\\gradlew.bat :app:assembleRelease -PreactNativeArchitectures=arm64-v8a --console=plain --no-daemon",
+    "build:apk:production": "cd android && .\\gradlew.bat :app:assembleRelease -PreactNativeArchitectures=arm64-v8a,x86_64 --console=plain --no-daemon",
     "android:open": "adb shell am start -n com.phyrexianarena.app/.MainActivity",
     "test:e2e:android": "node scripts/e2e-android-preflight.mjs && maestro test e2e/smoke-quick-game.yaml",
     "ios:config": "expo config --type introspect",
