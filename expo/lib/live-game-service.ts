@@ -88,6 +88,8 @@ export async function fetchBusyLiveGameParticipantKeys(
     .from('live_game_participants')
     .select('participant_key')
     .eq('group_id', groupId)
+    .eq('status', 'active')
+    .eq('is_eliminated', false)
     .in('participant_key', participantKeys);
 
   if (error) throw error;

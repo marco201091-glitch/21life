@@ -65,7 +65,10 @@ type EditMatchModalProps = {
     swipeDecksHint: string;
     winCondition: string;
     winConditions: Record<Exclude<NonNullable<ArenaMatch['win_condition']>, 'last_standing'> | 'last_standing', string>;
+    replacePlayer: string;
+    selectPlayer: string;
   };
+  canManage: boolean;
   onClose: () => void;
   onError: (message: string) => void;
   onSave: (input: {
@@ -76,10 +79,12 @@ type EditMatchModalProps = {
     matchPlayedAtIso: string;
     matchNotes: string;
     winCondition: ArenaMatch['win_condition'];
+    isArenaManager: boolean;
     participants: {
       id: string;
       participantKey: string | null;
       isGuest: boolean;
+      replacementKey: string | null;
     }[];
   }) => Promise<void>;
 };
@@ -115,6 +120,7 @@ export function EditMatchModal({
   members,
   guests,
   decks,
+  canManage,
   labels,
   onClose,
   onError,
@@ -137,6 +143,7 @@ export function EditMatchModal({
   const [winCondition, setWinCondition] = useState<ArenaMatch['win_condition']>(null);
   const [deckSearch, setDeckSearch] = useState<Record<string, string>>({});
   const [hiddenDeckLists, setHiddenDeckLists] = useState<Record<string, boolean>>({});
+  const [replacementKeys, setReplacementKeys] = useState<Record<string, string>>({});
 
   const decksByUser = useMemo(() => {
     const map = new Map<string, MemberDeck[]>();
@@ -154,6 +161,11 @@ export function EditMatchModal({
       .map((participant) => getParticipantKey(participant))
       .filter((key): key is ParticipantKey => key !== null);
   }, [match]);
+
+  const effectiveParticipantKeys = useMemo(() => participantKeys.map((key) => {
+    const row = match?.match_participants.find((participant) => getParticipantKey(participant) === key);
+    return row ? replacementKeys[row.id] || key : key;
+  }), [match, participantKeys, replacementKeys]);
 
   useEffect(() => {
     if (!visible || !match) return;
@@ -180,11 +192,20 @@ export function EditMatchModal({
       }
     });
     setParticipantDecks(deckMap);
+    setReplacementKeys({});
   }, [match, visible]);
 
   const handleSave = async () => {
     if (!match) return;
+    if (new Set(effectiveParticipantKeys).size !== effectiveParticipantKeys.length) {
+      onError(labels.winnerError);
+      return;
+    }
     if (!isDraw && !winnerKey) {
+      onError(labels.winnerError);
+      return;
+    }
+    if (!isDraw && !effectiveParticipantKeys.includes(winnerKey)) {
       onError(labels.winnerError);
       return;
     }
@@ -203,10 +224,12 @@ export function EditMatchModal({
       matchPlayedAtIso: playedAtIso,
       matchNotes,
       winCondition: isDraw ? null : (winCondition || 'other'),
+      isArenaManager: canManage,
       participants: match.match_participants.map((participant) => ({
         id: participant.id,
         participantKey: getParticipantKey(participant),
         isGuest: Boolean(participant.guest_id),
+        replacementKey: replacementKeys[participant.id] || null,
       })),
     });
   };
@@ -243,6 +266,7 @@ export function EditMatchModal({
       <View style={[styles.shell, { height: modalBodyHeight }]}>
         <Text style={styles.title}>{labels.title}</Text>
         <Text style={styles.hint}>{labels.hint}</Text>
+        {canManage ? <Text style={styles.replacementLabel}>{labels.replacePlayer}</Text> : null}
 
         <KeyboardAwareScrollView
           ref={formScrollRef}
@@ -273,8 +297,35 @@ export function EditMatchModal({
               const isGuest = Boolean(participant.guest_id);
 
               return (
+                <View key={participant.id}>
+                {canManage && members.length + guests.length > 0 ? (
+                  <View style={styles.replacementControl}>
+                    <Text style={styles.replacementLabel}>{labels.replacePlayer}</Text>
+                    <Pressable
+                      style={styles.replacementOption}
+                      onPress={() => setReplacementKeys((current) => ({ ...current, [participant.id]: '' }))}
+                    ><Text style={styles.replacementText}>{labels.selectPlayer}: {getParticipantDisplayName(participant)}</Text></Pressable>
+                    {members.filter((member) => `user:${member.id}` !== participantKey && !participantKeys.includes(`user:${member.id}` as ParticipantKey)).map((member) => {
+                      const key = `user:${member.id}`;
+                      const selectedReplacement = replacementKeys[participant.id] === key;
+                      return <Pressable key={key} style={styles.replacementOption} onPress={() => {
+                        setReplacementKeys((current) => ({ ...current, [participant.id]: key }));
+                        const firstDeck = decks.find((deck) => deck.user_id === member.id);
+                        setParticipantDecks((current) => ({ ...current, [key]: firstDeck?.id || '' }));
+                      }}><Text style={[styles.replacementText, selectedReplacement && styles.replacementSelected]}>{getProfileDisplayName(member)}</Text></Pressable>;
+                    })}
+                    {guests.filter((guest) => `guest:${guest.id}` !== participantKey && !participantKeys.includes(`guest:${guest.id}` as ParticipantKey)).map((guest) => {
+                      const key = `guest:${guest.id}`;
+                      const selectedReplacement = replacementKeys[participant.id] === key;
+                      return <Pressable key={key} style={styles.replacementOption} onPress={() => {
+                        setReplacementKeys((current) => ({ ...current, [participant.id]: key }));
+                        const firstDeck = guest.arena_guest_decks?.[0];
+                        setParticipantDecks((current) => ({ ...current, [key]: firstDeck?.id || '' }));
+                      }}><Text style={[styles.replacementText, selectedReplacement && styles.replacementSelected]}>{guest.display_name}</Text></Pressable>;
+                    })}
+                  </View>
+                ) : null}
                 <MatchParticipantRow
-                  key={participant.id}
                   participantKey={participantKey}
                   displayName={getParticipantDisplayName(participant)}
                   isGuest={isGuest}
@@ -301,6 +352,7 @@ export function EditMatchModal({
                     setParticipantDecks((state) => ({ ...state, [participantKey]: deckId }))
                   }
                 />
+                </View>
               );
             })}
           </View>
@@ -320,8 +372,10 @@ export function EditMatchModal({
           <>
           <Text style={styles.sectionLabel}>{labels.selectWinner}</Text>
           <View style={styles.chipRow}>
-            {participantKeys.map((key) => {
-              const selected = winnerKey === key;
+            {effectiveParticipantKeys.map((key) => {
+              const replacedRow = match.match_participants.find((participant) => replacementKeys[participant.id] === key);
+              const originalReplacementKey = replacedRow ? getParticipantKey(replacedRow) : null;
+              const selected = winnerKey === key || Boolean(originalReplacementKey && winnerKey === originalReplacementKey);
               const label = key.startsWith('guest:')
                 ? guests.find((guest) => guest.id === key.slice(6))?.display_name || key
                 : (() => {
@@ -333,7 +387,7 @@ export function EditMatchModal({
                 <Pressable
                   key={key}
                   style={[styles.chip, selected && styles.winnerChip]}
-                  onPress={() => setWinnerKey(key)}
+                  onPress={() => setWinnerKey(originalReplacementKey || key)}
                 >
                   <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>
                     {label}
@@ -424,6 +478,16 @@ const styles = StyleSheet.create({
   participantList: {
     gap: spacing.sm,
   },
+  replacementControl: {
+    gap: spacing.xs,
+    padding: spacing.sm,
+    borderRadius: 10,
+    backgroundColor: colors.surfaceMuted,
+  },
+  replacementLabel: { color: colors.muted, fontSize: 12, fontWeight: '700' },
+  replacementOption: { paddingVertical: 5 },
+  replacementText: { color: colors.foreground, fontSize: 13 },
+  replacementSelected: { color: colors.primary, fontWeight: '800' },
   sectionLabel: {
     color: colors.foreground,
     fontSize: 14,
