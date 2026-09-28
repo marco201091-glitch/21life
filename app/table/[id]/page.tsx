@@ -506,6 +506,7 @@ export default function TablePage() {
   const [editMatchWinCondition, setEditMatchWinCondition] = useState<NonNullable<Match['win_condition']>>('other');
   const [editMatchNotes, setEditMatchNotes] = useState('');
   const [editMatchPlayedAt, setEditMatchPlayedAt] = useState(() => toMatchDateValue());
+  const [editMatchPlayerKeys, setEditMatchPlayerKeys] = useState<Record<string, ParticipantKey>>({});
   const [editMatchPlayerDecks, setEditMatchPlayerDecks] = useState<Record<string, string>>({});
   const [editMatchDeckSearches, setEditMatchDeckSearches] = useState<Record<string, string>>({});
   const [hiddenEditMatchDeckLists, setHiddenEditMatchDeckLists] = useState<Record<string, boolean>>({});
@@ -518,6 +519,22 @@ export default function TablePage() {
   const canManageGroup = Boolean(group && user && (group.created_by === user.id || adminMode));
   const currentUserIsMember = isArenaMember(members, user?.id);
   const canLeaveCurrentArena = canLeaveArena(members.length, currentUserIsMember);
+
+  const editMatchPlayerOptions = useMemo(() => {
+    const options = new Map<ParticipantKey, string>();
+    members.forEach((member) => {
+      options.set(toUserParticipantKey(member.id), member.display_name?.trim() || member.username);
+    });
+    guests.forEach((guest) => {
+      options.set(toGuestParticipantKey(guest.id), guest.display_name);
+    });
+    editingMatch?.match_participants.forEach((participant) => {
+      const key = getParticipantKey(participant);
+      if (!key || options.has(key)) return;
+      options.set(key, getParticipantDisplayName(participant));
+    });
+    return Array.from(options, ([key, label]) => ({ key, label }));
+  }, [editingMatch, guests, members]);
 
   const playerRanksByIndex = useMemo(
     () => playerStats.map((_, index) => getPlayerRank(playerStats, index)),
@@ -1261,8 +1278,12 @@ export default function TablePage() {
     return guest?.arena_guest_decks || [];
   };
 
-  const getFilteredParticipantDeckOptions = (participantKey: ParticipantKey, searchMap: Record<string, string>) => {
-    const query = (searchMap[participantKey] || '').trim().toLowerCase();
+  const getFilteredParticipantDeckOptions = (
+    participantKey: ParticipantKey,
+    searchMap: Record<string, string>,
+    searchKey = participantKey,
+  ) => {
+    const query = (searchMap[searchKey] || '').trim().toLowerCase();
     const deckList = getParticipantDeckOptions(participantKey);
     if (!query) return deckList;
 
@@ -1289,11 +1310,20 @@ export default function TablePage() {
     return guest?.arena_guest_decks?.find((deck) => deck.id === deckId) || null;
   };
 
-  const getFilteredEditMatchDeckOptions = (participantKey: ParticipantKey) =>
-    getFilteredParticipantDeckOptions(participantKey, editMatchDeckSearches);
+  const getFilteredEditMatchDeckOptions = (participantId: string, participantKey: ParticipantKey) => {
+    const query = (editMatchDeckSearches[participantId] || '').trim().toLowerCase();
+    const deckList = getParticipantDeckOptions(participantKey);
+    if (!query) return deckList;
+    return deckList.filter((deck) => [
+      deck.name,
+      deck.commander,
+      'source_type' in deck ? deck.source_type : 'guest',
+      deck.bracket ? `bracket ${deck.bracket}` : null,
+    ].filter(Boolean).some((value) => String(value).toLowerCase().includes(query)));
+  };
 
-  const getSelectedEditMatchDeck = (participantKey: ParticipantKey) => {
-    const deckId = editMatchPlayerDecks[participantKey];
+  const getSelectedEditMatchDeck = (participantId: string, participantKey: ParticipantKey) => {
+    const deckId = editMatchPlayerDecks[participantId];
     if (!deckId) return null;
     const parsed = parseParticipantKey(participantKey);
     if (!parsed) return null;
@@ -1862,8 +1892,9 @@ export default function TablePage() {
     try {
       const { error: participantsError } = await supabase.from('match_participants').delete().eq('match_id', matchId);
       if (participantsError) throw participantsError;
-      const { error: matchError } = await supabase.from('matches').delete().eq('id', matchId);
+      const { data: deletedMatch, error: matchError } = await supabase.from('matches').delete().eq('id', matchId).select('id').maybeSingle();
       if (matchError) throw matchError;
+      if (!deletedMatch) throw new Error(t({ it: 'Partita non eliminata: verifica di essere proprietario dell’arena o creatore della partita.', en: 'Match not deleted: verify that you own the arena or created the match.' }));
       const { data: remaining, error: verifyError } = await supabase
         .from('matches')
         .select('id')
@@ -2220,23 +2251,26 @@ export default function TablePage() {
     setEditMatchNotes(match.notes || '');
     setEditMatchPlayedAt(isoToMatchDateValue(match.played_at));
     setEditMatchDeckSearches({});
+    setEditMatchPlayerKeys(Object.fromEntries(
+      match.match_participants.flatMap((participant) => {
+        const key = getParticipantKey(participant);
+        return key ? [[participant.id, key]] : [];
+      }),
+    ));
     setHiddenEditMatchDeckLists(Object.fromEntries(
-      match.match_participants
-        .map(getParticipantKey)
-        .filter((key): key is ParticipantKey => Boolean(key))
-        .map((key) => [key, true]),
+      match.match_participants.map((participant) => [participant.id, true]),
     ));
     const deckMap: Record<string, string> = {};
     match.match_participants.forEach((p) => {
-      const participantKey = getParticipantKey(p);
       const deckId = getParticipantDeckId(p);
-      if (participantKey && deckId) deckMap[participantKey] = deckId;
+      if (deckId) deckMap[p.id] = deckId;
     });
     setEditMatchPlayerDecks(deckMap);
     void refreshMissingImportedDeckImages(
-      Object.entries(deckMap)
-        .filter(([key]) => key.startsWith('user:'))
-        .map(([, deckId]) => deckId),
+      match.match_participants.flatMap((participant) => {
+        const deckId = deckMap[participant.id];
+        return deckId && getParticipantKey(participant)?.startsWith('user:') ? [deckId] : [];
+      }),
     );
   };
 
@@ -2244,6 +2278,25 @@ export default function TablePage() {
     if (!editingMatch) return;
     if (!editMatchIsDraw && !editMatchWinnerKey) {
       toast({ title: t({ it: 'Errore', en: 'Error' }), description: t({ it: 'Seleziona un vincitore o segna come patta', en: 'Select a winner or mark as draw' }), variant: 'destructive' });
+      return;
+    }
+    const assignments = editingMatch.match_participants.map((participant) => ({
+      participant,
+      originalKey: getParticipantKey(participant),
+      selectedKey: editMatchPlayerKeys[participant.id] || getParticipantKey(participant),
+    }));
+    const selectedKeys = assignments.map((assignment) => assignment.selectedKey).filter((key): key is ParticipantKey => Boolean(key));
+    const hasReplacement = assignments.some(({ originalKey, selectedKey }) => originalKey !== selectedKey);
+    if (hasReplacement && !canManageGroup) {
+      toast({ title: t({ it: 'Permesso negato', en: 'Permission denied' }), description: t({ it: 'Solo il proprietario dell’arena può sostituire un giocatore.', en: 'Only the arena owner can replace a player.' }), variant: 'destructive' });
+      return;
+    }
+    if (selectedKeys.length !== assignments.length || new Set(selectedKeys).size !== selectedKeys.length) {
+      toast({ title: t({ it: 'Giocatori non validi', en: 'Invalid players' }), description: t({ it: 'Ogni posto deve essere assegnato a un giocatore diverso.', en: 'Each seat must be assigned to a different player.' }), variant: 'destructive' });
+      return;
+    }
+    if (!editMatchIsDraw && !selectedKeys.includes(editMatchWinnerKey as ParticipantKey)) {
+      toast({ title: t({ it: 'Vincitore non valido', en: 'Invalid winner' }), description: t({ it: 'Seleziona come vincitore uno dei giocatori attuali.', en: 'Select one of the current players as the winner.' }), variant: 'destructive' });
       return;
     }
     const playedAtIso = matchDateToIso(editMatchPlayedAt, editingMatch?.played_at);
@@ -2259,7 +2312,7 @@ export default function TablePage() {
     setSavingEditMatch(true);
     try {
       const winnerParsed = editMatchIsDraw ? null : parseParticipantKey(editMatchWinnerKey);
-      const { error: matchError } = await supabase
+      const { data: updatedMatch, error: matchError } = await supabase
         .from('matches')
         .update({
           is_draw: editMatchIsDraw,
@@ -2269,23 +2322,34 @@ export default function TablePage() {
           played_at: playedAtIso,
           win_condition: editMatchIsDraw ? null : editMatchWinCondition,
         })
-        .eq('id', editingMatch.id);
+        .eq('id', editingMatch.id)
+        .select('id')
+        .maybeSingle();
       if (matchError) throw matchError;
+      if (!updatedMatch) throw new Error(t({ it: 'Partita non aggiornata: verifica i permessi sull’arena.', en: 'Match was not updated: check arena permissions.' }));
 
-      for (const p of editingMatch.match_participants) {
-        const participantKey = getParticipantKey(p);
-        const deckId = participantKey ? editMatchPlayerDecks[participantKey] || null : null;
-        const isGuest = Boolean(p.guest_id);
+      for (const { participant: p, selectedKey } of assignments) {
+        const parsedPlayer = selectedKey ? parseParticipantKey(selectedKey) : null;
+        const selectedPlayer = editMatchPlayerOptions.find((option) => option.key === selectedKey);
+        if (!parsedPlayer || !selectedPlayer) throw new Error(t({ it: 'Seleziona un giocatore valido.', en: 'Select a valid player.' }));
+        const deckId = editMatchPlayerDecks[p.id] || null;
+        const isGuest = parsedPlayer.type === 'guest';
 
-        const { error: pError } = await supabase
+        const { data: updatedParticipant, error: pError } = await supabase
           .from('match_participants')
           .update({
+            user_id: isGuest ? null : parsedPlayer.id,
+            guest_id: isGuest ? parsedPlayer.id : null,
+            participant_name_snapshot: selectedPlayer.label,
             deck_id: isGuest ? null : deckId,
             guest_deck_id: isGuest ? deckId : null,
-            is_winner: !editMatchIsDraw && participantKey === editMatchWinnerKey,
+            is_winner: !editMatchIsDraw && selectedKey === editMatchWinnerKey,
           })
-          .eq('id', p.id);
+          .eq('id', p.id)
+          .select('id')
+          .maybeSingle();
         if (pError) throw pError;
+        if (!updatedParticipant) throw new Error(t({ it: 'Giocatore non aggiornato: verifica i permessi sull’arena.', en: 'Player was not updated: check arena permissions.' }));
       }
 
       toast({ title: t({ it: 'Partita aggiornata!', en: 'Battle updated!' }) });
@@ -4002,21 +4066,24 @@ export default function TablePage() {
                   <label className="text-sm font-medium text-foreground mb-3 block">{t({ it: 'Assegnazione mazzi', en: 'Deck Assignments' })}</label>
                   <div className="space-y-3">
                     {editingMatch.match_participants.map((p) => {
-                      const participantKey = getParticipantKey(p);
+                      const participantKey = editMatchPlayerKeys[p.id] || getParticipantKey(p);
                       if (!participantKey) return null;
 
+                      const parsedPlayer = parseParticipantKey(participantKey);
+                      const playerLabel = editMatchPlayerOptions.find((option) => option.key === participantKey)?.label
+                        || getParticipantDisplayName(p);
                       const deckOptions = getParticipantDeckOptions(participantKey).map(toDeckOption);
-                      const filteredDeckOptions = getFilteredEditMatchDeckOptions(participantKey).map(toDeckOption);
-                      const selectedDeck = getSelectedEditMatchDeck(participantKey);
-                      const deckListHidden = hiddenEditMatchDeckLists[participantKey];
+                      const filteredDeckOptions = getFilteredEditMatchDeckOptions(p.id, participantKey).map(toDeckOption);
+                      const selectedDeck = getSelectedEditMatchDeck(p.id, participantKey);
+                      const deckListHidden = hiddenEditMatchDeckLists[p.id];
 
                       return (
                         <div key={p.id} className="rounded-lg border border-border bg-secondary/30 p-3">
                           <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-medium text-foreground">{getParticipantDisplayName(p)}</p>
-                                {p.guest_id && (
+                                <p className="text-sm font-medium text-foreground">{playerLabel}</p>
+                                {parsedPlayer?.type === 'guest' && (
                                   <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-200">
                                     Guest
                                   </span>
@@ -4039,8 +4106,8 @@ export default function TablePage() {
                                 <div className="relative flex-1">
                                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                   <Input
-                                    value={editMatchDeckSearches[participantKey] || ''}
-                                    onChange={(event) => setEditMatchDeckSearches((prev) => ({ ...prev, [participantKey]: event.target.value }))}
+                                    value={editMatchDeckSearches[p.id] || ''}
+                                    onChange={(event) => setEditMatchDeckSearches((prev) => ({ ...prev, [p.id]: event.target.value }))}
                                     placeholder={t({ it: 'Cerca mazzo...', en: 'Search deck...' })}
                                     className="h-9 bg-background/50 border-border pl-9 text-foreground placeholder:text-muted-foreground"
                                   />
@@ -4050,7 +4117,7 @@ export default function TablePage() {
                                   variant="outline"
                                   size="sm"
                                   className="shrink-0 border-border text-foreground"
-                                  onClick={() => setHiddenEditMatchDeckLists((prev) => ({ ...prev, [participantKey]: !prev[participantKey] }))}
+                                  onClick={() => setHiddenEditMatchDeckLists((prev) => ({ ...prev, [p.id]: !prev[p.id] }))}
                                 >
                                   {deckListHidden ? <Eye className="mr-2 h-4 w-4" /> : <EyeOff className="mr-2 h-4 w-4" />}
                                   {deckListHidden ? t({ it: 'Mostra', en: 'Show' }) : t({ it: 'Nascondi', en: 'Hide' })}
@@ -4058,6 +4125,33 @@ export default function TablePage() {
                               </div>
                             )}
                           </div>
+
+                          {canManageGroup ? (
+                            <div className="mb-3 space-y-1.5">
+                              <label className="text-xs font-medium text-muted-foreground">{t({ it: 'Giocatore', en: 'Player' })}</label>
+                              <Select
+                                value={participantKey}
+                                onValueChange={(value) => {
+                                  const nextKey = value as ParticipantKey;
+                                  const previousKey = editMatchPlayerKeys[p.id] || getParticipantKey(p);
+                                  setEditMatchPlayerKeys((current) => ({ ...current, [p.id]: nextKey }));
+                                  setEditMatchPlayerDecks((current) => ({ ...current, [p.id]: '' }));
+                                  setEditMatchDeckSearches((current) => ({ ...current, [p.id]: '' }));
+                                  setHiddenEditMatchDeckLists((current) => ({ ...current, [p.id]: false }));
+                                  if (previousKey && editMatchWinnerKey === previousKey) setEditMatchWinnerKey(nextKey);
+                                }}
+                              >
+                                <SelectTrigger className="h-9 w-full bg-background/50 border-border text-foreground">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-card border-border">
+                                  {editMatchPlayerOptions.map((option) => (
+                                    <SelectItem key={option.key} value={option.key}>{option.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          ) : null}
 
                           {deckOptions.length > 0 ? (
                             deckListHidden ? (
@@ -4071,9 +4165,9 @@ export default function TablePage() {
                                 <div className="grid grid-cols-1 gap-3 sm:grid-flow-col sm:auto-cols-[minmax(290px,320px)] sm:overflow-x-auto sm:pb-3">
                                   <button
                                     type="button"
-                                    onClick={() => setEditMatchPlayerDecks((prev) => ({ ...prev, [participantKey]: '' }))}
+                                    onClick={() => setEditMatchPlayerDecks((prev) => ({ ...prev, [p.id]: '' }))}
                                     className={`h-28 rounded-lg border p-3 text-left text-xs transition-colors ${
-                                      !editMatchPlayerDecks[participantKey] ? 'border-emerald-500 bg-emerald-500/10' : 'border-border bg-background/25 hover:border-emerald-500/50'
+                                      !editMatchPlayerDecks[p.id] ? 'border-emerald-500 bg-emerald-500/10' : 'border-border bg-background/25 hover:border-emerald-500/50'
                                     }`}
                                   >
                                     <div className="flex h-full items-center justify-center rounded-md border border-dashed border-border/70 bg-background/25 px-3 text-center">
@@ -4084,9 +4178,9 @@ export default function TablePage() {
                                     <button
                                       key={deck.id}
                                       type="button"
-                                      onClick={() => setEditMatchPlayerDecks((prev) => ({ ...prev, [participantKey]: deck.id }))}
+                                      onClick={() => setEditMatchPlayerDecks((prev) => ({ ...prev, [p.id]: deck.id }))}
                                       className={`min-h-[7.5rem] rounded-lg border p-3 text-left transition-colors ${
-                                        editMatchPlayerDecks[participantKey] === deck.id
+                                        editMatchPlayerDecks[p.id] === deck.id
                                           ? 'border-emerald-500 bg-emerald-500/10'
                                           : 'border-border bg-background/25 hover:border-emerald-500/50'
                                       }`}
@@ -4156,12 +4250,13 @@ export default function TablePage() {
                         </SelectTrigger>
                         <SelectContent className="bg-card border-border">
                           {editingMatch.match_participants.map((p) => {
-                            const participantKey = getParticipantKey(p);
+                            const participantKey = editMatchPlayerKeys[p.id] || getParticipantKey(p);
                             if (!participantKey) return null;
-                            const selectedDeck = getSelectedEditMatchDeck(participantKey);
+                            const selectedDeck = getSelectedEditMatchDeck(p.id, participantKey);
+                            const playerLabel = editMatchPlayerOptions.find((option) => option.key === participantKey)?.label || getParticipantDisplayName(p);
                             return (
-                              <SelectItem key={participantKey} value={participantKey}>
-                                {getParticipantDisplayName(p)}{selectedDeck ? ` (${selectedDeck.commander})` : ''}
+                              <SelectItem key={p.id} value={participantKey}>
+                                {playerLabel}{selectedDeck ? ` (${selectedDeck.commander})` : ''}
                               </SelectItem>
                             );
                           })}
