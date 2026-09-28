@@ -281,6 +281,7 @@ export default function TableScreen() {
     group,
     isPlatformAdmin: false,
   });
+  const isArenaManager = Boolean(user && group?.created_by === user.id);
   const canLeave = canLeaveArena(members.length, isMember);
 
   const periodMatches = useMemo(
@@ -1192,6 +1193,7 @@ export default function TableScreen() {
       <EditMatchModal
         visible={Boolean(editingMatch)}
         saving={savingEditMatch}
+        canManage={isArenaManager}
         match={editingMatch}
         members={members}
         guests={guests}
@@ -1230,13 +1232,15 @@ export default function TableScreen() {
             alternate_card: copy('liveGameWinAlternateCard'),
             other: copy('liveGameWinOther'),
           },
+          replacePlayer: copy('replacePlayer'),
+          selectPlayer: copy('selectPlayer'),
         }}
         onClose={() => setEditingMatch(null)}
         onError={(message) => showAppAlert(copy('error'), message)}
         onSave={async (input) => {
           setSavingEditMatch(true);
           try {
-            await updateMatch(input);
+            await updateMatch({ ...input, isArenaManager });
             setEditingMatch(null);
             void hapticSuccess();
             showToast(copy('matchUpdated'));
