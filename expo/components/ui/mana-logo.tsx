@@ -127,7 +127,8 @@ const styles = StyleSheet.create({
   },
   wordmark: {
     color: '#fafafa',
-    fontFamily: 'Cinzel_700Bold',
+    fontFamily: 'sans-serif',
+    fontWeight: '700',
     letterSpacing: 1.1,
     textAlign: 'center',
     textShadowColor: 'rgba(255, 255, 255, 0.18)',
