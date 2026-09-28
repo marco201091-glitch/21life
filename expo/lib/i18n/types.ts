@@ -428,6 +428,8 @@ export type TranslationKey =
   | 'deckError'
   | 'dateError'
   | 'selectDeckPrompt'
+  | 'replacePlayer'
+  | 'selectPlayer'
   | 'showDeckList'
   | 'hideDeckList'
   | 'deckListHiddenSelected'

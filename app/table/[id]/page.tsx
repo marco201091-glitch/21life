@@ -1860,10 +1860,19 @@ export default function TablePage() {
   const handleDeleteMatch = async (matchId: string) => {
     if (!confirm(t({ it: 'Eliminare questa partita?', en: 'Are you sure you want to delete this battle record?' }))) return;
     try {
-      await supabase.from('match_participants').delete().eq('match_id', matchId);
-      await supabase.from('matches').delete().eq('id', matchId);
+      const { error: participantsError } = await supabase.from('match_participants').delete().eq('match_id', matchId);
+      if (participantsError) throw participantsError;
+      const { error: matchError } = await supabase.from('matches').delete().eq('id', matchId);
+      if (matchError) throw matchError;
+      const { data: remaining, error: verifyError } = await supabase
+        .from('matches')
+        .select('id')
+        .eq('id', matchId)
+        .maybeSingle();
+      if (verifyError) throw verifyError;
+      if (remaining) throw new Error(t({ it: 'La partita non è stata eliminata.', en: 'The match was not deleted.' }));
       toast({ title: t({ it: 'Partita eliminata', en: 'Battle deleted' }) });
-      refreshMatches();
+      await refreshMatches();
     } catch (error: unknown) {
       toast({ title: t({ it: 'Errore', en: 'Error' }), description: error instanceof Error ? error.message : t({ it: 'Impossibile eliminare la partita', en: 'Failed to delete match' }), variant: 'destructive' });
     }

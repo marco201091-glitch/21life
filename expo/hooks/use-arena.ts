@@ -319,12 +319,17 @@ export function useArena(groupId: string | undefined, userId: string | undefined
     matchPlayedAtIso: string;
     matchNotes: string;
     winCondition: import('@/lib/types/arena').ArenaMatch['win_condition'];
+    isArenaManager: boolean;
     participants: Array<{
       id: string;
       participantKey: string | null;
       isGuest: boolean;
+      replacementKey: string | null;
     }>;
   }) => {
+    if (input.participants.some((participant) => participant.replacementKey) && !input.isArenaManager) {
+      throw new Error('Only the arena manager can replace match participants');
+    }
     const winnerParsed = !input.isDraw && input.winnerKey
       ? parseParticipantKey(input.winnerKey)
       : null;
@@ -343,20 +348,41 @@ export function useArena(groupId: string | undefined, userId: string | undefined
     if (matchError) throw matchError;
 
     for (const participant of input.participants) {
-      const deckId = participant.participantKey
-        ? input.participantDecks[participant.participantKey] || null
+      const replacement = participant.replacementKey
+        ? parseParticipantKey(participant.replacementKey)
+        : null;
+      const participantKey = participant.replacementKey || participant.participantKey;
+      const isGuest = replacement ? replacement.type === 'guest' : participant.isGuest;
+      const deckId = participantKey
+        ? input.participantDecks[participantKey] || null
         : null;
 
       const { error: participantError } = await supabase
         .from('match_participants')
         .update({
-          deck_id: participant.isGuest ? null : deckId,
-          guest_deck_id: participant.isGuest ? deckId : null,
-          is_winner: !input.isDraw && participant.participantKey === input.winnerKey,
+          ...(participant.replacementKey ? {
+            user_id: replacement?.type === 'user' ? replacement.id : null,
+            guest_id: replacement?.type === 'guest' ? replacement.id : null,
+          } : {}),
+          deck_id: isGuest ? null : deckId,
+          guest_deck_id: isGuest ? deckId : null,
+          is_winner: !input.isDraw && participantKey === input.winnerKey,
         })
         .eq('id', participant.id);
 
       if (participantError) throw participantError;
+    }
+
+    if (input.participants.some((participant) => participant.replacementKey)) {
+      const replacementWinner = input.participants.find((participant) => participant.participantKey === input.winnerKey && participant.replacementKey);
+      if (replacementWinner) {
+        const parsed = parseParticipantKey(replacementWinner.replacementKey!);
+        const { error: winnerError } = await supabase.from('matches').update({
+          winner_id: parsed?.type === 'user' ? parsed.id : null,
+          winner_guest_id: parsed?.type === 'guest' ? parsed.id : null,
+        }).eq('id', input.matchId);
+        if (winnerError) throw winnerError;
+      }
     }
 
     await refreshMatches();
@@ -399,9 +425,17 @@ export function useArena(groupId: string | undefined, userId: string | undefined
   }, [groupId, userId]);
 
   const deleteMatch = useCallback(async (matchId: string) => {
-    await supabase.from('match_participants').delete().eq('match_id', matchId);
+    const { error: participantError } = await supabase.from('match_participants').delete().eq('match_id', matchId);
+    if (participantError) throw participantError;
     const { error } = await supabase.from('matches').delete().eq('id', matchId);
     if (error) throw error;
+    const { data: remaining, error: verifyError } = await supabase
+      .from('matches')
+      .select('id')
+      .eq('id', matchId)
+      .maybeSingle();
+    if (verifyError) throw verifyError;
+    if (remaining) throw new Error('Match was not deleted');
     await refreshMatches();
   }, [refreshMatches]);
 
