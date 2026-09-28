@@ -78,7 +78,7 @@ Builds:
 
   - versionName: 9.0.1
     versionCode: 90001
-    commit: 032ca2e4f8bdc318424dfbda0d9212649bc22210
+    commit: 84fe4e3122647b4cbfa3c72622ffaa6c8462d60a
     subdir: expo
     sudo:
       - apt-get update
