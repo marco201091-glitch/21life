@@ -55,6 +55,8 @@ jobs:
           java-version: '21'
 
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
 
       - name: Install Android build-tools 34
         run: sdkmanager 'build-tools;34.0.0'
