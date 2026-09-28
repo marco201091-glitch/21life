@@ -78,7 +78,7 @@ Builds:
 
   - versionName: 9.0.1
     versionCode: 90001
-    commit: cf4d8d4ad96be4e05c30574b297a7f0714754947
+    commit: REPLACE_WITH_FDROID_RELEASE_COMMIT_SHA
     subdir: expo
     sudo:
       - apt-get update
@@ -118,8 +118,6 @@ Builds:
       - expo/node_modules/react-native-view-shot/android/build.gradle
       - expo/node_modules/react-native-webview/android/build.gradle
       - expo/node_modules/react-native/ReactAndroid/publish.gradle
-    scandelete:
-      - node_modules
     build:
       - export APP_VARIANT=fdroid
       - export EXPO_PUBLIC_FDROID_BUILD=true
@@ -129,6 +127,7 @@ Builds:
       - gradle :app:assembleRelease -PfdroidBuild=true -PreactNativeArchitectures=arm64-v8a
         -PreactNativeDevServerIp=localhost --no-daemon --console=plain
       - cd ../..
+      - rm -rf node_modules
       - rm -rf expo/node_modules
 
 AllowedAPKSigningKeys: 5d25e32cdf901becfba81adf93189e1d755e50a90b897efa21da4c2ab3002106

@@ -9,7 +9,8 @@ Version 9.0.1 is being prepared in the official F-Droid `fdroiddata` merge reque
 - Build model: Expo/React Native produces an unsigned Android APK entirely from
   source. Expo modules are built from source and Gradle/JVM targets are aligned
   for the F-Droid build environment.
-- Network services (Non-Free Network Services / Tethered Network Services): the app depends on a self-hosted Supabase backend, Scryfall,
+- Network services (Non-Free Network Services / Tethered Network Services): the app depends on a self-hosted Supabase backend,
+  Scryfall,
   Archidekt, Moxfield, EDHREC, Resend, Turnstile, optional Google OAuth, optional
   Expo Push, and optional Sentry diagnostics. These may require F-Droid
   Anti-Feature disclosure.

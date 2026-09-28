@@ -13,7 +13,7 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 
 - [x] Hotfix 9.0.1 gestione record arena: cancellazione verificata su web/mobile; partecipanti eliminati nuovamente disponibili; sostituzione partecipante in modifica riservata ad Arena Manager. PR production #118 e promozione Dev #119 unite. CI completa verde (migrazioni SQL, web/Expo quality, build, E2E). Deploy Dev avviato sul commit `fd83926`; migrazione DB Dev avviata. RLS cancellazione manager applicata e verificata su Supabase production e Dev via Dokploy. Migrazione versionata e PR #120 (main) / #121 (Dev) unite, CI verde.
 
-- [ ] F-Droid 9.0.1: portare il flavor sul codice 9.0.1, verificare build e riproducibilità, aggiornare ricetta e reference APK, ottenere pipeline GitLab verde, poi attendere review/device test di @linsui.
+- [ ] F-Droid 9.0.1: pipeline GitLab verde e review/device test di @linsui. Prebuild, typecheck, APK unsigned e rebuild byte-identical locali superati; correggere l’ultimo fail scanner eliminando node_modules dopo la compilazione.
 
 - [x] iPad: pre-caricamento immagini limitato a 4 operazioni parallele su iOS; Android invariato.
 
