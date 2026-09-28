@@ -78,7 +78,7 @@ Builds:
 
   - versionName: 9.0.1
     versionCode: 90001
-    commit: REPLACE_WITH_FDROID_RELEASE_COMMIT_SHA
+    commit: 032ca2e4f8bdc318424dfbda0d9212649bc22210
     subdir: expo
     sudo:
       - apt-get update
