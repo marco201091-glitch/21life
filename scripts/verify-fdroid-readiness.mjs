@@ -84,10 +84,10 @@ for (const text of [
     failures.push(`F-Droid docs must mention ${text}`);
   }
 }
-if (!metadata.includes('AutoName: 21Life')) {
+if (read('fastlane/metadata/android/en-US/title.txt').trim() !== '21Life') {
   failures.push('Fastlane metadata must use the Android display name');
 }
-for (const text of ['NonFreeNet', 'REPLACE_WITH_FDROID_RELEASE_COMMIT_SHA', 'app-release-unsigned.apk']) {
+for (const text of ['NonFreeNet', 'versionName: 9.0.1', 'app-release-unsigned.apk']) {
   if (!fdroidMetadata.includes(text)) {
     failures.push(`F-Droid metadata draft must mention ${text}`);
   }

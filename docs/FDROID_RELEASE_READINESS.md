@@ -1,8 +1,6 @@
 # F-Droid-style release readiness
 
-Version 8.0.0 has been submitted to the official F-Droid `fdroiddata`
-repository. The source build and validation pipeline pass; inclusion is now
-waiting for F-Droid maintainer review.
+Version 9.0.1 is being prepared in the official F-Droid `fdroiddata` merge request. Source build, reproducibility, and device review must pass before inclusion.
 
 ## Current assessment
 
@@ -11,7 +9,7 @@ waiting for F-Droid maintainer review.
 - Build model: Expo/React Native produces an unsigned Android APK entirely from
   source. Expo modules are built from source and Gradle/JVM targets are aligned
   for the F-Droid build environment.
-- Network services: the app depends on a self-hosted Supabase backend, Scryfall,
+- Network services (Non-Free Network Services / Tethered Network Services): the app depends on a self-hosted Supabase backend, Scryfall,
   Archidekt, Moxfield, EDHREC, Resend, Turnstile, optional Google OAuth, optional
   Expo Push, and optional Sentry diagnostics. These may require F-Droid
   Anti-Feature disclosure.
@@ -74,7 +72,7 @@ docs/FDROID_OFFICIAL_SUBMISSION.md
 ## Submission status
 
 - Official merge request: <https://gitlab.com/fdroid/fdroiddata/-/merge_requests/44721>
-- `fdroid build`, APK checks, lint, scanner, and pipeline validation pass.
+- The 9.0.1 source build, APK checks, scanner, and pipeline are pending.
 - `NonFreeNet` is declared for the fixed hosted and third-party network services.
 - Store text and changelog live upstream under `fastlane/metadata/android/en-US`.
 - Remaining work is external maintainer review and any requested follow-up.

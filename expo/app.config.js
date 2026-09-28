@@ -1,7 +1,5 @@
 module.exports = ({ config: base }) => {
   const isDevVariant = process.env.APP_VARIANT === 'dev';
-  const isFdroidVariant = process.env.APP_VARIANT === 'fdroid'
-    || process.env.EXPO_PUBLIC_FDROID_BUILD === 'true';
   const devScheme = 'phyrexianarena-dev';
   const productionHost = 'app.phyrexianarena.dpdns.org';
   const devHost = 'dev.phyrexianarena.dpdns.org';
@@ -40,14 +38,6 @@ module.exports = ({ config: base }) => {
       }],
       'expo-status-bar',
       'expo-web-browser',
-      ...(!isFdroidVariant ? [[
-        '@sentry/react-native/expo', {
-          organization: process.env.SENTRY_ORG,
-          project: process.env.SENTRY_MOBILE_PROJECT || process.env.SENTRY_PROJECT,
-          url: process.env.SENTRY_URL,
-          disableAutoUpload: isDevVariant || !process.env.SENTRY_AUTH_TOKEN,
-        },
-      ]] : []),
       './plugins/with-clean-intent-filter-markers',
       './plugins/with-fdroid-blocked-permissions',
       './plugins/with-fdroid-release-build',

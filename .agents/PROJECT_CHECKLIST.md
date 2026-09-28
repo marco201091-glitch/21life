@@ -9,6 +9,12 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 
 ## In progress
 
+- [x] Backup off-site: risolto 403 `RATE_LIMIT_EXCEEDED` del client OAuth condiviso. Rclone 1.75.1 installato con checksum ufficiale; config e binario precedenti conservati. Client OAuth dedicato in produzione con scope `drive.file`, cartella backup nuova e chiave crypt originale preservata. Backup del 2026-09-28 riuscito; marker locale/off-site e file cifrati verificati. Config di recupero e checksum caricati e verificati su Drive.
+
+- [x] Hotfix 9.0.1 gestione record arena: cancellazione verificata su web/mobile; partecipanti eliminati nuovamente disponibili; sostituzione partecipante in modifica riservata ad Arena Manager. PR production #118 e promozione Dev #119 unite. CI completa verde (migrazioni SQL, web/Expo quality, build, E2E). Deploy Dev avviato sul commit `fd83926`; migrazione DB Dev avviata. RLS cancellazione manager applicata e verificata su Supabase production e Dev via Dokploy. Migrazione versionata e PR #120 (main) / #121 (Dev) unite, CI verde.
+
+- [ ] F-Droid 9.0.1: portare il flavor sul codice 9.0.1, verificare build e riproducibilità, aggiornare ricetta e reference APK, ottenere pipeline GitLab verde, poi attendere review/device test di @linsui.
+
 - [x] iPad: pre-caricamento immagini limitato a 4 operazioni parallele su iOS; Android invariato.
 
 - [ ] Hotfix 9.0.1 Android: icona nativa durata, award Healing Master e Beginner’s luck, premi mazzo senza soglia tranne Più veloce; release production da completare.
@@ -57,7 +63,7 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 
 ## External follow-up
 
-- [x] Backup off-site rclone crypt/Google Drive: primo upload e marker verificati il 2026-09-24.
+- [x] Backup off-site rclone crypt/Google Drive: migrazione al client OAuth dedicato e primo backup verificati il 2026-09-28; i file storici sono conservati nella vecchia cartella.
 - [ ] Monitor the official F-Droid merge request until approval.
 - [ ] PM verification of the Dokploy production build.
 
