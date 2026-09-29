@@ -15,8 +15,6 @@ export const MATCHES_SELECT = `
     participant_name_snapshot,
     deck_id,
     guest_deck_id,
-    profiles (id, username, display_name),
-    arena_guests (id, display_name),
     is_winner,
     tracked_event_count,
     life_lost,

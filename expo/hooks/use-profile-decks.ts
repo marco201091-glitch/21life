@@ -63,7 +63,7 @@ export function useProfileDecks(userId: string | undefined) {
     try {
       const { data: deckRows, error: deckError } = await supabase
         .from('decks')
-        .select('id, user_id, group_id, name, commander, commander_image, source_url, source_type, bracket, color_identity, commander_options, commander_cmc, is_favorite, created_at, updated_at')
+        .select('id, user_id, group_id, name, commander, commander_image, source_url, source_type, bracket, color_identity, commander_options, commander_cmc, is_favorite, is_archived, created_at, updated_at')
         .is('group_id', null)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
@@ -222,6 +222,14 @@ export function useProfileDecks(userId: string | undefined) {
       throw error;
     }
   }, [userId]);
+
+  const setDeckArchived = useCallback(async (deckId: string, archived: boolean) => {
+    if (!userId) throw new Error('Not authenticated');
+    const { error } = await supabase.from('decks').update({ is_archived: archived })
+      .eq('id', deckId).eq('user_id', userId).is('group_id', null);
+    if (error) throw error;
+    await refresh();
+  }, [refresh, userId]);
 
   const saveImportedDeck = useCallback(async (
     imported: ImportedDeckPreview,
@@ -582,6 +590,7 @@ export function useProfileDecks(userId: string | undefined) {
     refresh,
     deleteDeck,
     toggleDeckFavorite,
+    setDeckArchived,
     saveImportedDeck,
     saveManualDeck,
     refreshImportedDeck,
