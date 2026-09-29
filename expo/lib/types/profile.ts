@@ -25,6 +25,7 @@ export interface ProfileDeck {
   commander_options: CommanderMetadataOption[] | null;
   commander_cmc: number | null;
   is_favorite?: boolean;
+  is_archived?: boolean;
   created_at: string;
   updated_at: string;
 }

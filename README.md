@@ -1,7 +1,7 @@
 # 21Life
 
 [![Web app](https://img.shields.io/badge/Open-Web_App-16a34a?style=flat-square)](https://app.phyrexianarena.dpdns.org)
-[![Android](https://img.shields.io/badge/Android-v9.0.2-7c3aed?style=flat-square)](https://github.com/marco201091-glitch/PhyrexianArena/releases/latest)
+[![Android](https://img.shields.io/badge/Android-v9.0.3-7c3aed?style=flat-square)](https://github.com/marco201091-glitch/PhyrexianArena/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 Track Commander games, manage your playgroup, and turn match history into statistics that actually mean something — without a spreadsheet.
