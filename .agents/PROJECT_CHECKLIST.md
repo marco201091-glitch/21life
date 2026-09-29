@@ -9,7 +9,9 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 
 ## In progress
 
-- [ ] Android 9.0.2 production: support x86_64 alongside arm64-v8a (fixes startup crash on x86_64 emulators); clarify the login wordmark to render `21Life` distinctly; publish signed APK through the Obtainium GitHub release.
+- [ ] Production hotfix 9.0.3: fix duplicated Supabase participant embeds that silently empty match history; restore Cinzel `21Life` wordmark; add owner-only personal deck archive/restore for web and Expo; migration, production release and verified APK.
+
+- [x] Android 9.0.2 production: support x86_64 alongside arm64-v8a; release published through Obtainium.
 
 - [x] iPad: pre-caricamento immagini limitato a 4 operazioni parallele su iOS; Android invariato.
 

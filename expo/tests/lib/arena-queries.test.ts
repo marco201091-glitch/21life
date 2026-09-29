@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fetchArenaMatches, fetchArenaMemberDecks } from '@/lib/arena-queries';
+import { fetchArenaMatches, fetchArenaMemberDecks, MATCHES_SELECT } from '@/lib/arena-queries';
 
 describe('arena queries', () => {
+  it('selects each nested participant profile and guest relation once', () => {
+    const participantProjection = MATCHES_SELECT.split('match_participants (')[1];
+    expect(participantProjection).toBeTruthy();
+    expect(participantProjection.match(/profiles \(/g)).toHaveLength(1);
+    expect(participantProjection.match(/arena_guests \(/g)).toHaveLength(1);
+  });
+
   it('uses stable keyset pagination and detects a following page', async () => {
     const rows = Array.from({ length: 101 }, (_, index) => ({
       id: `match-${String(index).padStart(3, '0')}`,
