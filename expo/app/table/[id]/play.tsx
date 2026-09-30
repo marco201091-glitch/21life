@@ -143,6 +143,7 @@ export default function LiveGameScreen() {
   const groupId = Array.isArray(id) ? id[0] : id;
   const router = useRouter();
   const { user } = useAuth();
+  const currentUserId = user?.id;
   const { copy, language } = useLanguage();
   const { featureFlags } = useRuntimeConfig();
   const { showToast } = useToast();
@@ -335,6 +336,22 @@ export default function LiveGameScreen() {
     });
     applySeatSetups(next);
   }, [applySeatSetups, seatSetups]);
+
+  const handleSelectSetupParticipant = useCallback((participantKey: ParticipantKey) => {
+    const targetUserId = participantKey.startsWith('user:')
+      ? participantKey.slice('user:'.length)
+      : null;
+    if (!groupId || !currentUserId || !targetUserId
+      || !members.some((member) => member.id === targetUserId && member.archidekt_auto_import)) return;
+
+    void supabase.from('archidekt_sync_requests').upsert({
+      group_id: groupId,
+      user_id: targetUserId,
+      requested_by: currentUserId,
+    }, { onConflict: 'group_id,user_id', ignoreDuplicates: true }).then(({ error }) => {
+      if (error) console.warn('Could not request participant Archidekt sync', error.message);
+    });
+  }, [currentUserId, groupId, members]);
 
   const resetSetup = useCallback(() => {
     applySeatSetups(clearLiveGameSeats(seatSetups));
@@ -1713,6 +1730,7 @@ export default function LiveGameScreen() {
               onPlayerCountChange={handlePlayerCountChange}
               onLayoutChange={setLayoutVariant}
               onStartingLifeChange={applyStartingLife}
+              onSelectParticipant={handleSelectSetupParticipant}
               onAssignSeat={handleAssignSeat}
               onReset={resetSetup}
               onStart={handleStart}

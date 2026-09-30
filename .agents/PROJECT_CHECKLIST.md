@@ -63,6 +63,8 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 
 ## Completed
 
+- [x] Wizard live game: avvia il sync Archidekt del membro selezionato solo se abilitato; richiesta Realtime autorizzata e sync eseguito dalla sessione del proprietario. Migrazione applicata e verificata su Supabase Dev via SSH; lint, typecheck e 248 test Expo OK.
+
 - [x] Spostare lo storico season sotto le partite recenti con Top 10 giocatori/mazzi per win rate e minimo 5 partite.
 
 - [x] Mostrare negli archivi delle season la top 10 giocatori completa con record W/L su web ed Expo.
