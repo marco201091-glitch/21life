@@ -9,6 +9,9 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 
 ## In progress
 
+- [ ] Release 9.0.4 produzione: codice Dev riallineato a main, versione 90004, migrazione Archidekt su Supabase Dokploy, APK Obtainium e IPA unsigned da pubblicare.
+- [x] Wizard live game: indicatore di attesa Archidekt sul partecipante selezionato, con stato differito per app offline/non aggiornata; qualità Expo, bundle Android e CI superati, integrato su Dev via PR #141.
+
 - [ ] Production hotfix 9.0.3: fix duplicated Supabase participant embeds that silently empty match history; restore Cinzel `21Life` wordmark; add owner-only personal deck archive/restore for web and Expo; migration, production release and verified APK.
 
 - [x] Android 9.0.2 production: support x86_64 alongside arm64-v8a; release published through Obtainium.
@@ -66,6 +69,8 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 - [ ] PM verification of the Dokploy production build.
 
 ## Completed
+
+- [x] Wizard live game: avvia il sync Archidekt del membro selezionato solo se abilitato; richiesta Realtime autorizzata e sync eseguito dalla sessione del proprietario. Migrazione applicata e verificata su Supabase Dev via SSH; lint, typecheck e 248 test Expo OK.
 
 - [x] Spostare lo storico season sotto le partite recenti con Top 10 giocatori/mazzi per win rate e minimo 5 partite.
 

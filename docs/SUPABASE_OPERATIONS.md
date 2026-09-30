@@ -1,5 +1,28 @@
 # Supabase self-hosted operations
 
+## Applying and verifying schema migrations
+
+The Dev and production Supabase stacks run remotely in Dokploy on the project
+VM. From the repository root, after reviewing a migration, apply it to the
+intended environment explicitly:
+
+```powershell
+node scripts/selfhosted-db.mjs apply dev supabase/migrations/<migration-file>.sql
+```
+
+Use `production` only after explicit PM authorization. The runner reads the
+environment-specific SSH host, user, key path, Compose project, and database
+role from `.env.local`; it runs the SQL in one transaction inside that remote
+stack and records the filename version and SHA-256 in
+`app_private.schema_migrations`. This is separate from Supabase CLI migration
+history. Verify the resulting table, RLS policies, grants, publication, and
+runner checksum with a read-only query over the same SSH target.
+
+The workstation does not need Docker or Podman installed for this workflow.
+`npx supabase status` only inspects a local stack and a local-container error
+does not indicate that the Dokploy VM is unavailable. Do not use linked-project
+or local-stack migration commands for this self-hosted deployment.
+
 ## Compatibility boundary
 
 Release 8.2 migrations are additive. The minimum supported client remains

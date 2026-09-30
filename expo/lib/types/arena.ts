@@ -4,6 +4,7 @@ export interface ArenaProfile {
   id: string;
   username: string;
   display_name: string | null;
+  archidekt_auto_import?: boolean;
 }
 
 export interface MemberDeck {
