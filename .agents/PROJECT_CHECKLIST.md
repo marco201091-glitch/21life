@@ -9,16 +9,16 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 
 ## In progress
 
-- [ ] Pre-release 9.0.4: PR #140 con Archidekt live e hotfix 9.0.2/9.0.3 integrata su Dev, CI verde. Audit in `docs/AUDIT_2026-09-30_9.0.4.md`; migrazione Archidekt produzione in concomitanza con la release 9.0.4.
-- [ ] Wizard live game: indicatore di attesa Archidekt sul partecipante selezionato, con stato differito per app offline/non aggiornata; qualità Expo e bundle Android OK, integrazione Dev in corso.
+- [x] Release 9.0.4 produzione: codice Dev riallineato a main, versione 90004, migrazione Archidekt verificata su Supabase Dokploy, web 9.0.4 pronto, APK firmato su Obtainium e IPA unsigned pubblicata con checksum.
+- [x] Wizard live game: indicatore di attesa Archidekt sul partecipante selezionato, con stato differito per app offline/non aggiornata; qualità Expo, bundle Android e CI superati, integrato su Dev via PR #141.
 
-- [ ] Production hotfix 9.0.3: fix duplicated Supabase participant embeds that silently empty match history; restore Cinzel `21Life` wordmark; add owner-only personal deck archive/restore for web and Expo; migration, production release and verified APK.
+- [x] Production hotfix 9.0.3: match history, wordmark Cinzel e archivio mazzi rilasciati con migrazione e APK.
 
 - [x] Android 9.0.2 production: support x86_64 alongside arm64-v8a; release published through Obtainium.
 
 - [x] iPad: pre-caricamento immagini limitato a 4 operazioni parallele su iOS; Android invariato.
 
-- [ ] Hotfix 9.0.1 Android: icona nativa durata, award Healing Master e Beginner’s luck, premi mazzo senza soglia tranne Più veloce; release production da completare.
+- [x] Hotfix 9.0.1 Android: durata, premi giocatore e mazzo corretti e release produzione pubblicata.
 
 - [x] Rebranding v9: nome visibile `21Life`, lockup interno `21Life - Tracker & Analytics`, dado con `21`, icone web/Android, email, notifiche, condivisioni e metadata aggiornati; identificativi tecnici preservati.
 
