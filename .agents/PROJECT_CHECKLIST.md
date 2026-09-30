@@ -9,7 +9,8 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 
 ## In progress
 
-- [ ] Pre-release 9.0.4: PR #140 con Archidekt live e hotfix 9.0.2/9.0.3; CI e merge Dev da completare. Audit in `docs/AUDIT_2026-09-30_9.0.4.md`; build 9.0.4 solo dopo promozione e migrazione produzione.
+- [ ] Pre-release 9.0.4: PR #140 con Archidekt live e hotfix 9.0.2/9.0.3 integrata su Dev, CI verde. Audit in `docs/AUDIT_2026-09-30_9.0.4.md`; migrazione Archidekt produzione in concomitanza con la release 9.0.4.
+- [ ] Wizard live game: indicatore di attesa Archidekt sul partecipante selezionato, con stato differito per app offline/non aggiornata; qualità Expo e bundle Android OK, integrazione Dev in corso.
 
 - [ ] Production hotfix 9.0.3: fix duplicated Supabase participant embeds that silently empty match history; restore Cinzel `21Life` wordmark; add owner-only personal deck archive/restore for web and Expo; migration, production release and verified APK.
 

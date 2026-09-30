@@ -163,6 +163,11 @@ export default function LiveGameScreen() {
   const [lifePreset, setLifePreset] = useState<LifePreset>('40');
   const [customLife, setCustomLife] = useState('40');
   const [starting, setStarting] = useState(false);
+  const [archidektSyncRequest, setArchidektSyncRequest] = useState<{
+    userId: string;
+    status: 'sending' | 'waiting' | 'delayed' | 'failed';
+    deckFingerprint: string;
+  } | null>(null);
   const [damagePulse, setDamagePulse] = useState<Record<string, number>>({});
   const [randomHighlight, setRandomHighlight] = useState<ParticipantKey | null>(null);
   const [startingHighlight, setStartingHighlight] = useState<ParticipantKey | null>(null);
@@ -293,6 +298,25 @@ export default function LiveGameScreen() {
     }),
   ], [getDeckOptions, guests, matches, members]);
 
+  const memberDeckFingerprint = useCallback((userId: string) => JSON.stringify(
+    (decksByUser.get(userId) || []).map((deck) => [
+      deck.id, deck.name, deck.commander, deck.commander_image, deck.source_url,
+    ]),
+  ), [decksByUser]);
+
+  useEffect(() => {
+    if (!archidektSyncRequest || archidektSyncRequest.status !== 'waiting') return;
+    if (memberDeckFingerprint(archidektSyncRequest.userId) !== archidektSyncRequest.deckFingerprint) {
+      setArchidektSyncRequest(null);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      setArchidektSyncRequest((current) => current?.userId === archidektSyncRequest.userId
+        && current.status === 'waiting' ? { ...current, status: 'delayed' } : current);
+    }, 25000);
+    return () => clearTimeout(timeout);
+  }, [archidektSyncRequest, memberDeckFingerprint]);
+
   const applySeatSetups = useCallback((nextSeats: LiveGameSeatSetup[]) => {
     setSeatSetups(nextSeats);
     const assigned = nextSeats.filter(
@@ -342,7 +366,13 @@ export default function LiveGameScreen() {
       ? participantKey.slice('user:'.length)
       : null;
     if (!groupId || !currentUserId || !targetUserId
-      || !members.some((member) => member.id === targetUserId && member.archidekt_auto_import)) return;
+      || !members.some((member) => member.id === targetUserId && member.archidekt_auto_import)) {
+      setArchidektSyncRequest(null);
+      return;
+    }
+
+    const deckFingerprint = memberDeckFingerprint(targetUserId);
+    setArchidektSyncRequest({ userId: targetUserId, status: 'sending', deckFingerprint });
 
     void supabase.from('archidekt_sync_requests').upsert({
       group_id: groupId,
@@ -350,8 +380,10 @@ export default function LiveGameScreen() {
       requested_by: currentUserId,
     }, { onConflict: 'group_id,user_id', ignoreDuplicates: true }).then(({ error }) => {
       if (error) console.warn('Could not request participant Archidekt sync', error.message);
+      setArchidektSyncRequest((current) => current?.userId === targetUserId
+        ? { ...current, status: error ? 'failed' : 'waiting' } : current);
     });
-  }, [currentUserId, groupId, members]);
+  }, [currentUserId, groupId, memberDeckFingerprint, members]);
 
   const resetSetup = useCallback(() => {
     applySeatSetups(clearLiveGameSeats(seatSetups));
@@ -1731,6 +1763,7 @@ export default function LiveGameScreen() {
               onLayoutChange={setLayoutVariant}
               onStartingLifeChange={applyStartingLife}
               onSelectParticipant={handleSelectSetupParticipant}
+              archidektSyncRequest={archidektSyncRequest}
               onAssignSeat={handleAssignSeat}
               onReset={resetSetup}
               onStart={handleStart}
@@ -1745,6 +1778,9 @@ export default function LiveGameScreen() {
                 emptySeat: copy('liveGameEmptySeat'),
                 choosePlayer: copy('liveGameChoosePlayer'),
                 chooseDeck: copy('liveGameChooseDeck'),
+                archidektSyncWaiting: copy('liveGameArchidektSyncWaiting'),
+                archidektSyncDelayed: copy('liveGameArchidektSyncDelayed'),
+                archidektSyncFailed: copy('liveGameArchidektSyncFailed'),
                 searchDecks: copy('searchDecks'),
                 noDecksMatchSearch: copy('noDecksMatchSearch'),
                 clearSeat: copy('liveGameClearSeat'),
