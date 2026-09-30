@@ -8,6 +8,12 @@ metadata:
 
 # Supabase
 
+## Repository-specific deployment override
+
+In this repository Supabase is self-hosted in Dokploy on the project VM, and the supported database path is SSH, not a local Docker stack or hosted Supabase project. Root `AGENTS.md` and `docs/SUPABASE_OPERATIONS.md` describe the target selection and verification procedure. Missing Docker/Podman on the workstation does **not** block Supabase work. Use `node scripts/selfhosted-db.mjs apply <dev|production> <migration.sql>` from the repository root; select the environment explicitly and do not target production without explicit PM authorization. The runner loads `.env.local`, executes over SSH in the selected Compose `db` container, and stores a checksum in `app_private.schema_migrations` (separate from Supabase CLI migration history). `supabase status` is local-only and must not be used to infer remote availability.
+
+The generic CLI/MCP guidance below applies only where it fits this self-hosted deployment. For repository database changes, the SSH-backed runner is authoritative.
+
 ## Core Principles
 
 **1. Supabase changes frequently — verify against changelog and current docs before implementing.**

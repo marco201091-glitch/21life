@@ -9,6 +9,12 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 
 ## In progress
 
+- [ ] Pre-release 9.0.4: PR #140 con Archidekt live e hotfix 9.0.2/9.0.3; CI e merge Dev da completare. Audit in `docs/AUDIT_2026-09-30_9.0.4.md`; build 9.0.4 solo dopo promozione e migrazione produzione.
+
+- [ ] Production hotfix 9.0.3: fix duplicated Supabase participant embeds that silently empty match history; restore Cinzel `21Life` wordmark; add owner-only personal deck archive/restore for web and Expo; migration, production release and verified APK.
+
+- [x] Android 9.0.2 production: support x86_64 alongside arm64-v8a; release published through Obtainium.
+
 - [x] iPad: pre-caricamento immagini limitato a 4 operazioni parallele su iOS; Android invariato.
 
 - [ ] Hotfix 9.0.1 Android: icona nativa durata, award Healing Master e Beginner’s luck, premi mazzo senza soglia tranne Più veloce; release production da completare.
@@ -62,6 +68,8 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 - [ ] PM verification of the Dokploy production build.
 
 ## Completed
+
+- [x] Wizard live game: avvia il sync Archidekt del membro selezionato solo se abilitato; richiesta Realtime autorizzata e sync eseguito dalla sessione del proprietario. Migrazione applicata e verificata su Supabase Dev via SSH; lint, typecheck e 248 test Expo OK.
 
 - [x] Spostare lo storico season sotto le partite recenti con Top 10 giocatori/mazzi per win rate e minimo 5 partite.
 

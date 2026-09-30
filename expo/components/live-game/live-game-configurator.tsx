@@ -61,6 +61,7 @@ type Props = {
   onPlayerCountChange: (count: number) => void;
   onLayoutChange: (variant: TableLayoutVariant) => void;
   onStartingLifeChange: (life: number) => void;
+  onSelectParticipant?: (participantKey: ParticipantKey) => void;
   onAssignSeat: (index: number, participantKey: ParticipantKey | null, deckId: string | null) => void;
   onReset: () => void;
   onStart: () => void;
@@ -122,6 +123,7 @@ export function LiveGameConfigurator({
   onPlayerCountChange,
   onLayoutChange,
   onStartingLifeChange,
+  onSelectParticipant,
   onAssignSeat,
   onReset,
   onStart,
@@ -163,6 +165,7 @@ export function LiveGameConfigurator({
   };
 
   const selectPlayer = (participant: SetupParticipant) => {
+    if (draftPlayer !== participant.key) onSelectParticipant?.(participant.key);
     setDraftPlayer(participant.key);
     const preferred = participant.decks.length === 1
       ? participant.decks[0].id

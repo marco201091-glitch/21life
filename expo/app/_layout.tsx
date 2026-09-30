@@ -112,6 +112,7 @@ function RootLayout() {
             <Stack.Screen name="arena/[code]" />
             <Stack.Screen name="legal/[slug]" />
             <Stack.Screen name="counter" />
+            <Stack.Screen name="archived-decks" />
           </Stack>
           </AuthGate>
           </AppErrorBoundary>

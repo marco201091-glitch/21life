@@ -2,7 +2,7 @@
   "expo": {
     "name": "21Life",
     "slug": "phyrexian-arena",
-    "version": "9.0.1",
+    "version": "9.0.3",
     "platforms": ["android", "ios", "web"],
     "orientation": "default",
     "icon": "./assets/icon.png",
@@ -12,7 +12,7 @@
       "supportsTablet": true,
       "requireFullScreen": false,
       "bundleIdentifier": "com.phyrexianarena.app",
-      "buildNumber": "90001",
+      "buildNumber": "90003",
       "icon": "./assets/icon.png",
       "backgroundColor": "#0a0a0f",
       "associatedDomains": [
@@ -41,7 +41,7 @@
     },
     "android": {
       "package": "com.phyrexianarena.app",
-      "versionCode": 90001,
+      "versionCode": 90003,
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",

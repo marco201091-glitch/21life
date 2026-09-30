@@ -108,6 +108,7 @@ import {
   Skull,
   Link2,
   Star,
+  Archive,
   Download,
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -128,6 +129,7 @@ interface Deck {
   commander_options: ImportedCommanderOption[] | null;
   commander_cmc: number | null;
   is_favorite: boolean;
+  is_archived: boolean;
   created_at: string;
   updated_at: string | null;
   profiles?: {
@@ -136,7 +138,7 @@ interface Deck {
   } | null;
 }
 
-const PROFILE_DECK_COLUMNS = 'id, user_id, group_id, name, commander, commander_image, source_url, source_type, bracket, color_identity, commander_options, commander_cmc, is_favorite, created_at, updated_at';
+const PROFILE_DECK_COLUMNS = 'id, user_id, group_id, name, commander, commander_image, source_url, source_type, bracket, color_identity, commander_options, commander_cmc, is_favorite, is_archived, created_at, updated_at';
 
 interface Profile {
   id: string;
@@ -963,12 +965,24 @@ export default function ProfilePage() {
   }, [adminMode, fetchDeckWinRates, syncMissingCommanderCmc, syncMissingDeckMetadata, user]);
 
   const visibleDecks = useMemo(() => {
+    const activeDecks = decks.filter((deck) => !deck.is_archived);
     if (!adminMode || deckPlayerFilter === 'all') {
-      return decks;
+      return activeDecks;
     }
 
-    return decks.filter((deck) => deck.user_id === deckPlayerFilter);
+    return activeDecks.filter((deck) => deck.user_id === deckPlayerFilter);
   }, [adminMode, deckPlayerFilter, decks]);
+
+  const archivedDecks = useMemo(() => decks.filter((deck) => deck.is_archived && deck.user_id === user?.id), [decks, user?.id]);
+
+  const setDeckArchived = useCallback(async (deck: Deck, archived: boolean) => {
+    if (!user || deck.user_id !== user.id || deck.group_id !== null) return;
+    const { error } = await supabase.from('decks').update({ is_archived: archived })
+      .eq('id', deck.id).eq('user_id', user.id).is('group_id', null);
+    if (error) throw error;
+    setDecks((current) => current.map((entry) => entry.id === deck.id ? { ...entry, is_archived: archived } : entry));
+    toast({ title: t(archived ? { it: 'Mazzo archiviato', en: 'Deck archived' } : { it: 'Mazzo ripristinato', en: 'Deck restored' }) });
+  }, [t, toast, user]);
 
   const filteredDecks = useMemo(() => {
     const normalizedQuery = deckSearchQuery.trim().toLowerCase();
@@ -2689,6 +2703,7 @@ export default function ProfilePage() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:flex gap-2">
+            {user ? <Button asChild variant="outline" className="border-border text-foreground"><Link href="/profile/archived-decks"><Archive className="mr-2 h-4 w-4" />{t({ it: `Archiviati (${archivedDecks.length})`, en: `Archived (${archivedDecks.length})` })}</Link></Button> : null}
             <Button
               variant="outline"
               onClick={handleRefreshDecks}
@@ -2907,6 +2922,11 @@ export default function ProfilePage() {
                               })}
                             >
                               <Star className={`h-4 w-4 ${deck.is_favorite ? 'fill-current' : ''}`} />
+                            </Button>
+                          ) : null}
+                          {deck.user_id === user?.id ? (
+                            <Button variant="ghost" size="icon" className="h-11 w-11 text-white/60 hover:text-emerald-300" onClick={() => void setDeckArchived(deck, true).catch((error) => toast({ title: t({ it: 'Errore', en: 'Error' }), description: getSupabaseErrorMessage(error, t({ it: 'Archiviazione non riuscita', en: 'Failed to archive deck' })), variant: 'destructive' }))} title={t({ it: 'Archivia mazzo', en: 'Archive deck' })}>
+                              <Archive className="h-4 w-4" />
                             </Button>
                           ) : null}
                           <Button variant="ghost" size="sm" className="min-h-11 gap-1 px-3 text-emerald-200" onClick={() => setDetailsDeck(deck)}>

@@ -52,6 +52,11 @@ if (!badging.includes("package: name='com.phyrexianarena.app'")) {
   console.error('Unexpected production package identifier');
   process.exit(1);
 }
+const nativeCode = badging.match(/^native-code:.*$/m)?.[0] || '';
+if (!nativeCode.includes("'arm64-v8a'") || !nativeCode.includes("'x86_64'")) {
+  console.error('Production APK must include arm64-v8a and x86_64 native libraries');
+  process.exit(1);
+}
 if (!badging.includes(`versionName='${expectedVersion}'`)) {
   console.error('APK version does not match the requested release');
   process.exit(1);
