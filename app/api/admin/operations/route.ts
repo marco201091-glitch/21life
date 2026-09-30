@@ -42,7 +42,7 @@ export async function GET() {
   return NextResponse.json({
     backend: { version: packageJson.version, commit: process.env.GIT_COMMIT_SHA || 'unknown' },
     database: { ok: !databaseResult.error, latencyMs: databaseLatencyMs },
-    expectedLatestMigration: '20260928120000_release_eliminated_live_game_participants.sql',
+    expectedLatestMigration: '20260930071738_archidekt_live_game_sync_requests.sql',
     runtimeConfiguration: configResult.data ?? null,
     clientAdoption30d: { appVersions: versions, webVisits, queryLimited: (accessResult.data?.length ?? 0) === 10_000 },
     notificationDeliveries24h: { counts: deliveries, available: !deliveryResult.error },
