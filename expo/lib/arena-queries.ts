@@ -117,7 +117,7 @@ export async function fetchArenaGroup(supabase: SupabaseClient, groupId: string)
       profiles:created_by (id, username, display_name),
       group_members (
         user_id,
-        profiles (id, username, display_name)
+        profiles (id, username, display_name, archidekt_auto_import)
       )
     `)
     .eq('id', groupId)
