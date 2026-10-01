@@ -79,7 +79,7 @@ export function runDependencyAudits({ rootDir, outputDir, run = spawnSync }) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const rootDir = process.cwd();
-  const branch = process.env.GITHUB_REF_NAME || 'local';
+  const branch = process.env.AUDIT_TARGET_BRANCH || process.env.GITHUB_REF_NAME || 'local';
   const outputDir = resolve(process.argv[2] || 'artifacts/dependency-audit', branch);
   try {
     const summary = runDependencyAudits({ rootDir, outputDir });

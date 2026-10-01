@@ -55,7 +55,7 @@ jobs:
       - name: Audit production dependencies
         run: node ../audit-tools/scripts/dependency-audit.mjs artifacts/dependency-audit
         env:
-          GITHUB_REF_NAME: ${{ matrix.branch }}
+          AUDIT_TARGET_BRANCH: ${{ matrix.branch }}
       - name: Upload audit reports
         if: always()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
