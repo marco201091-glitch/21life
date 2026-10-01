@@ -38,6 +38,10 @@ jobs:
         run: |
           supabase start -x realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor,mailpit
           supabase db lint --local --schema public --level error --fail-on error
+      - name: Verify self-hosted migration atomicity against disposable CI database
+        run: npm run test:selfhosted-db-runner
+        env:
+          SELFHOSTED_DB_TESTS: "1"
       - name: Export local Supabase test environment
         run: |
           eval "$(supabase status -o env)"

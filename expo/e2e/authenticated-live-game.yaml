@@ -1,0 +1,58 @@
+appId: com.phyrexianarena.app.dev
+env:
+  METRO_URL: ${MAESTRO_METRO_URL}
+---
+- launchApp:
+    clearState: true
+- runFlow:
+    when:
+      true: ${METRO_URL != ""}
+    commands:
+      - openLink: ${METRO_URL}
+- tapOn:
+    id: login-identifier
+- inputText:
+    text: ${MAESTRO_E2E_USERNAME}
+    label: Disposable staging login
+- tapOn:
+    id: login-password
+- inputText:
+    text: ${MAESTRO_E2E_PASSWORD}
+    label: Disposable staging password
+- hideKeyboard
+- tapOn:
+    id: login-submit
+- extendedWaitUntil:
+    visible: "IMP synthetic playgroup"
+    timeout: 20000
+- tapOn: "IMP synthetic playgroup"
+- tapOn: "Play [Gg]ame|Gioca partita"
+- tapOn: "2"
+- tapOn: "Next|Avanti"
+- tapOn: "Next|Avanti"
+- tapOn: "Next|Avanti"
+- tapOn: "(Seat|Posto) 1:.*"
+- tapOn: ${MAESTRO_PLAYER_1}
+- tapOn: "(Choose deck|Scegli mazzo): IMP synthetic deck 1"
+- tapOn: "Confirm|Conferma"
+- tapOn: "(Seat|Posto) 2:.*"
+- tapOn: ${MAESTRO_PLAYER_2}
+- tapOn: "(Choose deck|Scegli mazzo): IMP synthetic deck 2"
+- tapOn: "Confirm|Conferma"
+- tapOn: "Start game|Inizia partita"
+- extendedWaitUntil:
+    visible: "End game|Fine partita"
+    timeout: 20000
+- tapOn: ${MAESTRO_PLAYER_1 + " -1"}
+- runFlow:
+    when:
+      visible: "Close guide|Chiudi guida"
+    commands:
+      - tapOn: "Close guide|Chiudi guida"
+- tapOn: "End game|Fine partita"
+- tapOn: "Draw|Patta"
+- tapOn: "Confirm & save|Conferma e salva"
+- extendedWaitUntil:
+    visible: "Share recap|Condividi riepilogo"
+    timeout: 20000
+- assertVisible: "Share recap|Condividi riepilogo"

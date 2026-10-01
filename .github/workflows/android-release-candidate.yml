@@ -141,39 +141,12 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Publish GitHub release for Obtainium
+      - name: Publish and verify GitHub release assets
         if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ github.ref_name }}
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
-        run: |
-          $apk = "artifacts/apk/21life-v$env:RELEASE_VERSION.apk"
-          $checksum = "$apk.sha256"
-          $webSbom = "artifacts/apk/web-sbom-$env:RELEASE_VERSION.json"
-          $androidSbom = "artifacts/apk/android-sbom-$env:RELEASE_VERSION.json"
-          $trailer = @(
-            "",
-            "Install or update with Obtainium from this repository's GitHub Releases.",
-            "",
-            "The attached checksum can be used to verify the APK before installation."
-          )
-
-          # Curated notes live next to the code; see docs/releases/README.md.
-          # Falling back to generated notes is deliberate: a release must never
-          # ship another version's changelog.
-          $notesFile = "docs/releases/$env:RELEASE_VERSION.md"
-          if (Test-Path $notesFile) {
-            $body = @((Get-Content -Raw $notesFile).TrimEnd()) + $trailer
-            $body | Set-Content -LiteralPath "$env:RUNNER_TEMP/release-notes.md" -Encoding utf8
-            $notesArgs = @("--notes-file", "$env:RUNNER_TEMP/release-notes.md")
-          } else {
-            Write-Host "No ${notesFile}: falling back to generated release notes."
-            $notesArgs = @("--generate-notes")
-          }
-
-          gh release create $env:GITHUB_REF_NAME $apk $checksum $webSbom $androidSbom `
-            --repo $env:GITHUB_REPOSITORY `
-            --title "21Life $env:GITHUB_REF_NAME" `
-            @notesArgs `
-            --verify-tag
+        run: node scripts/release/publish-github-release.mjs

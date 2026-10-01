@@ -34,3 +34,28 @@ l'installazione di produzione è archiviata in Google Drive in
 condividere questa cartella: equivale a una chiave di recupero dei backup.
 
 Il job fallisce e invia un alert se la copia off-site configurata non riesce. Non impostare l'ambiente off-site finché il remote `crypt` non è stato verificato: senza configurazione il backup locale continua e registra un warning.
+
+## Preparazione del drill (IMP-12)
+
+Il verificatore accetta sia il formato Dev storico (`.dump` e archivio Storage
+con i rispettivi `.sha256`) sia una directory off-site con `database.dump`,
+`storage.tar.gz`, `SHA256SUMS` e `manifest.json`. Da root, usare
+`node scripts/verify-dev-supabase-backup.mjs <directory-copia-staging>`.
+Valida entrambi i digest, formato PGDMP e leggibilità del tar; rifiuta nomi
+esterni alla directory, file mancanti e checksum duplicati. I test usano solo
+fixture sintetiche. Nessun backup automatico è stato cambiato in questo lavoro.
+
+Il runner `restore-drill-dev-supabase.mjs` ora legge entrambi i formati, ma
+rimane una prova **solo PostgreSQL**: non ripristina Storage, Auth o grant.
+Non usarne l'esito come attestazione di recupero completo. L'off-site disponibile
+contiene produzione; per il target autorizzato serve una copia off-site staging
+e una stack dedicata prima di scaricare o ripristinare dati.
+
+Il dump `--no-owner --no-privileges` non conserva ownership/grant. Restano fuori
+ruoli globali, segreti JWT/Auth, configurazione Compose/Dokploy, chiavi rclone e
+credenziali email/push. Conservarli nel deposito privato di recupero e ripristinarli
+con una procedura distinta. DB e Storage sono acquisiti in istanti diversi:
+il drill deve verificare oggetti mancanti/orfani, autorizzazioni cross-user e
+download con hash uguale, oltre a login e scritture sintetiche. Non dichiarare
+RPO/RTO prima di una prova completa cronometrata su volumi nuovi con outbound
+email/push disabilitato. Nessun drill completo è stato eseguito in questa passata.

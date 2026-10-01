@@ -27,8 +27,11 @@ For F-Droid-style publication, also follow `docs/FDROID_RELEASE_READINESS.md`.
 - [ ] Confirm the APK is not debuggable and is signed by the permanent key.
 - [ ] Run the complete verification suite and install/upgrade smoke test.
 - [ ] Generate and verify SHA-256.
-- [ ] Publish APK, checksum, release notes, source tag, and legal notices in one
-  GitHub Release.
+- [ ] Publish APK, matching `.apk.sha256`, web SBOM, and Android SBOM from the
+  same tagged build. Verify their version, source commit, APK checksum, and
+  uploaded bytes before marking the GitHub Release complete.
+- [ ] Keep IPA distribution explicitly separate until its channel and signing
+  format are approved; never report an unsigned IPA as a published iOS release.
 - [ ] Test the GitHub Release URL in Obtainium before announcing it.
 
 ## Release blockers
@@ -39,6 +42,8 @@ For F-Droid-style publication, also follow `docs/FDROID_RELEASE_READINESS.md`.
 - Production environment pointing to Dev/Test services.
 - Missing legal pages or inaccessible account deletion.
 - APK signature different from the previous public release.
+- A same-name release asset with different bytes; stop and investigate rather
+  than overwriting it.
 - Store listing or app name using third-party trademarks in a way that could
   imply official Wizards endorsement. Existing domain and package identifiers
   remain technical compatibility identifiers for this release.

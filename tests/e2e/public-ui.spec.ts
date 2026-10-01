@@ -12,6 +12,16 @@ test('login fields advertise credential autofill semantics', async ({ page }) =>
     .toHaveAttribute('autocapitalize', 'none');
 });
 
+test('login page has no serious or critical WCAG 2 A/AA violations', async ({ page }) => {
+  await page.goto('/auth/login');
+  const accessibility = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa'])
+    .analyze();
+  expect(accessibility.violations.filter((violation) =>
+    violation.impact === 'critical' || violation.impact === 'serious'
+  )).toEqual([]);
+});
+
 test('public landing is accessible and visually stable', async ({ page }) => {
   await page.goto('/');
   await page.waitForLoadState('networkidle');

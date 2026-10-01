@@ -9,3 +9,11 @@
 # Questi script vengono copiati sulla VM Linux, quindi il fine-riga fa parte
 # del contratto del file, non e' una preferenza locale.
 *.sh text eol=lf
+
+# Preserve the canonical Dev bytes confirmed against staging's registry.
+supabase/migrations/20260930071738_archidekt_live_game_sync_requests.sql text eol=lf
+# New registry entries must retain the bytes originally applied to staging.
+supabase/migrations/20261001090317_recommend_v9_0_4_runtime_update.sql -text
+supabase/migrations/20261001103000_admin_operations_aggregates.sql text eol=lf
+supabase/migrations/20261001110000_admin_migration_registry_read.sql text eol=lf
+supabase/migrations/20261001105900_migration_registry_bootstrap.sql text eol=lf

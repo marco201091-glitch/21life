@@ -1,0 +1,76 @@
+name: Optional Dev Android device smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  device-smoke:
+    if: github.ref == 'refs/heads/Dev' || startsWith(github.ref, 'refs/heads/improvement/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      APP_VARIANT: dev
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.STAGING_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+      EXPO_PUBLIC_API_BASE_URL: https://dev.phyrexianarena.dpdns.org
+      EXPO_PUBLIC_SITE_URL: https://dev.phyrexianarena.dpdns.org
+    defaults:
+      run:
+        working-directory: expo
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: expo/package-lock.json
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Require explicit staging configuration
+        run: |
+          node -e 'const u=new URL(process.env.EXPO_PUBLIC_SUPABASE_URL); const api=new URL(process.env.EXPO_PUBLIC_API_BASE_URL); const site=new URL(process.env.EXPO_PUBLIC_SITE_URL); if(u.hostname!=="supabase-staging.phyrexianarena.dpdns.org" || api.hostname!=="dev.phyrexianarena.dpdns.org" || site.hostname!==api.hostname || !process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY) throw Error("Configure staging DB/API/site; production is refused")'
+      - run: npm ci
+      - run: npx --no-install expo prebuild --platform android --no-install
+      - name: Build isolated Dev debug package
+        run: ./gradlew :app:assembleDebug -PreactNativeArchitectures=x86_64 --no-daemon --console=plain
+        working-directory: expo/android
+      - name: Install Maestro
+        run: |
+          curl -fsSL https://get.maestro.mobile.dev | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run three isolated quick-game flows
+        uses: ReactiveCircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808 # v2
+        with:
+          api-level: 35
+          arch: x86_64
+          disable-animations: true
+          working-directory: expo
+          script: |
+            set -e
+            npx --no-install expo start --dev-client --localhost --port 8081 > "$RUNNER_TEMP/metro.log" 2>&1 &
+            for attempt in $(seq 1 60); do curl -fsS http://127.0.0.1:8081/status && break || sleep 2; done
+            curl -fsS http://127.0.0.1:8081/status
+            adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+            adb reverse tcp:8081 tcp:8081
+            node scripts/e2e-android-preflight.mjs
+            for attempt in 1 2 3; do maestro test -e METRO_URL='phyrexianarena-dev://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081' --debug-output "$RUNNER_TEMP/maestro-$attempt" e2e/smoke-quick-game.yaml; done
+      - name: Retain device failure evidence
+        if: failure()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: dev-device-failure
+          path: |
+            ${{ runner.temp }}/maestro-*
+            ${{ runner.temp }}/metro.log
+          if-no-files-found: ignore
+          retention-days: 7
