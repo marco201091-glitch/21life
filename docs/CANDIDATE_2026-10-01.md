@@ -1,7 +1,7 @@
 # Candidato Dev e preparazione del rilascio
 
 Codice candidato: `2653614b190224189c27e96b15439fe7256e25de`, PR #144 verso
-Dev. Versione attuale 9.0.4 / 90004, minimo supportato 8.1. La release pubblica
+Dev, integrata con squash `5d60de2bea047fcbc5fdabcf9ee859841974ec9a`. Versione attuale 9.0.4 / 90004, minimo supportato 8.1. La release pubblica
 9.0.4 esiste già: non spostare il suo tag né sostituire APK o asset esistenti.
 Una nuova release standard deve usare una nuova versione/build, quindi un
 nuovo candidato verificato; questa scheda non autorizza la pubblicazione.
@@ -53,10 +53,12 @@ raccomandazione diversa richiede SQL e note propri, dopo disponibilità dell'APK
 
 ## Ordine e recupero
 
-Integrare la PR su Dev dopo i check richiesti. Per una successiva promozione
+La PR #144 è stata integrata su Dev dopo i check richiesti. Per una successiva promozione
 pubblica, riconciliare main/Dev preservando ancestry secondo
 `BRANCH_RELEASE_WORKFLOW.md`; preparare la PR di promozione e chiedere
-autorizzazione sul candidato finale. Schema additivo prima dell'applicazione.
+autorizzazione sul candidato finale. main/Dev richiedono storia lineare: il
+merge con ancestry richiede approvazione della modifica di questa sola policy,
+preservando web/expo e le altre protezioni. Schema additivo prima dell'applicazione.
 Rollback: revert del codice sul branch e nuova versione se già pubblicata;
 lasciare registro/RPC additive, senza drop o cancellazione di telemetria.
 Ripristinare la raccomandazione precedente solo con i valori salvati e se
@@ -82,9 +84,30 @@ F-Droid: PR draft #145 verso fdroid-prep; 9.0.4/90004, source pin
 `f12b7de0c2cb60a7c9d6721245ecae1397ea9347`, APK unsigned arm64 e scanner binario
 fdroidserver 2.4.5 verificati. SHA-256 APK:
 `71b05cdb3649de9660883da7fe15d0a25991b295e9ae9c577e342458c214056e`.
+Rebuild Windows dopo clean: APK byte per byte identica.
 La recipe Linux e l'accettazione ufficiale restano separate dalle verifiche
 locali; nessun aggiornamento della MR GitLab o tag pubblico effettuato.
 
 IMP-17 richiede ancora autorizzazione esplicita per target produzione,
 promozione pubblica e pubblicazione. Lo stato unico resta
 `.agents/PROJECT_CHECKLIST.md`.
+
+
+## Esito audit dei due rami e proposta di promozione web
+
+Esecuzione reale `36868928257`: Dev web/Expo zero; main web una critical Next,
+Expo zero. Il workflow ha conservato i report di entrambi i rami e ha bloccato
+main con exit 2. Advisory:
+<https://github.com/advisories/GHSA-vcvr-r3jv-pc5j>. La dipendenza è segnalata;
+l'esito audit non è una prova di sfruttabilità dei percorsi dell'applicazione.
+Il fix 16.3.8 è già integrato su Dev; il follow-up #147 rende l'audit indipendente
+dall'età del codice analizzato e usa una variabile matrix dedicata.
+
+Il primo intervento production proposto è una promozione **web e schema**, senza
+nuovo tag o sostituzione dell'APK 9.0.4 disponibile. Richiede autorizzazione PM:
+quattro migrazioni della tabella sopra, backup manuale completo verificato,
+PR Dev→main con ancestry, deploy web Dokploy production e monitoraggio richiesto.
+Per permettere questa PR, disabilitare esclusivamente `required_linear_history`
+su main/Dev, conservando controlli web/expo e tutte le altre protezioni; anche
+questa modifica di governance richiede la decisione esplicita PM. Un rilascio
+APK successivo resta una nuova versione/build con verifiche proprie.
