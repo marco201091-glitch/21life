@@ -1,0 +1,444 @@
+{
+  "migrations": [
+    {
+      "version": "20260701121822",
+      "name": "20260701121822_001_commander_tracker_schema.sql",
+      "checksum": "8212fc5ec7c6c42d1a1a204461e2e543c40fc7e79b904b965a97f40ffef14d43"
+    },
+    {
+      "version": "20260701124559",
+      "name": "20260701124559_002_update_decks_for_global.sql",
+      "checksum": "71b1e4e5404b9e3afb80f7a700420a9000e692c9984942b9e48628b5af8aec02"
+    },
+    {
+      "version": "20260701124608",
+      "name": "20260701124608_003_rename_commander_image.sql",
+      "checksum": "51c5286d90c22632c83f52a9026624b78bd305d8149a942ccac821d0eb85e90f"
+    },
+    {
+      "version": "20260702075326",
+      "name": "20260702075326_004_fix_decks_visibility.sql",
+      "checksum": "88bb6b774d06bbb38e1cc0dc306f423b5ee474214cb9d77b14a1f1f4fe6df9d8"
+    },
+    {
+      "version": "20260702143000",
+      "name": "20260702143000_005_fix_updates_and_deck_bracket.sql",
+      "checksum": "71ae6b22d6e30b5fa8d396bb9707f18934f71b38abc3c491d9910748106339e5"
+    },
+    {
+      "version": "20260702151500",
+      "name": "20260702151500_006_resolve_login_email.sql",
+      "checksum": "3a3ea1711226bfedf2998eb495a6dcfb9a1b4fa2cae44a1277fe8122fb4ee55b"
+    },
+    {
+      "version": "20260702170000",
+      "name": "20260702170000_007_administrator_visibility.sql",
+      "checksum": "50e07066d1fc0b073febafdca5da80c4fe453c40ab76c80f75f5bcde8ffc3a55"
+    },
+    {
+      "version": "20260702173000",
+      "name": "20260702173000_008_deck_profile_notes.sql",
+      "checksum": "d08211e54ef9c022742b67fdaf8293a3ad354aeedfbe93c30959c2453fc3cd29"
+    },
+    {
+      "version": "20260702174000",
+      "name": "20260702174000_009_allow_shared_deck_source_urls.sql",
+      "checksum": "a29b717f5ee67cd3871a6f67090a3e09dd18bc99fa07ad7ac91b1cbdce2a940b"
+    },
+    {
+      "version": "20260703120000",
+      "name": "20260703120000_010_profile_display_names.sql",
+      "checksum": "9144c9551dde25c8a4a59f46049165000a7774d67c586ae9be1764a79e6f2e91"
+    },
+    {
+      "version": "20260704105543",
+      "name": "20260704105543_profile_avatars.sql",
+      "checksum": "7f2579c643e46cee3cc292d48c8ae0649378fd8fbf7f39c1bb690bef2755540e"
+    },
+    {
+      "version": "20260706120000",
+      "name": "20260706120000_011_deck_color_identity_columns.sql",
+      "checksum": "85044f81ba5a36bc8f0af99d995afd82af2b7ea8989dc3283d8360db5237881c"
+    },
+    {
+      "version": "20260706130000",
+      "name": "20260706130000_012_arena_guests_and_public.sql",
+      "checksum": "7258c9f2d95a38d31e676b706d7ee568e330bc10dd297f77c3f4b2603a988d86"
+    },
+    {
+      "version": "20260706140000",
+      "name": "20260706140000_013_fix_rls_recursion.sql",
+      "checksum": "8034e916561a6de223b2b8d9a4afd379e1f8ddc062b486bb133e2d7b9d1f6fdf"
+    },
+    {
+      "version": "20260706150000",
+      "name": "20260706150000_014_arena_guests_delete.sql",
+      "checksum": "637072eaec1f72e41cf89cd6ef2af2092f2ec8b374bc7c32da7b6d8ea08dd2f0"
+    },
+    {
+      "version": "20260707120000",
+      "name": "20260707120000_015_security_hardening.sql",
+      "checksum": "865f98cb4e13fa777c3b02f9c3292a3d7b96ced935cfc46b9973b32d4788b157"
+    },
+    {
+      "version": "20260707130000",
+      "name": "20260707130000_016_remove_deck_private_notes.sql",
+      "checksum": "0939a156c09f66237e3095ad57a470290b39024802ab3c9cbf28fada35a84fd0"
+    },
+    {
+      "version": "20260708120000",
+      "name": "20260708120000_017_arena_member_management.sql",
+      "checksum": "e8771c728008bc2e8e7258484806a6315d78ee37f3b4f1bae8547a07c68a4597"
+    },
+    {
+      "version": "20260708130000",
+      "name": "20260708130000_018_api_rate_limits.sql",
+      "checksum": "9379958ba92f411f7e19d025bf1191ce1f66005ae2d8cbd82ab381ba3d8dd6cb"
+    },
+    {
+      "version": "20260709120000",
+      "name": "20260709120000_019_demo_sandbox.sql",
+      "checksum": "5ef19886de243878e92718c34730f107b974500c32bf4add514d232762f528b8"
+    },
+    {
+      "version": "20260709130000",
+      "name": "20260709130000_020_access_logs.sql",
+      "checksum": "6bca03131522d8389ec268138217bf6b3c27daf907057dbdb31efd6fc3ccf301"
+    },
+    {
+      "version": "20260709140000",
+      "name": "20260709140000_021_access_logs_include_demo.sql",
+      "checksum": "22724564edd3d3f5b1e05d322e53115a7e7aae221a3e71736c2d9ed266b73019"
+    },
+    {
+      "version": "20260709150000",
+      "name": "20260709150000_022_analytics_exclusions.sql",
+      "checksum": "871ca6689d993fcbb62dc5030351b3215543c1860d3e6e639680f04526b530e1"
+    },
+    {
+      "version": "20260709160000",
+      "name": "20260709160000_023_oauth_profile_usernames.sql",
+      "checksum": "b1a696516ce07370a243f1aa44fe422cc161b352af29ff207663be23480f4eb5"
+    },
+    {
+      "version": "20260709170000",
+      "name": "20260709170000_024_oauth_username_dots.sql",
+      "checksum": "4770412ad009cab1db2ba1db93e7022261580b3fb19399ac1e17058fcc9ea747"
+    },
+    {
+      "version": "20260709180000",
+      "name": "20260709180000_025_access_logs_admin_rpc.sql",
+      "checksum": "507db0ad919966afc6f37e1e5c1dcc03104f6af9f0b83fceb64a6603a1deb010"
+    },
+    {
+      "version": "20260710150000",
+      "name": "20260710150000_026_deck_commander_cmc.sql",
+      "checksum": "8a8cfd4dae7f8f8013c7fa90bb8471bd747afcef6020d2cda64ba6a8930c0894"
+    },
+    {
+      "version": "20260712120000",
+      "name": "20260712120000_027_access_logs_source.sql",
+      "checksum": "815000472fe0459dfb4a51037d65e76b399d5715fd2bc214cf4cb62742598944"
+    },
+    {
+      "version": "20260713120000",
+      "name": "20260713120000_028_v2_live_games_and_draws.sql",
+      "checksum": "b515db33140eaeefd0d330b80a7972e8addc63c1d60b9463c3acd99ce009fc99"
+    },
+    {
+      "version": "20260713131007",
+      "name": "20260713131007_live_game_offline_realtime_rpc.sql",
+      "checksum": "5ab46310e5a17faf919e7c399c90865981040af4ecbfb538372f8845e07f971a"
+    },
+    {
+      "version": "20260713141738",
+      "name": "20260713141738_enforce_disjoint_live_game_participants.sql",
+      "checksum": "136432979640733efe169b2ea1c60e7fbee170af9d8d3b40ad3bbe10029b0cb8"
+    },
+    {
+      "version": "20260714071909",
+      "name": "20260714071909_add_live_game_duration_and_log.sql",
+      "checksum": "eb20634f2795468815c51d239fd78606ed1c89de7e0c587db77fffd29179eaea"
+    },
+    {
+      "version": "20260714135348",
+      "name": "20260714135348_add_live_game_win_condition.sql",
+      "checksum": "7098b0fa9612415dff50de5c5cb16c777bb10f720c34795c2e6d684da2a86fd9"
+    },
+    {
+      "version": "20260714144707",
+      "name": "20260714144707_add_live_game_participant_metrics.sql",
+      "checksum": "fc7d3ac8f05149ec8d81339017494b1f1de6041716aef38bc168790262240ca0"
+    },
+    {
+      "version": "20260715092834",
+      "name": "20260715092834_arena_match_day_details.sql",
+      "checksum": "870c8b3ea183e8b808474673408ed38cfe4ddcf30853b33a6f28040da51bddfe"
+    },
+    {
+      "version": "20260716125036",
+      "name": "20260716125036_v4_0_1_realtime_awards.sql",
+      "checksum": "3f6932e5ab4f5bfce437846286bd62bf6f60615f57b36d56ebd759246fae8cc2"
+    },
+    {
+      "version": "20260716150458",
+      "name": "20260716150458_live_game_telemetry.sql",
+      "checksum": "732b642dac639d493caf9bc966a46a98e3f536c6e450f722374d8f014f390e93"
+    },
+    {
+      "version": "20260717071442",
+      "name": "20260717071442_guest_live_game_lobbies.sql",
+      "checksum": "d06d9b0b00596aa6a92f9e520789c9016768d679c5b54098e606730c9149c72a"
+    },
+    {
+      "version": "20260717080944",
+      "name": "20260717080944_enhance_guest_sessions.sql",
+      "checksum": "b1fdbdd2ea5d3a0f67bbb7cc2793d6e13b72a1009344fec4fbd396803dd3afb0"
+    },
+    {
+      "version": "20260718183341",
+      "name": "20260718183341_batch_live_game_sync_and_started_timestamp.sql",
+      "checksum": "d79e52bfa58b6776225a10efa441e8428bb02bdbbc7d8caa78770f4805cfe8b7"
+    },
+    {
+      "version": "20260719141902",
+      "name": "20260719141902_compact_live_game_events.sql",
+      "checksum": "f327ea3b8cd47e1dcf3847ec12c28c1274e9358498de20c7164fb852427ad4fe"
+    },
+    {
+      "version": "20260719143831",
+      "name": "20260719143831_optimize_live_game_storage_and_queries.sql",
+      "checksum": "e2f7d8d54ed31bb4fe20d57d097b5e624820435081fb20c24a8e72df9f283492"
+    },
+    {
+      "version": "20260719145757",
+      "name": "20260719145757_compact_existing_stat_history.sql",
+      "checksum": "6c0ef116c6c3bd448c0e70a1c4568964ced1603a7ba56b8db8ba1177f612a3e2"
+    },
+    {
+      "version": "20260720101717",
+      "name": "20260720101717_sync_postgame_deck_snapshots.sql",
+      "checksum": "eed0f7ed820dc6b936834c8403305077388913ebbdfffe6dd67588b0d4a694e4"
+    },
+    {
+      "version": "20260723065742",
+      "name": "20260723065742_restore_auth_profile_trigger.sql",
+      "checksum": "5c8dd4e48b138f5acc154f3462acbab79cd871675b53ff0a46bfe71a9ee5b22c"
+    },
+    {
+      "version": "20260727123116",
+      "name": "20260727123116_arena_day_requires_previous_match.sql",
+      "checksum": "38e126d50af0c7176bbca647534f4a1297d4558ab54889d243722ae579c3f3fc"
+    },
+    {
+      "version": "20260727150000",
+      "name": "20260727150000_profile_archidekt_sync_preferences.sql",
+      "checksum": "aa31b20deaf90c5c74e1319fd84e5383b49473c65f9ee063e82280d4247e969a"
+    },
+    {
+      "version": "20260727183959",
+      "name": "20260727183959_harden_privileged_rpcs_and_indexes.sql",
+      "checksum": "39186f5e81b9788c8a929c7ea07ac276b4cd532e3e434e60a50e27f3872ce632"
+    },
+    {
+      "version": "20260728073240",
+      "name": "20260728073240_add_deck_favorites.sql",
+      "checksum": "6e63e2d9e81e4fced93b13b4f01a543b1743e3bb18425ab57d0184fde8288986"
+    },
+    {
+      "version": "20260728073639",
+      "name": "20260728073639_arena_invitations_and_notifications.sql",
+      "checksum": "8656b562cf57cbb148c08fb1b6dd6b0da4dfb414fa330588db3a675e05b12140"
+    },
+    {
+      "version": "20260728073848",
+      "name": "20260728073848_convert_arena_guest_to_user.sql",
+      "checksum": "106cbc51ad7df8861d1d796e57278d13eecb338798fee2412944d65e2f1b8303"
+    },
+    {
+      "version": "20260728075427",
+      "name": "20260728075427_atomic_archidekt_sync.sql",
+      "checksum": "5390ba5f4c1e9160cd4f98a1b6c87d605983523272260c63c80c0bdf4757264f"
+    },
+    {
+      "version": "20260728102159",
+      "name": "20260728102159_add_extended_arena_awards.sql",
+      "checksum": "4ed4f3a612fd2d8270a42d2768e62109b4db787e315858231d3cfc61da578429"
+    },
+    {
+      "version": "20260728130411",
+      "name": "20260728130411_v7_remove_remote_guest_sessions.sql",
+      "checksum": "024c68ba1590366d8530424dd661b512cda1a54d71eac74222cbf6ea5b5a5978"
+    },
+    {
+      "version": "20260728132414",
+      "name": "20260728132414_v7_optimize_profile_deck_loading.sql",
+      "checksum": "65aa2670743231bfcb765add8565042515f603335538cd5aa52f1997e6e54fc1"
+    },
+    {
+      "version": "20260729070641",
+      "name": "20260729070641_v7_favorite_decks_first_in_arena_pickers.sql",
+      "checksum": "8979bea2a9e0959336716611de9342d2e7cba8823c320fec6f7f252db5806b51"
+    },
+    {
+      "version": "20260729080333",
+      "name": "20260729080333_v7_arena_catalog_broadcast.sql",
+      "checksum": "137b052103e9630f37e466e95eeb5ae8bb553b879cf4881ef0cd1e4a49c89138"
+    },
+    {
+      "version": "20260729085256",
+      "name": "20260729085256_v7_final_index_cleanup.sql",
+      "checksum": "afbfb0341a15d0fb9e83950ced17dcd791899ad2bcc511b62ed6085691ccb0b0"
+    },
+    {
+      "version": "20260729091210",
+      "name": "20260729091210_v7_remove_guest_claim_links.sql",
+      "checksum": "0a6ec85fd7eb5275e1a35920298ebecca660ea011934434aa350c2a4aaf9f18b"
+    },
+    {
+      "version": "20260729144659",
+      "name": "20260729144659_v7_scalable_history_and_retention.sql",
+      "checksum": "cf248afde22061119bbd339a76eb9b5f80b5c612fc000d89d0b6485ec88f42f2"
+    },
+    {
+      "version": "20260729160414",
+      "name": "20260729160414_v7_release_hardening.sql",
+      "checksum": "ae311828386ce0de6caf5d46a3e54625db27caddd696785adcf14ff0b80e8c90"
+    },
+    {
+      "version": "20260730150000",
+      "name": "20260730150000_restore_guest_conversion.sql",
+      "checksum": "923f65a6a13951f1d7c67a3f6a0e20db5f1c37453e5c334fbd9bdaa9419d854a"
+    },
+    {
+      "version": "20260730173000",
+      "name": "20260730173000_fix_dev_avatar_storage_rls.sql",
+      "checksum": "063cd01162ec644d6a66192d574e1589288c87af3814387dc099c537f519d576"
+    },
+    {
+      "version": "20260730190000",
+      "name": "20260730190000_v7.1.1_arena_day_fix.sql",
+      "checksum": "b17305cdee119f894229bbd38585bdee3e63eded497c4561ea1f7efee9909cb0"
+    },
+    {
+      "version": "20260804103000",
+      "name": "20260804103000_fix_arena_deck_reports.sql",
+      "checksum": "736bb3ef7b592161bf284b493600462dee4884d198ef4ad60b9919e9bc462f3e"
+    },
+    {
+      "version": "20260812121901",
+      "name": "20260812121901_explicit_data_api_grants.sql",
+      "checksum": "f406e806346b226ab418f88c4001f98676b6887a12b0f052cb98a16a23423b4e"
+    },
+    {
+      "version": "20260812191404",
+      "name": "20260812191404_resolve_safe_advisor_warnings.sql",
+      "checksum": "7f8ba5b586e464f532273ea006e93d6994442ccccb451bb076ce0f36a6e079c6"
+    },
+    {
+      "version": "20260813071326",
+      "name": "20260813071326_notification_preferences_and_inbox.sql",
+      "checksum": "384edea1f4ef2230ac7fdd054b1882d02c02a129e5081e4186614bbba9e74579"
+    },
+    {
+      "version": "20260813113051",
+      "name": "20260813113051_arena_seasons.sql",
+      "checksum": "913cae371bc992027f7a44936a9f73fefabd8b5dae7c75f45f8e692f0c1f0530"
+    },
+    {
+      "version": "20260813114741",
+      "name": "20260813114741_harden_arena_season_context.sql",
+      "checksum": "941f218d6905a2b8031ea608ef3aa0ad917f2e7eea30814c3d9d39af27b7b269"
+    },
+    {
+      "version": "20260813114830",
+      "name": "20260813114830_optimize_arena_season_rollover.sql",
+      "checksum": "790a26ec52762c94ba597e1b5d105aec49c93c0984e3f729102b179d77d536ab"
+    },
+    {
+      "version": "20260814074908",
+      "name": "20260814074908_optional_arena_seasons.sql",
+      "checksum": "facaa38f31b6cdb38c5d68a417694f51e3aa10794d9744484359a6699b8df4bd"
+    },
+    {
+      "version": "20260816071447",
+      "name": "20260816071447_localized_notification_delivery.sql",
+      "checksum": "497cceb47dedbaa8ed5106bb8f074943653d6491033bd5818e0036172416e1ea"
+    },
+    {
+      "version": "20260829083951",
+      "name": "20260829083951_access_logs_app_version.sql",
+      "checksum": "11996adb195bac6b6c97c4cb3e277bb517d8aef47712e84395ae7c3f8ec5e53a"
+    },
+    {
+      "version": "20260829093212",
+      "name": "20260829093212_app_runtime_configuration.sql",
+      "checksum": "15f42a9dd372477b97ef4adb3b075bffec94f099d8d80adefa33ffa38790afcf"
+    },
+    {
+      "version": "20260829205816",
+      "name": "20260829205816_add_win_condition_analytics.sql",
+      "checksum": "558f2dd398ac3943f31ad39edf4505cc90dddb28b500bc284f1738303a40ed99"
+    },
+    {
+      "version": "20260919120000",
+      "name": "20260919120000_draw_neutral_win_rate.sql",
+      "checksum": "502686c8d5e24b07b585786973420e6a9fc0ff729e239269cffe84be269b04e5"
+    },
+    {
+      "version": "20260922075612",
+      "name": "20260922075612_prepare_v9_runtime_configuration.sql",
+      "checksum": "b2f133b799a9e13abca7005ef23232c8183542268f21ab85d1ff4362d661d32a"
+    },
+    {
+      "version": "20260922143000",
+      "name": "20260922143000_smart_season_notifications.sql",
+      "checksum": "f4ebfe79c0fe1d06b3a06841e766734b78b6fc8430f09aad8670b172abf5b6c3"
+    },
+    {
+      "version": "20260928082927",
+      "name": "20260928082927_allow_arena_owner_match_deletion.sql",
+      "checksum": "7b0087f404fb6a46d731a38821b6386608fd2c40af9db6590faad628ea2ace0d"
+    },
+    {
+      "version": "20260928090441",
+      "name": "20260928090441_allow_arena_owners_manage_matches_and_guard_player_replacement.sql",
+      "checksum": "43f385ace9749a534048e47b127282dba72e120cb348b75824a2a9f13e4cce89"
+    },
+    {
+      "version": "20260928120000",
+      "name": "20260928120000_release_eliminated_live_game_participants.sql",
+      "checksum": "0a8de78b52a13e2f2562fb181762939f6d1d029aaf24a4bb743ac9d65bba519c"
+    },
+    {
+      "version": "20260929063833",
+      "name": "20260929063833_profile_deck_archiving.sql",
+      "checksum": "bc9efcfad551239020ecc74cc2a07a0dd4ae4249a4d581f397dae70bdd3e377f"
+    },
+    {
+      "version": "20260930071738",
+      "name": "20260930071738_archidekt_live_game_sync_requests.sql",
+      "checksum": "9e8ba02985df31a9f50768d7008d7e6e5d0f0089063bdd1f343414d8f3140eda"
+    },
+    {
+      "version": "20261001090317",
+      "name": "20261001090317_recommend_v9_0_4_runtime_update.sql",
+      "checksum": "87c0f0c12e22a07678f95b2c407749f2a678292e3d6e3dc6acc1dae278198a7c"
+    },
+    {
+      "version": "20261001103000",
+      "name": "20261001103000_admin_operations_aggregates.sql",
+      "checksum": "3b235451ab815370343bb19c0db3eb0ee208d2374e43d6505ca3331a09f953bc"
+    },
+    {
+      "version": "20261001105900",
+      "name": "20261001105900_migration_registry_bootstrap.sql",
+      "checksum": "a5162af410f6a08e1f9eec392d4ae9583461e22085d34dd65961f470396760f2"
+    },
+    {
+      "version": "20261001110000",
+      "name": "20261001110000_admin_migration_registry_read.sql",
+      "checksum": "d93d392ef7a3fecb978c717c845af7b16deb131db957ace87e8fb6f8afae1ec8"
+    }
+  ]
+}

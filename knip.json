@@ -16,6 +16,8 @@
   ],
   "ignoreBinaries": [
     "netstat",
-    "findstr"
+    "findstr",
+    "expo",
+    "maestro"
   ]
 }

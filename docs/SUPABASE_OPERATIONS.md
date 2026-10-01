@@ -12,16 +12,29 @@ node scripts/selfhosted-db.mjs apply dev supabase/migrations/<migration-file>.sq
 
 Use `production` only after explicit PM authorization. The runner reads the
 environment-specific SSH host, user, key path, Compose project, and database
-role from `.env.local`; it runs the SQL in one transaction inside that remote
-stack and records the filename version and SHA-256 in
-`app_private.schema_migrations`. This is separate from Supabase CLI migration
-history. Verify the resulting table, RLS policies, grants, publication, and
-runner checksum with a read-only query over the same SSH target.
+role from `.env.local`. One SSH session runs the migration and checksum record
+inside a single PostgreSQL transaction under a transaction-scoped advisory
+lock. Reapplying the same version and checksum is a no-op; reusing a version
+with different SQL fails before changing the database. The runner records the
+filename version and SHA-256 in `app_private.schema_migrations`. This is
+separate from Supabase CLI migration history. Verify the resulting table, RLS
+policies, grants, publication, and runner checksum with a read-only query over
+the same SSH target.
 
 The workstation does not need Docker or Podman installed for this workflow.
 `npx supabase status` only inspects a local stack and a local-container error
 does not indicate that the Dokploy VM is unavailable. Do not use linked-project
 or local-stack migration commands for this self-hosted deployment.
+
+### Staging target mapping
+
+In the current Dokploy setup, the public host in `STAGING_SUPABASE_DOMAIN` and
+`SUPABASE_URL` is served by the VM configured in `.env.local` as
+`SELFHOSTED_DEV_*`, using Compose project `supabase-dev`. This `dev` alias is
+the staging database used by the Dev application. The separate Dokploy Compose
+record named `supabase-staging` is currently idle and is not the active target
+for that URL. Use the SSH target from `.env.local` and the `supabase-dev`
+Compose label for staging SQL tests; do not substitute a local container.
 
 ## Compatibility boundary
 
@@ -104,6 +117,26 @@ database reproduced all 73 tables across `public`, `auth`, `storage`,
 `pg_restore` errors. Repeat into an isolated database at least quarterly.
 
 ## Read-only database review
+
+### Staging Realtime connectivity (2026-10-01)
+
+The staging domain is served by Compose project `supabase-dev`. Kong's Realtime
+upstream is `realtime-dev.supabase-realtime:4000`; that name must be an alias
+of the Realtime service on the default Compose network. A healthy container
+alone does not prove public WebSocket connectivity. The missing alias caused
+HTTP 503 (`name resolution failed`) and stale concurrent clients.
+
+In `/opt/supabase-staging/supabase/docker/docker-compose.yml`, the `realtime`
+service now declares `networks.default.aliases: [realtime-dev.supabase-realtime]`.
+Only that staging service was recreated with `docker compose -p supabase-dev
+up -d --no-deps realtime`. A real anonymous channel subscription reached
+`SUBSCRIBED`; two authenticated browser clients subsequently converged after
+overlapping mutations. Preserve the alias when regenerating the Dokploy stack.
+
+Rollback: the VM holds the original Compose file beside it as
+`docker-compose.yml.imp-realtime-alias.bak` (0600). Restore that file and recreate
+only staging Realtime using the same Compose project. This restores the old
+configuration, including its known connectivity failure. Production was untouched.
 
 Run `scripts/qa/supabase-runtime-audit.sql` through `psql` with a read-only
 administrative session. Review missing foreign-key indexes, large sequential
