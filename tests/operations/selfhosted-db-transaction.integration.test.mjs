@@ -125,7 +125,10 @@ test('self-hosted migration transaction protocol on isolated staging/CI database
     ? sshConfig().project
     : process.env.SELFHOSTED_DB_TEST_PROJECT || 'phyrexian-arena';
   assert.match(project, /^[a-z0-9_.-]+$/i, 'The integration database project name must be explicit and safe.');
-  const found = docker(['ps', '-q', '--filter', 'label=com.docker.compose.project=' + project, '--filter', 'label=com.docker.compose.service=db']);
+  const filters = target === 'ssh'
+    ? ['--filter', 'label=com.docker.compose.project=' + project, '--filter', 'label=com.docker.compose.service=db']
+    : ['--filter', 'name=^/supabase_db_' + project.replaceAll('.', '\\.') + '$'];
+  const found = docker(['ps', '-q', ...filters]);
   assert.equal(found.status, 0, found.stderr);
   containerId = found.stdout.trim().split(/\r?\n/)[0];
   assert.ok(containerId, 'The isolated Supabase CI database container was not found.');

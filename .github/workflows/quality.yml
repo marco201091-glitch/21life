@@ -42,6 +42,7 @@ jobs:
         run: npm run test:selfhosted-db-runner
         env:
           SELFHOSTED_DB_TESTS: "1"
+          SELFHOSTED_DB_TEST_PROJECT: phyrexian-arena
       - name: Export local Supabase test environment
         run: |
           eval "$(supabase status -o env)"
