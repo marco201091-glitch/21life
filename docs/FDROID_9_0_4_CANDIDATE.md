@@ -46,3 +46,13 @@ and returned exit 0 (2026-10-01). It checked known non-free classes and extra
 signing blocks. A second scan using Android SDK build-tools in PATH also
 returned exit 0. This Windows binary scan does not attest the official Linux
 recipe, source scanner or clean-build reproducibility; those remain pending.
+
+
+Additional Windows reproducibility check: `gradlew clean` followed by a fresh
+release rebuild, same F-Droid flags/CMake 3.31.6, produced an APK identical
+byte for byte to the saved candidate (SHA-256 above). The first app configure
+step needed regeneration of Reanimated/Worklets Prefab outputs after clean;
+`:react-native-reanimated:prefabReleasePackage` and
+`:react-native-worklets:prefabReleasePackage` succeeded, then app assembleRelease
+completed in 10m07s (1,191 tasks executed). This documents the local workaround,
+without changing or attesting the official Linux recipe.
