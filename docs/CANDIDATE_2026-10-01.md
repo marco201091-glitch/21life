@@ -91,3 +91,23 @@ locali; nessun aggiornamento della MR GitLab o tag pubblico effettuato.
 IMP-17 richiede ancora autorizzazione esplicita per target produzione,
 promozione pubblica e pubblicazione. Lo stato unico resta
 `.agents/PROJECT_CHECKLIST.md`.
+
+
+## Esito audit dei due rami e proposta di promozione web
+
+Esecuzione reale `36868928257`: Dev web/Expo zero; main web una critical Next,
+Expo zero. Il workflow ha conservato i report di entrambi i rami e ha bloccato
+main con exit 2. Advisory:
+<https://github.com/advisories/GHSA-vcvr-r3jv-pc5j>. La dipendenza è segnalata;
+l'esito audit non è una prova di sfruttabilità dei percorsi dell'applicazione.
+Il fix 16.3.8 è già integrato su Dev; il follow-up #147 rende l'audit indipendente
+dall'età del codice analizzato e usa una variabile matrix dedicata.
+
+Il primo intervento production proposto è una promozione **web e schema**, senza
+nuovo tag o sostituzione dell'APK 9.0.4 disponibile. Richiede autorizzazione PM:
+quattro migrazioni della tabella sopra, backup manuale completo verificato,
+PR Dev→main con ancestry, deploy web Dokploy production e monitoraggio richiesto.
+Per permettere questa PR, disabilitare esclusivamente `required_linear_history`
+su main/Dev, conservando controlli web/expo e tutte le altre protezioni; anche
+questa modifica di governance richiede la decisione esplicita PM. Un rilascio
+APK successivo resta una nuova versione/build con verifiche proprie.
