@@ -2,7 +2,7 @@
 
 Prepared locally on `improvement/fdroid-904`, based on `origin/fdroid-prep`
 `1254d80`. The 9.0.4 metadata recipe pins the source commit `f12b7de0c2cb60a7c9d6721245ecae1397ea9347`.
-The source is local until this branch is reviewed and pushed; no release tag,
+The source is prepared on this feature branch for review; no release tag,
 public APK, store acceptance or official merge-request update is claimed.
 
 | Capability | Standard 9.0.4 | F-Droid candidate |
@@ -41,4 +41,8 @@ SHA-256: 71b05cdb3649de9660883da7fe15d0a25991b295e9ae9c577e342458c214056e.
 Android apkanalyzer dex packages found no io.sentry, expo.modules.notifications
 or expo.modules.imagepicker class namespaces. apksigner rejects it as expected
 for the unsigned recipe (no META-INF/MANIFEST.MF). No device install occurred.
-The exact fdroidserver scanner/build/reproducibility checks remain pending.
+Binary scanner fdroidserver 2.4.5 ran on this exact APK with `--refresh --exit-code`
+and returned exit 0 (2026-10-01). It checked known non-free classes and extra
+signing blocks. A second scan using Android SDK build-tools in PATH also
+returned exit 0. This Windows binary scan does not attest the official Linux
+recipe, source scanner or clean-build reproducibility; those remain pending.
