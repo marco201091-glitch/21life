@@ -42,7 +42,7 @@ export default function ArchivedDecksScreen() {
                 openDeckLabel={copy('openDeck')}
                 viewOnEdhrecLabel={copy('viewOnEdhrec')}
                 detailsLabel={copy('details')}
-                onDetails={() => router.push(`/profile/decks/${deck.id}`)}
+                onDetails={() => undefined}
                 hideDetails
                 hideDelete
                 onDelete={() => undefined}
