@@ -1,7 +1,7 @@
 # F-Droid 9.0.4 candidate
 
 Prepared locally on `improvement/fdroid-904`, based on `origin/fdroid-prep`
-`1254d80`. The 9.0.4 metadata recipe pins the source commit `3125ada`.
+`1254d80`. The 9.0.4 metadata recipe pins the source commit `f12b7de0c2cb60a7c9d6721245ecae1397ea9347`.
 The source is local until this branch is reviewed and pushed; no release tag,
 public APK, store acceptance or official merge-request update is claimed.
 
@@ -28,3 +28,17 @@ and JS budget (7.73 MiB / 12 MiB). `npm ls` confirms Sentry, Expo notifications
 and image picker are absent from the installed graph. This is dependency and
 bundle evidence; the updated recipe still needs native fdroidserver
 scanner/build/reproducibility validation. Device checks are assigned to PM.
+
+
+Native candidate verification (2026-10-01): Gradle assembleRelease completed
+with arm64-v8a, fdroidBuild=true and the F-Droid environment flags, after
+using locally installed CMake 3.31.6 through a temporary Gradle init script.
+The default CMake 3.22.1/Ninja failed on this Windows checkout. This local
+workaround is not a change to the official Linux recipe or proof of its build.
+Final source: f12b7de0c2cb60a7c9d6721245ecae1397ea9347; generated APK is unsigned,
+package com.phyrexianarena.app, version 9.0.4 / 90004, label 21Life, arm64-v8a.
+SHA-256: 71b05cdb3649de9660883da7fe15d0a25991b295e9ae9c577e342458c214056e.
+Android apkanalyzer dex packages found no io.sentry, expo.modules.notifications
+or expo.modules.imagepicker class namespaces. apksigner rejects it as expected
+for the unsigned recipe (no META-INF/MANIFEST.MF). No device install occurred.
+The exact fdroidserver scanner/build/reproducibility checks remain pending.

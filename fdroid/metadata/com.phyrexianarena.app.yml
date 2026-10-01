@@ -132,7 +132,7 @@ Builds:
 
   - versionName: 9.0.4
     versionCode: 90004
-    commit: 3125ada76382ee9e59c5abada980fe6bea3fb98f
+    commit: f12b7de0c2cb60a7c9d6721245ecae1397ea9347
     subdir: expo
     sudo:
       - apt-get update
