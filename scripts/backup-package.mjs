@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 
 export function verifyBackupChecksums(checksums, files) {
@@ -29,6 +29,10 @@ export function readBackupPackage(input) {
   const files = { [basename(dumpPath)]: bytes, [basename(storagePath)]: storageBytes };
   let manifest = null;
   if (offsite) {
+    for (const name of ['recovery-roles.sql', 'recovery-privileges.sql']) {
+      const file = join(path, name);
+      if (existsSync(file)) files[name] = readFileSync(file);
+    }
     manifest = JSON.parse(readFileSync(join(dirname(dumpPath), 'manifest.json'), 'utf8'));
     if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) throw new Error('Invalid backup manifest.');
     verifyBackupChecksums(readFileSync(join(path, 'SHA256SUMS'), 'utf8'), files);
