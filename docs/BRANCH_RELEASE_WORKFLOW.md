@@ -59,3 +59,12 @@ Keeping the completed Dev records produces tree
 The simulation uses a temporary Git index and changes no branch or worktree.
 GitHub currently permits merge commits. This establishes the reconciliation
 procedure without publishing or merging a promotion.
+
+
+Live enforcement check (2026-10-01): GitHub REST reports merge commits enabled
+for the repository, but both main and Dev require linear history. An actual
+feature PR merge using `--merge` was rejected; the authorized feature was
+integrated with squash, preserving the protected checks. The proposed merge
+promotion/back-merge process needs a separate PM decision to disable only the
+linear-history requirement on these branches. Do not change governance or
+remove web/expo checks to work around this restriction.

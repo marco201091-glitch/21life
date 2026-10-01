@@ -18,6 +18,9 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: audited
     strategy:
       fail-fast: false
       matrix:
@@ -26,21 +29,31 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: ${{ matrix.branch }}
+          path: audited
+      - name: Load audit tooling from the workflow revision
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.sha }}
+          path: audit-tools
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            scripts/dependency-audit.mjs
+            tests/scripts/dependency-audit.test.mjs
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 24.18.0
           cache: npm
           cache-dependency-path: |
-            package-lock.json
-            expo/package-lock.json
+            audited/package-lock.json
+            audited/expo/package-lock.json
       - name: Install locked dependencies
         run: |
           npm ci --no-audit
           npm --prefix expo ci --no-audit
       - name: Test audit reporting
-        run: node --test tests/scripts/dependency-audit.test.mjs
+        run: node --test ../audit-tools/tests/scripts/dependency-audit.test.mjs
       - name: Audit production dependencies
-        run: node scripts/dependency-audit.mjs artifacts/dependency-audit
+        run: node ../audit-tools/scripts/dependency-audit.mjs artifacts/dependency-audit
         env:
           GITHUB_REF_NAME: ${{ matrix.branch }}
       - name: Upload audit reports
@@ -48,6 +61,6 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: dependency-audit-${{ matrix.branch }}
-          path: artifacts/dependency-audit/${{ matrix.branch }}/
+          path: audited/artifacts/dependency-audit/${{ matrix.branch }}/
           if-no-files-found: error
           retention-days: 30
