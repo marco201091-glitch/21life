@@ -5,6 +5,8 @@ const mocks = vi.hoisted(() => ({
   fetchCommanderArtOptions: vi.fn(),
   repairImportedCommanderOptions: vi.fn(),
   resolveImportedDeckCommanderImage: vi.fn(),
+  pendingRequests: [] as Array<{ id: string }>,
+  deleteIn: vi.fn(),
   rpc: vi.fn(),
   single: vi.fn(),
 }));
@@ -25,16 +27,18 @@ vi.mock('@/lib/deck-importers', () => ({
 }));
 vi.mock('@/lib/supabase', () => ({
   supabase: {
-    from: () => ({
-      select: () => ({
-        eq: () => ({ single: mocks.single }),
-      }),
-    }),
+    from: (table: string) => table === 'profiles'
+      ? { select: () => ({ eq: () => ({ single: mocks.single }) }) }
+      : {
+        select: () => ({ eq: async () => ({ data: mocks.pendingRequests, error: null }) }),
+        delete: () => ({ eq: () => ({ in: mocks.deleteIn }) }),
+      },
     rpc: mocks.rpc,
   },
 }));
 
 import {
+  processArchidektSyncRequests,
   runArchidektAutoSync,
   syncArchidektUserDecks,
 } from '@/lib/archidekt-auto-sync';
@@ -46,6 +50,8 @@ describe('Archidekt automatic sync', () => {
       { name: 'Talrand', imageUrl: 'image' },
     ]);
     mocks.resolveImportedDeckCommanderImage.mockReturnValue('image');
+    mocks.pendingRequests = [];
+    mocks.deleteIn.mockResolvedValue({ error: null });
     mocks.rpc.mockResolvedValue({
       data: { inserted: 1, updated: 0 },
       error: null,
@@ -120,5 +126,24 @@ describe('Archidekt automatic sync', () => {
     await runArchidektAutoSync('user-id', { force: true });
     expect(mocks.apiPost).toHaveBeenCalledOnce();
     expect(mocks.rpc).toHaveBeenCalledWith('sync_archidekt_decks', { p_decks: [] });
+  });
+
+  it('processes live-game requests with a forced sync and clears them', async () => {
+    mocks.pendingRequests = [{ id: 'request-1' }, { id: 'request-2' }];
+    mocks.single.mockResolvedValue({
+      data: {
+        archidekt_username: 'marco',
+        archidekt_auto_import: true,
+        archidekt_last_sync_at: new Date().toISOString(),
+      },
+      error: null,
+    });
+    mocks.apiPost.mockResolvedValue({ status: 200, data: { decks: [] } });
+
+    await expect(processArchidektSyncRequests('user-id')).resolves.toBeUndefined();
+
+    expect(mocks.apiPost).toHaveBeenCalledOnce();
+    expect(mocks.rpc).toHaveBeenCalledWith('sync_archidekt_decks', { p_decks: [] });
+    expect(mocks.deleteIn).toHaveBeenCalledWith('id', ['request-1', 'request-2']);
   });
 });

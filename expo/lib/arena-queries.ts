@@ -15,8 +15,6 @@ export const MATCHES_SELECT = `
     participant_name_snapshot,
     deck_id,
     guest_deck_id,
-    profiles (id, username, display_name),
-    arena_guests (id, display_name),
     is_winner,
     tracked_event_count,
     life_lost,
@@ -119,7 +117,7 @@ export async function fetchArenaGroup(supabase: SupabaseClient, groupId: string)
       profiles:created_by (id, username, display_name),
       group_members (
         user_id,
-        profiles (id, username, display_name)
+        profiles (id, username, display_name, archidekt_auto_import)
       )
     `)
     .eq('id', groupId)
