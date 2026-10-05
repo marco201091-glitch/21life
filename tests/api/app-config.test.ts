@@ -23,6 +23,7 @@ vi.mock('@/lib/supabase-admin', () => ({
   } : null,
 }));
 
+import { version as packageVersion } from '@/package.json';
 import { GET } from '@/app/api/app-config/route';
 
 function request(version: string) {
@@ -67,7 +68,7 @@ describe('app config API', () => {
     const response = await GET(request('9.0.0'));
     await expect(response.json()).resolves.toMatchObject({
       minimumSupportedVersion: '8.1.0',
-      recommendedVersion: '9.0.4',
+      recommendedVersion: packageVersion,
       runtimeConfigurationSource: 'fallback',
       supportState: 'update_available',
     });
@@ -78,6 +79,6 @@ describe('app config API', () => {
     const response = await GET(request('8.2.0'));
     const body = await response.json();
     expect(body.runtimeConfigurationSource).toBe('fallback');
-    expect(body.recommendedVersion).toBe('9.0.4');
+    expect(body.recommendedVersion).toBe(packageVersion);
   });
 });

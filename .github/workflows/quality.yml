@@ -38,6 +38,8 @@ jobs:
         run: |
           supabase start -x realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor,mailpit
           supabase db lint --local --schema public --level error --fail-on error
+      - name: Verify arena Archidekt synchronization permissions and atomicity
+        run: docker exec -i supabase_db_phyrexian-arena psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < scripts/qa/arena-archidekt-sync.sql
       - name: Verify self-hosted migration atomicity against disposable CI database
         run: npm run test:selfhosted-db-runner
         env:

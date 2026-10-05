@@ -1,0 +1,1 @@
+Update any opted-in arena member’s Archidekt decks from the game wizard, even with their phone offline. Clear completed/partial/failed results and retry. Existing decks stay available on errors.

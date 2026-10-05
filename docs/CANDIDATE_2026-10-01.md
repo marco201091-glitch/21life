@@ -111,3 +111,7 @@ Per permettere questa PR, disabilitare esclusivamente `required_linear_history`
 su main/Dev, conservando controlli web/expo e tutte le altre protezioni; anche
 questa modifica di governance richiede la decisione esplicita PM. Un rilascio
 APK successivo resta una nuova versione/build con verifiche proprie.
+
+## Aggiornamento 2026-10-05
+
+Il PM ha successivamente autorizzato promozione web/schema, backup verificato, quattro migrazioni e rimozione del solo vincolo storia lineare; eseguiti con PR #149 e deploy main 1c319233. Sono autorizzate anche due eccezioni audit della CLI Expo con scadenza 19 ottobre escluso; non equivalgono ad audit zero. Questo documento conserva il candidato storico del 1 ottobre; record corrente ed evidenze in RELEASE_2026-10-05.md. Nessun tag/APK esistente sostituito.
