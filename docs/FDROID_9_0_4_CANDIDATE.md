@@ -56,3 +56,45 @@ step needed regeneration of Reanimated/Worklets Prefab outputs after clean;
 `:react-native-worklets:prefabReleasePackage` succeeded, then app assembleRelease
 completed in 10m07s (1,191 tasks executed). This documents the local workaround,
 without changing or attesting the official Linux recipe.
+
+Review corrections (2026-10-05): source scan restored before Gradle; only the
+9.0.4 recipe retained; LF enforced and canonical rewritemeta applied. Actual
+Gradle autolinking command resolves 22 Expo source projects. Removing the
+source policy reproduces the verification failure. The old failed build job
+16735722726 used cf4d8d4 (no source policy); its failure does not prove a
+regression in the later 84fe4e31 policy. NetInfo preserves native reachability
+and points its fallback at the app backend /api/ready (HTTP 200), instead of
+Google. Store copy now describes the F-Droid exclusions, with a 90004 changelog.
+
+Fresh quality: 249 Expo tests, lint, typecheck, coverage, logos and Knip pass.
+The October 5 npm audit reports 20 high findings propagated from two upstream
+advisories without published fixes: braces <=3.0.3 (GHSA-vfj7-8cjw-p6xm) and
+node-forge <=1.4.0 (GHSA-86w9-cpqp-85rv). npm's suggested downgrade to Expo 44 is
+incompatible and was not applied. These are Expo CLI/Metro dependencies; audit
+is not green and no general vulnerability-free claim is made.
+
+The upstream recipe uses fdroid-v9.0.4 because a commit cannot embed its own
+hash. The official fdroiddata recipe must use the exact SHA of that tag. Do not
+publish the official update before the signed reference asset exists.
+
+Reference runtime environment correction: the old workflow exposed a
+PRODUCTION_SUPABASE_ANON_KEY variable but never mapped it to Expo's public
+variables. A clean build had no Supabase URL/key, so native compilation alone
+could not prove startup. expo/fdroid-build-env.json now pins only public client
+configuration (JWT role anon verified; production Auth settings HTTP 200).
+prepare-fdroid-env.mjs validates the whitelist, role, expiry, production URLs
+and exclusions, then writes exactly the same .env in GitHub and F-Droid.
+Signing credentials remain in GitHub secrets. No privileged key is included.
+Independent release review found the RUNNER_TEMP gh repository-context error;
+the publisher now passes --repo explicitly.
+
+Local source scanner completed successfully on the disposable source/dependency
+tree (fdroidserver 2.4.5, refreshed signatures, zero fatal findings). Every
+prebuilt Expo AAR was deleted. The real Gradle autolinking command still resolves
+all 22 Expo Android projects from source after deletion. The source scan used
+the pre-environment-helper snapshot with the same dependency graph; the Linux
+workflow scans the final tagged tree again before building. Updated public
+environment tests pass 8/8; fresh Expo tests remain 249/249. Android F-Droid
+export passes at 7.73 MiB / 12 MiB, and byte inspection confirms the production
+Supabase URL, public anon key, API URL and Turnstile site key are in the Hermes
+bundle (values are deliberately not printed in logs).

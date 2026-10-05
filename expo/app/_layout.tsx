@@ -15,13 +15,21 @@ import { AppAlertHost } from '@/components/ui/app-alert-host';
 import { ImageCacheWarmer } from '@/components/deck/image-cache-warmer';
 import { colors } from '@/constants/theme';
 import { Sentry, sentryEnabled } from '@/lib/sentry';
-import { isFdroidBuild } from '@/lib/env';
+import { getApiBaseUrl, isFdroidBuild } from '@/lib/env';
 import { QueryProvider } from '@/components/query-provider';
 import { AppErrorBoundary } from '@/components/app-error-boundary';
 import { AppNotificationListener } from '@/components/app-notification-listener';
 import { ArchidektAutoSync } from '@/components/archidekt-auto-sync';
 import { ManaLogo } from '@/components/ui/mana-logo';
 import { Cinzel_700Bold, useFonts } from '@expo-google-fonts/cinzel';
+import NetInfo from '@react-native-community/netinfo';
+
+// Preserve native reachability and use our backend for the HTTP fallback,
+// configured before any listener starts instead of NetInfo's Google default.
+NetInfo.configure({
+  reachabilityUrl: `${getApiBaseUrl()}/api/ready`,
+  reachabilityTest: async (response) => response.status === 200,
+});
 
 const pushNotificationsEnabled =
   !isFdroidBuild()

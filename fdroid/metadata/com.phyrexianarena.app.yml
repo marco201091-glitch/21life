@@ -18,13 +18,12 @@ AutoName: 21Life
 
 RepoType: git
 Repo: https://github.com/marco201091-glitch/PhyrexianArena.git
-Binaries:
-  https://github.com/marco201091-glitch/PhyrexianArena/releases/download/fdroid-v%v/mtg-tracker-fdroid-v%v.apk
+Binaries: https://github.com/marco201091-glitch/PhyrexianArena/releases/download/fdroid-v%v/mtg-tracker-fdroid-v%v.apk
 
 Builds:
-  - versionName: 8.2.0
-    versionCode: 80200
-    commit: 59b596315e035f7dd5e7715a9f48004a3d52cc0f
+  - versionName: 9.0.4
+    versionCode: 90004
+    commit: fdroid-v9.0.4
     subdir: expo
     sudo:
       - apt-get update
@@ -34,6 +33,7 @@ Builds:
       - npm ci
       - cd expo
       - npm ci
+      - node ../scripts/prepare-fdroid-env.mjs
       - node scripts/patch-fdroid-java-toolchains.mjs
       - node scripts/patch-fdroid-reproducibility.mjs
     output: android/app/build/outputs/apk/release/app-release-unsigned.apk
@@ -50,6 +50,7 @@ Builds:
       - npm run verify:fdroid
       - cd expo
       - npm run typecheck
+      - node ../scripts/verify-fdroid-autolinking.mjs
     scanignore:
       - expo/node_modules/hermes-compiler/hermesc/linux64-bin/hermesc
       - expo/node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
@@ -75,114 +76,6 @@ Builds:
       - cd android
       - gradle :app:assembleRelease -PfdroidBuild=true -PreactNativeArchitectures=arm64-v8a
         -PreactNativeDevServerIp=localhost --no-daemon --console=plain
-
-  - versionName: 9.0.1
-    versionCode: 90001
-    commit: 84fe4e3122647b4cbfa3c72622ffaa6c8462d60a
-    subdir: expo
-    sudo:
-      - apt-get update
-      - apt-get install -y nodejs npm
-    init:
-      - cd ..
-      - npm ci
-      - cd expo
-      - npm ci
-      - node scripts/patch-fdroid-java-toolchains.mjs
-      - node scripts/patch-fdroid-reproducibility.mjs
-    output: android/app/build/outputs/apk/release/app-release-unsigned.apk
-    prebuild:
-      - export APP_VARIANT=fdroid
-      - export EXPO_PUBLIC_FDROID_BUILD=true
-      - export EXPO_PUBLIC_SENTRY_ENABLED=false
-      - export EXPO_PUBLIC_DISABLE_PUSH_NOTIFICATIONS=true
-      - npx --no-install expo prebuild --platform android --clean --no-install
-      - sed -i 's/-Xmx2048m/-Xmx4g/' android/gradle.properties
-      - sed -i 's/MaxMetaspaceSize=512m/MaxMetaspaceSize=1g/' android/gradle.properties
-      - echo 'org.gradle.workers.max=1' >> android/gradle.properties
-      - cd ..
-      - npm run verify:fdroid
-      - cd expo
-      - npm run typecheck
-    scanignore:
-      - expo/node_modules/hermes-compiler/hermesc/linux64-bin/hermesc
-      - expo/node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
-      - expo/node_modules/@react-native-async-storage/async-storage/android/build.gradle
-      - expo/node_modules/@react-native-community/netinfo/android/build.gradle
-      - expo/node_modules/@react-native-masked-view/masked-view/android/build.gradle
-      - expo/node_modules/react-native-get-random-values/android/build.gradle
-      - expo/node_modules/react-native-keyboard-controller/android/build.gradle
-      - expo/node_modules/react-native-safe-area-context/android/build.gradle
-      - expo/node_modules/react-native-screens/android/build.gradle
-      - expo/node_modules/react-native-svg/android/build.gradle
-      - expo/node_modules/react-native-view-shot/android/build.gradle
-      - expo/node_modules/react-native-webview/android/build.gradle
-      - expo/node_modules/react-native/ReactAndroid/publish.gradle
-    build:
-      - export APP_VARIANT=fdroid
-      - export EXPO_PUBLIC_FDROID_BUILD=true
-      - export EXPO_PUBLIC_SENTRY_ENABLED=false
-      - export EXPO_PUBLIC_DISABLE_PUSH_NOTIFICATIONS=true
-      - cd android
-      - gradle :app:assembleRelease -PfdroidBuild=true -PreactNativeArchitectures=arm64-v8a
-        -PreactNativeDevServerIp=localhost --no-daemon --console=plain
-      - cd ../..
-      - rm -rf node_modules
-      - rm -rf expo/node_modules
-
-  - versionName: 9.0.4
-    versionCode: 90004
-    commit: f12b7de0c2cb60a7c9d6721245ecae1397ea9347
-    subdir: expo
-    sudo:
-      - apt-get update
-      - apt-get install -y nodejs npm
-    init:
-      - cd ..
-      - npm ci
-      - cd expo
-      - npm ci
-      - node scripts/patch-fdroid-java-toolchains.mjs
-      - node scripts/patch-fdroid-reproducibility.mjs
-    output: android/app/build/outputs/apk/release/app-release-unsigned.apk
-    prebuild:
-      - export APP_VARIANT=fdroid
-      - export EXPO_PUBLIC_FDROID_BUILD=true
-      - export EXPO_PUBLIC_SENTRY_ENABLED=false
-      - export EXPO_PUBLIC_DISABLE_PUSH_NOTIFICATIONS=true
-      - npx --no-install expo prebuild --platform android --clean --no-install
-      - sed -i 's/-Xmx2048m/-Xmx4g/' android/gradle.properties
-      - sed -i 's/MaxMetaspaceSize=512m/MaxMetaspaceSize=1g/' android/gradle.properties
-      - echo 'org.gradle.workers.max=1' >> android/gradle.properties
-      - cd ..
-      - npm run verify:fdroid
-      - cd expo
-      - npm run typecheck
-    scanignore:
-      - expo/node_modules/hermes-compiler/hermesc/linux64-bin/hermesc
-      - expo/node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
-      - expo/node_modules/@react-native-async-storage/async-storage/android/build.gradle
-      - expo/node_modules/@react-native-community/netinfo/android/build.gradle
-      - expo/node_modules/@react-native-masked-view/masked-view/android/build.gradle
-      - expo/node_modules/react-native-get-random-values/android/build.gradle
-      - expo/node_modules/react-native-keyboard-controller/android/build.gradle
-      - expo/node_modules/react-native-safe-area-context/android/build.gradle
-      - expo/node_modules/react-native-screens/android/build.gradle
-      - expo/node_modules/react-native-svg/android/build.gradle
-      - expo/node_modules/react-native-view-shot/android/build.gradle
-      - expo/node_modules/react-native-webview/android/build.gradle
-      - expo/node_modules/react-native/ReactAndroid/publish.gradle
-    build:
-      - export APP_VARIANT=fdroid
-      - export EXPO_PUBLIC_FDROID_BUILD=true
-      - export EXPO_PUBLIC_SENTRY_ENABLED=false
-      - export EXPO_PUBLIC_DISABLE_PUSH_NOTIFICATIONS=true
-      - cd android
-      - gradle :app:assembleRelease -PfdroidBuild=true -PreactNativeArchitectures=arm64-v8a
-        -PreactNativeDevServerIp=localhost --no-daemon --console=plain
-      - cd ../..
-      - rm -rf node_modules
-      - rm -rf expo/node_modules
 
 AllowedAPKSigningKeys: 5d25e32cdf901becfba81adf93189e1d755e50a90b897efa21da4c2ab3002106
 

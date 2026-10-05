@@ -42,9 +42,11 @@ description: Apply the PM-led, specification-driven workflow for 21Life. Use for
   - `expo/components/`: mobile UI and feature components.
   - `expo/lib/`: mobile domain, API, authentication, and platform services.
   - `expo/plugins/`: native Expo configuration plugins.
+  - `expo/fdroid-build-env.json`: public production client configuration pinned for identical F-Droid/reference bundles.
   - `expo/tests/`: mobile test suites.
 - `supabase/`: self-hosted backend configuration, migrations, and Edge Functions.
 - `scripts/`: build, verification, release, and operations automation.
+  - `prepare-fdroid-env.mjs`, `verify-fdroid-autolinking.mjs`, `scan-fdroid-source.py`: deterministic F-Droid environment and source-only build gates.
 - `ops/`: VM services and deployment-retention automation.
 - `.github/workflows/`: CI and signed Obtainium release automation.
 - `fastlane/metadata/android/`: canonical public store listing metadata.

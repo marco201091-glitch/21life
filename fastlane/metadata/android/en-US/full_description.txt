@@ -11,4 +11,4 @@ Features:
 
 This app is unofficial fan content. It is not affiliated with, endorsed by, or sponsored by Wizards of the Coast, Scryfall, EDHREC, Archidekt, Moxfield, or other mentioned services.
 
-The app depends on hosted network services for account sync, playgroup history, deck import, card imagery, anti-abuse protection, and optional sign-in/diagnostics features.
+The app depends on hosted network services for email/password authentication, account sync, playgroup history, deck import, card imagery, and anti-abuse protection. The F-Droid version excludes Google sign-in, push notifications, and Sentry diagnostics.

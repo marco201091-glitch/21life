@@ -1,0 +1,2 @@
+Added deck archive and restore, Archidekt live-game sync and waiting status, and fixes from 9.0.2–9.0.4.
+F-Droid: source-only Expo build, email login, no Google sign-in, push or Sentry, and NetInfo connectivity fallback on the app backend.

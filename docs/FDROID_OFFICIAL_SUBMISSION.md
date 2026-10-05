@@ -24,7 +24,7 @@ Expected differences from standard APK:
   graph.
 - Photo-library dependencies are absent from every build variant.
 - Release build can be produced unsigned with Gradle property
-  `-PfdroidBuild=true`, so F-Droid can sign the APK itself.
+  `-PfdroidBuild=true`, for byte comparison before copying the preserved developer signature.
 
 ## Local verification
 
@@ -64,7 +64,7 @@ Draft metadata lives in:
 fdroid/metadata/com.phyrexianarena.app.yml
 ```
 
-Before submitting each release, replace the draft marker with the exact full SHA of the public F-Droid source tag. The official 9.0.1 MR must point to the `fdroid-v9.0.1` source commit. F-Droid metadata requires commit hashes rather than branch names.
+Before submitting each release, replace the draft marker with the exact full SHA of the public F-Droid source tag. The official 9.0.4 MR must point to the exact `fdroid-v9.0.4` source commit. F-Droid metadata requires commit hashes rather than branch names.
 
 ## Official submission
 
@@ -72,4 +72,10 @@ Merge request:
 
 <https://gitlab.com/fdroid/fdroiddata/-/merge_requests/44721>
 
-The earlier 8.2.0 revision passed its F-Droid build. For 9.0.1, local prebuild, typecheck, unsigned APK build, and a clean byte-for-byte rebuild have passed. The corrected GitLab run must still pass metadata checks, source build, scanner, signing, and APK checks. Maintainer on-device review remains pending.
+The earlier 8.2.0 revision passed its F-Droid build. The corrected 9.0.4 recipe
+restores the source scanner and retains only the latest build. Its reference
+workflow scans the source before two clean Gradle builds, compares APK bytes,
+verifies package/version/ABI/permissions and the preserved signing certificate,
+then scans the signed binary before publishing. The official pipeline and
+maintainer on-device review remain separate gates. Never claim acceptance
+based only on local quality checks or the GitHub reference build.

@@ -15,6 +15,20 @@ const fdroidPermissionsPlugin = read('expo/plugins/with-fdroid-blocked-permissio
 const fdroidDocs = read('docs/FDROID_RELEASE_READINESS.md');
 const metadata = read('fastlane/metadata/android/en-US/full_description.txt');
 const fdroidMetadata = read('fdroid/metadata/com.phyrexianarena.app.yml');
+const mobilePackage = JSON.parse(read('expo/package.json'));
+const mobileVersion = JSON.parse(read('expo/app.json')).expo;
+if (!mobilePackage.expo?.autolinking?.android?.buildFromSource?.includes('.*')) {
+  failures.push('Every Expo Android module must build from source');
+}
+if ((fdroidMetadata.match(/versionName:/g) ?? []).length !== 1) {
+  failures.push('Initial F-Droid submission must contain only the latest build');
+}
+if (!fdroidMetadata.includes('    scandelete:\n      - node_modules\n      - expo/node_modules')) {
+  failures.push('F-Droid source scanner must delete dependency binaries before building');
+}
+if (fdroidMetadata.includes('\r') || /[ \t]+$/m.test(fdroidMetadata)) {
+  failures.push('F-Droid metadata must use LF without trailing whitespace');
+}
 
 if (appConfig.includes('@sentry/react-native/expo')) {
   failures.push('F-Droid branch must not include the Sentry Expo plugin');
@@ -87,7 +101,7 @@ for (const text of [
 if (read('fastlane/metadata/android/en-US/title.txt').trim() !== '21Life') {
   failures.push('Fastlane metadata must use the Android display name');
 }
-for (const text of ['NonFreeNet', 'versionName: 9.0.1', 'app-release-unsigned.apk']) {
+for (const text of ['NonFreeNet', `versionName: ${mobileVersion.version}`, `versionCode: ${mobileVersion.android.versionCode}`, 'app-release-unsigned.apk']) {
   if (!fdroidMetadata.includes(text)) {
     failures.push(`F-Droid metadata draft must mention ${text}`);
   }

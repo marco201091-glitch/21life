@@ -13,7 +13,7 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 
 - [x] Hotfix 9.0.1 gestione record arena: cancellazione verificata su web/mobile; partecipanti eliminati nuovamente disponibili; sostituzione partecipante in modifica riservata ad Arena Manager. PR production #118 e promozione Dev #119 unite. CI completa verde (migrazioni SQL, web/Expo quality, build, E2E). Deploy Dev avviato sul commit `fd83926`; migrazione DB Dev avviata. RLS cancellazione manager applicata e verificata su Supabase production e Dev via Dokploy. Migrazione versionata e PR #120 (main) / #121 (Dev) unite, CI verde.
 
-- [ ] F-Droid 9.0.1: Dev allineato a fdroid-prep; fix scanner/Maven verificato localmente. Run GitHub 36428182376 fermata prima della build: setup-android chiedeva il pacchetto SDK deprecato tools; richiesto solo platform-tools. In rilancio; poi aggiornare pin e asset MR e avviare GitLab. Review/device test @linsui in attesa.
+- [x] Preparazione F-Droid 9.0.1 superata dal candidato 9.0.4; conservati firma e requisiti della MR ufficiale.
 
 - [x] iPad: pre-caricamento immagini limitato a 4 operazioni parallele su iOS; Android invariato.
 
@@ -99,3 +99,5 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 - [x] Remove confirmed obsolete code, assets, documentation, and dependencies.
 - [x] Validate web, mobile, release, and dependency quality gates.
 - [x] Start the `main` web application deployment on Dokploy production.
+
+- [ ] F-Droid 9.0.4 (2026-10-05): correggere review mezinster/linsui, ripristinare scanner sorgenti, ricetta unica e LF, NetInfo sul backend, env pubblica deterministica validata (8 test), 249 test Expo/quality e scanner sorgenti OK, bundle produzione verificato; reference firmata riproducibile e pin/tag coerenti da pubblicare; piano docs/FDROID_9_0_4_RELEASE_PLAN.md. GitLab CLI OAuth scaduto; git fetch funzionante.
