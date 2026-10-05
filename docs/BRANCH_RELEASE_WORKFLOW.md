@@ -1,8 +1,11 @@
 # Branch and release workflow
 
-The supported development path is `feature/*` → `Dev` → `main`. Keep feature
-changes reviewable in pull requests and preserve the ancestry of the long-lived
-release branches.
+`Dev` is the integration branch for development. Promote reviewed improvements
+from `Dev` to `main` for the standard release and to `fdroid-prep` for F-Droid,
+preserving the intentional F-Droid exclusions. These are the only permanent
+remote branches. Feature and dependency-update branches are temporary: remove
+them after integration or explicit closure, after checking for unique work.
+Keep changes reviewable in pull requests and preserve release branch ancestry.
 
 ## Feature integration
 
@@ -68,3 +71,7 @@ integrated with squash, preserving the protected checks. The proposed merge
 promotion/back-merge process needs a separate PM decision to disable only the
 linear-history requirement on these branches. Do not change governance or
 remove web/expo checks to work around this restriction.
+
+## Governance decision, 2026-10-05
+
+The PM authorized removing only required_linear_history on main and Dev because it prevented the agreed ancestry-preserving promotion. Applied and verified: required web/expo checks, strict up-to-date requirement, admin enforcement, signature settings, and force-push/deletion restrictions remain unchanged. PR #149 promoted the tested tree with merge ancestry; PR #151 returns published main ancestry to Dev without application changes. The October 1 enforcement notes above describe the former policy.
