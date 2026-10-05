@@ -38,3 +38,40 @@ test('high and critical findings block', () => {
 test('infrastructure errors are distinguishable from clean reports', () => {
   assert.throws(() => summarizeAudit({ error: { summary: 'registry unavailable' } }), /registry unavailable/);
 });
+
+const approvedReport = () => ({
+  metadata: { vulnerabilities: { high: 1, critical: 0 } },
+  vulnerabilities: { braces: { severity: 'high', nodes: ['node_modules/braces'], via: [{ url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm', name: 'braces', severity: 'high' }] } },
+});
+const approvedOptions = () => ({ project: 'expo', now: new Date('2026-10-05T12:00:00Z'), lockfile: { packages: { 'node_modules/braces': {version:'3.0.3'} } } });
+test('approved Expo tooling finding remains visible but passes before expiry', () => {
+  const s = summarizeAudit(approvedReport(), approvedOptions());
+  assert.equal(s.blocking, false); assert.equal(s.counts.high, 1); assert.equal(s.highestSeverity, 'high');
+  assert.deepEqual(s.acceptedAdvisories, ['https://github.com/advisories/GHSA-vfj7-8cjw-p6xm']);
+});
+test('exception fails closed at expiry and outside Expo', () => {
+  for(const options of [{...approvedOptions(),now:new Date('2026-10-18T22:00:00Z')},{...approvedOptions(),project:'web'}]) assert.equal(summarizeAudit(approvedReport(),options).blocking,true);
+});
+test('exception fails closed on changed version, path, advisory, or severity', () => {
+  const mutations = [
+    (a,o)=>{o.lockfile.packages['node_modules/braces'].version='3.0.4';},
+    (a)=>{a.vulnerabilities.braces.nodes=['node_modules/unreviewed/node_modules/braces'];},
+    (a)=>{a.vulnerabilities.braces.via[0].url='https://github.com/advisories/GHSA-other';},
+    (a)=>{a.vulnerabilities.braces.severity='critical';a.metadata.vulnerabilities.critical=1;},
+    (a)=>{a.vulnerabilities.braces.via.push('unreviewed');},
+  ];for(const mutate of mutations){const a=approvedReport(),o=approvedOptions();mutate(a,o);assert.equal(summarizeAudit(a,o).blocking,true);}
+});
+test('approved high-only npm exit remains distinct from infrastructure failure', () => {
+  const run=()=>({status:1,stdout:JSON.stringify(approvedReport()),stderr:''});
+  assert.equal(executeAudit('.',run,approvedOptions()).summary.blocking,false);
+  assert.throws(()=>executeAudit('.',()=>({...run(),status:2}),approvedOptions()),/before its security threshold/);
+});
+
+test('a high dependency cannot hide an unreviewed moderate root', () => {
+  const a=approvedReport();a.metadata.vulnerabilities.moderate=1;
+  a.vulnerabilities.micromatch={severity:'high',nodes:['node_modules/micromatch'],via:['braces']};
+  a.vulnerabilities.braces.severity='moderate';a.vulnerabilities.braces.nodes=['node_modules/unreviewed/node_modules/braces'];
+  a.vulnerabilities.braces.via.push({url:'https://github.com/advisories/GHSA-other',severity:'moderate'});
+  const o=approvedOptions();o.lockfile.packages['node_modules/micromatch']={version:'4.0.8'};
+  assert.equal(summarizeAudit(a,o).blocking,true);
+});
