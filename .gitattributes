@@ -9,3 +9,4 @@
 # Questi script vengono copiati sulla VM Linux, quindi il fine-riga fa parte
 # del contratto del file, non e' una preferenza locale.
 *.sh text eol=lf
+fdroid/metadata/*.yml text eol=lf

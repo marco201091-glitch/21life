@@ -1,6 +1,6 @@
 {
   "name": "phyrexian-arena-app",
-  "version": "9.0.1",
+  "version": "9.0.4",
   "private": true,
   "packageManager": "npm@11.16.0",
   "engines": {
@@ -17,7 +17,9 @@
   "expo": {
     "autolinking": {
       "android": {
-        "buildFromSource": [".*"]
+        "buildFromSource": [
+          ".*"
+        ]
       }
     }
   },

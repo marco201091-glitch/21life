@@ -1,0 +1,12 @@
+{
+  "EXPO_PUBLIC_SUPABASE_URL": "https://phyrexianarena.dpdns.org",
+  "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzg0NjQxMDM5LCJleHAiOjE5NDIzMjEwMzl9.hZG9Da--64xMqWQqd2g9TW-KDD9G46mt_Vba_c7Xsd4",
+  "EXPO_PUBLIC_API_BASE_URL": "https://app.phyrexianarena.dpdns.org",
+  "EXPO_PUBLIC_SITE_URL": "https://app.phyrexianarena.dpdns.org",
+  "EXPO_PUBLIC_TURNSTILE_SITE_KEY": "0x4AAAAAAD7RrnCNi4QCy9VP",
+  "EXPO_PUBLIC_SUPPORT_EMAIL": "support@phyrexianarena.dpdns.org",
+  "APP_VARIANT": "fdroid",
+  "EXPO_PUBLIC_FDROID_BUILD": "true",
+  "EXPO_PUBLIC_SENTRY_ENABLED": "false",
+  "EXPO_PUBLIC_DISABLE_PUSH_NOTIFICATIONS": "true"
+}

@@ -1,6 +1,6 @@
 # F-Droid-style release readiness
 
-Version 9.0.1 is being prepared in the official F-Droid `fdroiddata` merge request. Source build, reproducibility, and device review must pass before inclusion.
+Version 9.0.4 is being prepared in the official F-Droid `fdroiddata` merge request. Source build, reproducibility, and device review must pass before inclusion.
 
 ## Current assessment
 
@@ -73,7 +73,7 @@ docs/FDROID_OFFICIAL_SUBMISSION.md
 ## Submission status
 
 - Official merge request: <https://gitlab.com/fdroid/fdroiddata/-/merge_requests/44721>
-- The 9.0.1 source build, APK checks, scanner, and pipeline are pending.
+- The 9.0.4 source build, APK checks, scanner, and pipeline are pending.
 - `NonFreeNet` is declared for the fixed hosted and third-party network services.
 - Store text and changelog live upstream under `fastlane/metadata/android/en-US`.
 - Remaining work is external maintainer review and any requested follow-up.

@@ -10,7 +10,12 @@ import {
 import { supabase } from '@/lib/supabase';
 
 const AUTO_SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000;
-const syncsInFlight = new Map<string, Promise<ArchidektSyncResult>>();
+const syncsInFlight = new Map<string, {
+  force: boolean;
+  promise: Promise<ArchidektSyncResult>;
+}>();
+const requestProcessorsInFlight = new Map<string, Promise<void>>();
+const requestProcessorReruns = new Set<string>();
 
 export type ArchidektSyncResult = {
   inserted: number;
@@ -93,7 +98,12 @@ export function runArchidektAutoSync(
   options: { force?: boolean } = {},
 ): Promise<ArchidektSyncResult> {
   const existing = syncsInFlight.get(userId);
-  if (existing) return existing;
+  if (existing) {
+    if (options.force && !existing.force) {
+      return existing.promise.then(() => runArchidektAutoSync(userId, options));
+    }
+    return existing.promise;
+  }
 
   const task = (async () => {
     const { data: profile, error } = await supabase
@@ -120,6 +130,41 @@ export function runArchidektAutoSync(
     syncsInFlight.delete(userId);
   });
 
-  syncsInFlight.set(userId, task);
+  syncsInFlight.set(userId, { force: Boolean(options.force), promise: task });
+  return task;
+}
+
+/** Processes requests as their target user so the sync RPC stays user-scoped. */
+export function processArchidektSyncRequests(userId: string): Promise<void> {
+  const existing = requestProcessorsInFlight.get(userId);
+  if (existing) {
+    requestProcessorReruns.add(userId);
+    return existing;
+  }
+
+  const task = (async () => {
+    do {
+      requestProcessorReruns.delete(userId);
+      const { data: requests, error: requestError } = await supabase
+        .from('archidekt_sync_requests')
+        .select('id')
+        .eq('user_id', userId);
+      if (requestError) throw requestError;
+      if (!requests?.length) continue;
+
+      await runArchidektAutoSync(userId, { force: true });
+      const { error: deleteError } = await supabase
+        .from('archidekt_sync_requests')
+        .delete()
+        .eq('user_id', userId)
+        .in('id', requests.map((request) => request.id));
+      if (deleteError) throw deleteError;
+    } while (requestProcessorReruns.has(userId));
+  })().finally(() => {
+    requestProcessorsInFlight.delete(userId);
+    requestProcessorReruns.delete(userId);
+  });
+
+  requestProcessorsInFlight.set(userId, task);
   return task;
 }

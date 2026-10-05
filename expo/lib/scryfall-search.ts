@@ -33,7 +33,7 @@ type ScryfallSearchResponse = {
 
 const SCRYFALL_HEADERS = {
   Accept: 'application/json',
-  'User-Agent': 'MTGCommander/9.0.1 (https://phyrexianarena.app)',
+  'User-Agent': 'MTGCommander/9.0.4 (https://phyrexianarena.app)',
 };
 
 const SCRYFALL_MIN_REQUEST_INTERVAL_MS = 90;

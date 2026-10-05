@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CompactDeckCard } from '@/components/deck/compact-deck-card';
 import type { DeckOption } from '@/components/table/match-participant-row';
@@ -38,6 +38,9 @@ type Labels = {
   emptySeat: string;
   choosePlayer: string;
   chooseDeck: string;
+  archidektSyncWaiting: string;
+  archidektSyncDelayed: string;
+  archidektSyncFailed: string;
   searchDecks: string;
   noDecksMatchSearch: string;
   clearSeat: string;
@@ -61,6 +64,8 @@ type Props = {
   onPlayerCountChange: (count: number) => void;
   onLayoutChange: (variant: TableLayoutVariant) => void;
   onStartingLifeChange: (life: number) => void;
+  onSelectParticipant?: (participantKey: ParticipantKey) => void;
+  archidektSyncRequest?: { userId: string; status: 'sending' | 'waiting' | 'delayed' | 'failed' } | null;
   onAssignSeat: (index: number, participantKey: ParticipantKey | null, deckId: string | null) => void;
   onReset: () => void;
   onStart: () => void;
@@ -122,6 +127,8 @@ export function LiveGameConfigurator({
   onPlayerCountChange,
   onLayoutChange,
   onStartingLifeChange,
+  onSelectParticipant,
+  archidektSyncRequest,
   onAssignSeat,
   onReset,
   onStart,
@@ -163,6 +170,7 @@ export function LiveGameConfigurator({
   };
 
   const selectPlayer = (participant: SetupParticipant) => {
+    if (draftPlayer !== participant.key) onSelectParticipant?.(participant.key);
     setDraftPlayer(participant.key);
     const preferred = participant.decks.length === 1
       ? participant.decks[0].id
@@ -174,6 +182,9 @@ export function LiveGameConfigurator({
   };
 
   const selectedParticipant = draftPlayer ? participantByKey.get(draftPlayer) ?? null : null;
+  const selectedSyncStatus = draftPlayer?.startsWith('user:')
+    && archidektSyncRequest?.userId === draftPlayer.slice('user:'.length)
+    ? archidektSyncRequest.status : null;
   const filteredDecks = useMemo(() => {
     if (!selectedParticipant) return [];
     if (!deckSearchEnabled) return selectedParticipant.decks;
@@ -367,6 +378,16 @@ export function LiveGameConfigurator({
           {selectedParticipant ? (
             <View style={[styles.deckSection, tablet && styles.deckSectionTablet]}>
               <Text style={styles.deckSectionTitle}>{labels.chooseDeck}</Text>
+              {selectedSyncStatus ? <View style={styles.archidektSyncNotice} accessibilityRole="text">
+                {selectedSyncStatus === 'sending' || selectedSyncStatus === 'waiting'
+                  ? <ActivityIndicator size="small" color={colors.primaryLight} />
+                  : <Ionicons name={selectedSyncStatus === 'failed' ? 'alert-circle-outline' : 'time-outline'} size={18} color={colors.primaryLight} />}
+                <Text style={styles.archidektSyncText}>
+                  {selectedSyncStatus === 'failed' ? labels.archidektSyncFailed
+                    : selectedSyncStatus === 'delayed' ? labels.archidektSyncDelayed
+                      : labels.archidektSyncWaiting}
+                </Text>
+              </View> : null}
               {deckSearchEnabled ? <View style={styles.deckSearchWrap}>
                 <Ionicons name="search-outline" size={18} color={colors.muted} />
                 <TextInput
@@ -509,6 +530,8 @@ const styles = StyleSheet.create({
   deckSection: { gap: spacing.sm },
   deckSectionTablet: { flex: 1, minWidth: 0 },
   deckSectionTitle: { color: colors.muted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
+  archidektSyncNotice: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm, borderRadius: radii.md, backgroundColor: colors.primarySurface },
+  archidektSyncText: { flex: 1, color: colors.foreground, fontSize: 12, lineHeight: 17 },
   deckSearchWrap: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.cardInset },
   deckSearchInput: { flex: 1, minWidth: 0, color: colors.foreground, fontSize: 14 },
   emptyDeckSearch: { paddingVertical: spacing.lg, color: colors.muted, fontSize: 13, textAlign: 'center' },

@@ -1,5 +1,6 @@
 import { CollapsiblePanel } from '@/components/ui/collapsible-panel';
 import { useCallback, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
 import {
   RefreshControl,
@@ -49,6 +50,7 @@ const MASTERY_TIER_RANK: Record<string, number> = {
 };
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { user } = useAuth();
   const { copy, language } = useLanguage();
   const { showToast } = useToast();
@@ -61,6 +63,7 @@ export default function ProfileScreen() {
     refresh,
     deleteDeck,
     toggleDeckFavorite,
+    setDeckArchived,
     saveImportedDeck,
     saveManualDeck,
     refreshImportedDeck,
@@ -92,6 +95,7 @@ export default function ProfileScreen() {
   const filteredDecks = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     const filtered = decks.filter((deck) => {
+      if (deck.is_archived) return false;
       if (query) {
         const matchesQuery =
           deck.name.toLowerCase().includes(query) ||
@@ -122,6 +126,8 @@ export default function ProfileScreen() {
       return a.name.localeCompare(b.name, language, { sensitivity: 'base' });
     });
   }, [deckColorFilter, deckSort, decks, language, performance, searchQuery]);
+
+  const activeDecks = useMemo(() => decks.filter((deck) => !deck.is_archived), [decks]);
 
   const memberSince = useMemo(() => {
     if (!profile?.created_at) return '';
@@ -217,12 +223,14 @@ export default function ProfileScreen() {
         onEdit={() => openEditDeck(deck)}
         onRefresh={() => handleRefreshDeck(deck)}
         onDelete={() => handleDeleteDeck(deck.id)}
+        onArchive={() => void setDeckArchived(deck.id, true).then(() => showToast(copy('deckArchived'))).catch((error) => showAppAlert(copy('error'), getSupabaseErrorMessage(error, copy('saveDeckFailed'))))}
+        archiveLabel={copy('archiveDeck')}
         onToggleFavorite={() => void toggleDeckFavorite(deck.id, !deck.is_favorite).catch((error) => {
           showAppAlert(copy('error'), getSupabaseErrorMessage(error, copy('saveDeckFailed')));
         })}
       />
     </View>
-  ), [copy, handleDeleteDeck, handleRefreshDeck, language, openEditDeck, refreshingDeckIds, toggleDeckFavorite, winRates]);
+  ), [copy, handleDeleteDeck, handleRefreshDeck, language, openEditDeck, refreshingDeckIds, setDeckArchived, showToast, toggleDeckFavorite, winRates]);
 
   const listHeader = (
     <View style={styles.listHeader}>
@@ -243,16 +251,17 @@ export default function ProfileScreen() {
           <View style={styles.snapshotRow}>
             <View style={styles.snapshot}><Text style={styles.snapshotLabel}>{language === 'it' ? 'Partite' : 'Matches'}</Text><Text style={styles.snapshotValue}>{personalSnapshot.games}</Text></View>
             <View style={styles.snapshot}><Text style={styles.snapshotLabel}>Win rate</Text><Text style={styles.snapshotValue}>{personalSnapshot.winRate}%</Text></View>
-            <View style={styles.snapshot}><Text style={styles.snapshotLabel}>{language === 'it' ? 'Mazzi' : 'Decks'}</Text><Text style={styles.snapshotValue}>{decks.length}</Text></View>
+            <View style={styles.snapshot}><Text style={styles.snapshotLabel}>{language === 'it' ? 'Mazzi' : 'Decks'}</Text><Text style={styles.snapshotValue}>{activeDecks.length}</Text></View>
           </View>
+          <Button label={`${copy('archivedDecks')} (${decks.length - activeDecks.length})`} icon="archive-outline" variant="ghost" size="sm" onPress={() => router.push('/archived-decks')} />
           {personalSnapshot.favorite ? <Text style={styles.favorite}>{language === 'it' ? 'Preferito' : 'Favorite'} · {personalSnapshot.favorite.name}</Text> : null}
         </PhyrexianPanel>
 
-        {decks.length > 0 ? (
+        {activeDecks.length > 0 ? (
           <CollapsiblePanel title={language === 'it' ? 'Analisi mazzi' : 'Decks insights'}>
           <DeckCollectionInsights
             initiallyExpanded
-            decks={decks}
+            decks={activeDecks}
             language={language}
             labels={{
               avgBracket: copy('avgBracket'),
@@ -279,7 +288,7 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>{copy('deckArsenal')}</Text>
         </View>
 
-        {decks.length > 0 ? (
+        {activeDecks.length > 0 ? (
           <FilterPanel
             actions={(
               <>

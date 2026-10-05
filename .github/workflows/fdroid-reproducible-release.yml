@@ -18,7 +18,6 @@ jobs:
       EXPO_PUBLIC_SENTRY_ENABLED: 'false'
       EXPO_PUBLIC_DISABLE_PUSH_NOTIFICATIONS: 'true'
       GRADLE_USER_HOME: /home/vagrant/.gradle
-      PRODUCTION_SUPABASE_ANON_KEY: ${{ secrets.PRODUCTION_SUPABASE_ANON_KEY }}
       RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
       RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
       RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
@@ -35,10 +34,12 @@ jobs:
           version="${GITHUB_REF_NAME#fdroid-v}"
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
           [[ "$(node -p "require('./expo/app.json').expo.version")" == "$version" ]]
-          for secret in RELEASE_KEYSTORE_BASE64 RELEASE_STORE_PASSWORD RELEASE_KEY_ALIAS RELEASE_KEY_PASSWORD PRODUCTION_SUPABASE_ANON_KEY; do
+          for secret in RELEASE_KEYSTORE_BASE64 RELEASE_STORE_PASSWORD RELEASE_KEY_ALIAS RELEASE_KEY_PASSWORD; do
             [[ -n "${!secret}" ]] || { echo "Missing $secret"; exit 1; }
           done
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "code=$(node -p "require('./expo/app.json').expo.android.versionCode")" >> "$GITHUB_OUTPUT"
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)" >> "$GITHUB_ENV"
 
       - uses: actions/setup-node@v4
         with:
@@ -53,6 +54,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+          cache-disabled: true
 
       - uses: android-actions/setup-android@v3
         with:
@@ -77,6 +83,8 @@ jobs:
         run: |
           npm ci
           npm --prefix expo ci
+          node --test scripts/prepare-fdroid-env.test.mjs
+          node scripts/prepare-fdroid-env.mjs
 
       - name: Validate the F-Droid source tree
         working-directory: /home/vagrant/build/com.phyrexianarena.app
@@ -100,14 +108,37 @@ jobs:
           sed -i 's/-Xmx2048m/-Xmx4g/; s/MaxMetaspaceSize=512m/MaxMetaspaceSize=1g/' android/gradle.properties
           printf '\norg.gradle.workers.max=1\n' >> android/gradle.properties
 
+      - name: Verify Expo autolinking and scan the source tree
+        working-directory: /home/vagrant/build/com.phyrexianarena.app
+        run: |
+          node scripts/verify-fdroid-autolinking.mjs
+          python3 -m venv "$RUNNER_TEMP/fdroid-tools"
+          "$RUNNER_TEMP/fdroid-tools/bin/pip" install 'fdroidserver==2.4.5'
+          "$RUNNER_TEMP/fdroid-tools/bin/python" scripts/scan-fdroid-source.py --build-dir "$PWD"
+          node scripts/verify-fdroid-autolinking.mjs
+
       - name: Build twice and compare unsigned APKs
         working-directory: /home/vagrant/build/com.phyrexianarena.app/expo/android
         run: |
-          ./gradlew :app:assembleRelease -PfdroidBuild=true -PreactNativeArchitectures=arm64-v8a -PreactNativeDevServerIp=localhost --no-daemon --console=plain
+          gradle :app:assembleRelease -PfdroidBuild=true -PreactNativeArchitectures=arm64-v8a -PreactNativeDevServerIp=localhost --no-daemon --console=plain
           cp app/build/outputs/apk/release/app-release-unsigned.apk "$RUNNER_TEMP/fdroid-first.apk"
-          ./gradlew clean --no-daemon --console=plain
-          ./gradlew :app:assembleRelease -PfdroidBuild=true -PreactNativeArchitectures=arm64-v8a -PreactNativeDevServerIp=localhost --no-daemon --console=plain
+          gradle clean --no-daemon --console=plain
+          gradle :app:assembleRelease -PfdroidBuild=true -PreactNativeArchitectures=arm64-v8a -PreactNativeDevServerIp=localhost --no-daemon --console=plain
           cmp "$RUNNER_TEMP/fdroid-first.apk" app/build/outputs/apk/release/app-release-unsigned.apk
+
+      - name: Verify APK identity, architecture and permissions
+        working-directory: /home/vagrant/build/com.phyrexianarena.app/expo/android
+        run: |
+          apk=app/build/outputs/apk/release/app-release-unsigned.apk
+          "$ANDROID_HOME/build-tools/34.0.0/aapt" dump badging "$apk" > "$RUNNER_TEMP/fdroid-badging.txt"
+          grep -F "package: name='com.phyrexianarena.app' versionCode='${{ steps.release.outputs.code }}' versionName='${{ steps.release.outputs.version }}'" "$RUNNER_TEMP/fdroid-badging.txt"
+          grep -Fx "application-label:'21Life'" "$RUNNER_TEMP/fdroid-badging.txt"
+          grep -Fx "native-code: 'arm64-v8a'" "$RUNNER_TEMP/fdroid-badging.txt"
+          "$ANDROID_HOME/build-tools/34.0.0/aapt" dump permissions "$apk" > "$RUNNER_TEMP/fdroid-permissions.txt"
+          if grep -E 'READ_EXTERNAL_STORAGE|WRITE_EXTERNAL_STORAGE|MANAGE_EXTERNAL_STORAGE|READ_MEDIA_|REQUEST_INSTALL_PACKAGES|POST_NOTIFICATIONS|com.google.android.c2dm' "$RUNNER_TEMP/fdroid-permissions.txt"; then
+            echo 'Unexpected permission in F-Droid APK'
+            exit 1
+          fi
 
       - name: Sign and verify the reproducible reference APK
         id: apk
@@ -120,7 +151,10 @@ jobs:
           output="$RUNNER_TEMP/mtg-tracker-fdroid-v${{ steps.release.outputs.version }}.apk"
           "$ANDROID_HOME/build-tools/34.0.0/zipalign" -p -f 4 "$unsigned" "$aligned"
           "$ANDROID_HOME/build-tools/34.0.0/apksigner" sign --ks "$keystore" --ks-pass "pass:$RELEASE_STORE_PASSWORD" --ks-key-alias "$RELEASE_KEY_ALIAS" --key-pass "pass:$RELEASE_KEY_PASSWORD" --out "$output" "$aligned"
-          "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --verbose --print-certs "$output"
+          "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --verbose --print-certs "$output" | tee "$RUNNER_TEMP/fdroid-cert.txt"
+          expected=$(sed -n 's/^AllowedAPKSigningKeys: //p' ../../fdroid/metadata/com.phyrexianarena.app.yml)
+          grep -F "Signer #1 certificate SHA-256 digest: $expected" "$RUNNER_TEMP/fdroid-cert.txt"
+          "$RUNNER_TEMP/fdroid-tools/bin/fdroid" scanner --refresh --exit-code "$output"
           echo "apk=$output" >> "$GITHUB_OUTPUT"
 
       - name: Publish reference APK
@@ -128,7 +162,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           APK: ${{ steps.apk.outputs.apk }}
         run: |
-          sha256sum "$APK" > "$APK.sha256"
+          cd "$RUNNER_TEMP"
+          sha256sum "$(basename "$APK")" > "$APK.sha256"
           gh release create "$GITHUB_REF_NAME" "$APK" "$APK.sha256" \
+            --repo "$GITHUB_REPOSITORY" \
             --title "F-Droid reference $GITHUB_REF_NAME" \
             --notes 'Developer-signed reference APK for F-Droid reproducible-build verification.'
