@@ -32,6 +32,7 @@ import {
 } from '@/stores/live-game-runtime-store';
 import { hapticLight, hapticMedium, hapticSuccess, hapticWarning } from '@/lib/haptics';
 import { apiPost } from '@/lib/api';
+import { syncArenaMemberArchidektDecks } from '@/lib/arena-archidekt-sync';
 import { getLastDeckSelectionForParticipant } from '@/lib/arena-participants';
 import { getPreferredDeckId } from '@/lib/arena-deck-selection';
 import {
@@ -149,7 +150,7 @@ export default function LiveGameScreen() {
   const { showToast } = useToast();
   const { scrollContentStyle } = useScreenInsets();
 
-  const { members, guests, decks, matches, loading, group } = useArena(groupId, user?.id);
+  const { members, guests, decks, matches, loading, group, refresh } = useArena(groupId, user?.id);
 
   const [liveGame, setLiveGame] = useState<LiveGameRecord | null>(null);
   const [booting, setBooting] = useState(true);
@@ -165,9 +166,9 @@ export default function LiveGameScreen() {
   const [starting, setStarting] = useState(false);
   const [archidektSyncRequest, setArchidektSyncRequest] = useState<{
     userId: string;
-    status: 'sending' | 'waiting' | 'delayed' | 'failed';
-    deckFingerprint: string;
+    status: 'syncing' | 'completed' | 'partial' | 'failed';
   } | null>(null);
+  const archidektSyncGeneration = useRef(0);
   const [damagePulse, setDamagePulse] = useState<Record<string, number>>({});
   const [randomHighlight, setRandomHighlight] = useState<ParticipantKey | null>(null);
   const [startingHighlight, setStartingHighlight] = useState<ParticipantKey | null>(null);
@@ -298,25 +299,6 @@ export default function LiveGameScreen() {
     }),
   ], [getDeckOptions, guests, matches, members]);
 
-  const memberDeckFingerprint = useCallback((userId: string) => JSON.stringify(
-    (decksByUser.get(userId) || []).map((deck) => [
-      deck.id, deck.name, deck.commander, deck.commander_image, deck.source_url,
-    ]),
-  ), [decksByUser]);
-
-  useEffect(() => {
-    if (!archidektSyncRequest || archidektSyncRequest.status !== 'waiting') return;
-    if (memberDeckFingerprint(archidektSyncRequest.userId) !== archidektSyncRequest.deckFingerprint) {
-      setArchidektSyncRequest(null);
-      return;
-    }
-    const timeout = setTimeout(() => {
-      setArchidektSyncRequest((current) => current?.userId === archidektSyncRequest.userId
-        && current.status === 'waiting' ? { ...current, status: 'delayed' } : current);
-    }, 25000);
-    return () => clearTimeout(timeout);
-  }, [archidektSyncRequest, memberDeckFingerprint]);
-
   const applySeatSetups = useCallback((nextSeats: LiveGameSeatSetup[]) => {
     setSeatSetups(nextSeats);
     const assigned = nextSeats.filter(
@@ -362,6 +344,7 @@ export default function LiveGameScreen() {
   }, [applySeatSetups, seatSetups]);
 
   const handleSelectSetupParticipant = useCallback((participantKey: ParticipantKey) => {
+    const generation = ++archidektSyncGeneration.current;
     const targetUserId = participantKey.startsWith('user:')
       ? participantKey.slice('user:'.length)
       : null;
@@ -370,20 +353,21 @@ export default function LiveGameScreen() {
       setArchidektSyncRequest(null);
       return;
     }
-
-    const deckFingerprint = memberDeckFingerprint(targetUserId);
-    setArchidektSyncRequest({ userId: targetUserId, status: 'sending', deckFingerprint });
-
-    void supabase.from('archidekt_sync_requests').upsert({
-      group_id: groupId,
-      user_id: targetUserId,
-      requested_by: currentUserId,
-    }, { onConflict: 'group_id,user_id', ignoreDuplicates: true }).then(({ error }) => {
-      if (error) console.warn('Could not request participant Archidekt sync', error.message);
-      setArchidektSyncRequest((current) => current?.userId === targetUserId
-        ? { ...current, status: error ? 'failed' : 'waiting' } : current);
-    });
-  }, [currentUserId, groupId, memberDeckFingerprint, members]);
+    setArchidektSyncRequest({ userId: targetUserId, status: 'syncing' });
+    void (async () => {
+      try {
+        const result = await syncArenaMemberArchidektDecks(groupId, targetUserId);
+        if (!await refresh(false)) throw new Error('Unable to refresh arena decks.');
+        if (generation === archidektSyncGeneration.current) {
+          setArchidektSyncRequest({ userId: targetUserId, status: result.skipped ? 'partial' : 'completed' });
+        }
+      } catch {
+        if (generation === archidektSyncGeneration.current) {
+          setArchidektSyncRequest({ userId: targetUserId, status: 'failed' });
+        }
+      }
+    })();
+  }, [currentUserId, groupId, members, refresh]);
 
   const resetSetup = useCallback(() => {
     applySeatSetups(clearLiveGameSeats(seatSetups));
@@ -1779,7 +1763,9 @@ export default function LiveGameScreen() {
                 choosePlayer: copy('liveGameChoosePlayer'),
                 chooseDeck: copy('liveGameChooseDeck'),
                 archidektSyncWaiting: copy('liveGameArchidektSyncWaiting'),
-                archidektSyncDelayed: copy('liveGameArchidektSyncDelayed'),
+                archidektSyncCompleted: copy('liveGameArchidektSyncCompleted'),
+                archidektSyncPartial: copy('liveGameArchidektSyncPartial'),
+                archidektSyncRetry: copy('liveGameArchidektSyncRetry'),
                 archidektSyncFailed: copy('liveGameArchidektSyncFailed'),
                 searchDecks: copy('searchDecks'),
                 noDecksMatchSearch: copy('noDecksMatchSearch'),
