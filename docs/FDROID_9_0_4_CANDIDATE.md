@@ -98,3 +98,10 @@ environment tests pass 8/8; fresh Expo tests remain 249/249. Android F-Droid
 export passes at 7.73 MiB / 12 MiB, and byte inspection confirms the production
 Supabase URL, public anon key, API URL and Turnstile site key are in the Hermes
 bundle (values are deliberately not printed in logs).
+
+Reference attempt 37286774149 stopped before dependency installation/native
+build: setup-gradle tried to write GRADLE_USER_HOME before the mirrored directory
+was created (EACCES). The action now runs after directory creation/chown. No
+9.0.4 release or APK existed, and the official MR still referenced 9.0.1; only
+this unpublished candidate tag may be realigned to the corrected source, using
+an explicit force-with-lease against 7079dd597e42d2acb850adee59d36ded8ac1f6bd.
