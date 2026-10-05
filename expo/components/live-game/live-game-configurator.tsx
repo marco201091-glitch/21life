@@ -39,7 +39,9 @@ type Labels = {
   choosePlayer: string;
   chooseDeck: string;
   archidektSyncWaiting: string;
-  archidektSyncDelayed: string;
+  archidektSyncCompleted: string;
+  archidektSyncPartial: string;
+  archidektSyncRetry: string;
   archidektSyncFailed: string;
   searchDecks: string;
   noDecksMatchSearch: string;
@@ -65,7 +67,7 @@ type Props = {
   onLayoutChange: (variant: TableLayoutVariant) => void;
   onStartingLifeChange: (life: number) => void;
   onSelectParticipant?: (participantKey: ParticipantKey) => void;
-  archidektSyncRequest?: { userId: string; status: 'sending' | 'waiting' | 'delayed' | 'failed' } | null;
+  archidektSyncRequest?: { userId: string; status: 'syncing' | 'completed' | 'partial' | 'failed' } | null;
   onAssignSeat: (index: number, participantKey: ParticipantKey | null, deckId: string | null) => void;
   onReset: () => void;
   onStart: () => void;
@@ -379,14 +381,21 @@ export function LiveGameConfigurator({
             <View style={[styles.deckSection, tablet && styles.deckSectionTablet]}>
               <Text style={styles.deckSectionTitle}>{labels.chooseDeck}</Text>
               {selectedSyncStatus ? <View style={styles.archidektSyncNotice} accessibilityRole="text">
-                {selectedSyncStatus === 'sending' || selectedSyncStatus === 'waiting'
+                {selectedSyncStatus === 'syncing'
                   ? <ActivityIndicator size="small" color={colors.primaryLight} />
-                  : <Ionicons name={selectedSyncStatus === 'failed' ? 'alert-circle-outline' : 'time-outline'} size={18} color={colors.primaryLight} />}
+                  : <Ionicons name={selectedSyncStatus === 'completed' ? 'checkmark-circle-outline' : 'alert-circle-outline'} size={18} color={colors.primaryLight} />}
                 <Text style={styles.archidektSyncText}>
                   {selectedSyncStatus === 'failed' ? labels.archidektSyncFailed
-                    : selectedSyncStatus === 'delayed' ? labels.archidektSyncDelayed
+                    : selectedSyncStatus === 'completed' ? labels.archidektSyncCompleted
+                      : selectedSyncStatus === 'partial' ? labels.archidektSyncPartial
                       : labels.archidektSyncWaiting}
                 </Text>
+                {selectedSyncStatus !== 'syncing' && onSelectParticipant ? <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={labels.archidektSyncRetry}
+                  onPress={() => onSelectParticipant(selectedParticipant.key)}
+                  hitSlop={8}
+                ><Ionicons name="refresh-outline" size={22} color={colors.primaryLight} /></Pressable> : null}
               </View> : null}
               {deckSearchEnabled ? <View style={styles.deckSearchWrap}>
                 <Ionicons name="search-outline" size={18} color={colors.muted} />

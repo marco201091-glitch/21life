@@ -439,6 +439,11 @@
       "version": "20261001110000",
       "name": "20261001110000_admin_migration_registry_read.sql",
       "checksum": "d93d392ef7a3fecb978c717c845af7b16deb131db957ace87e8fb6f8afae1ec8"
+    },
+    {
+      "version": "20261005132724",
+      "name": "20261005132724_arena_archidekt_server_sync.sql",
+      "checksum": "2a53ceca8a2f15f66c10e211eb028fe8be1eded22ffffdda6205be65e0e1e7aa"
     }
   ]
 }
