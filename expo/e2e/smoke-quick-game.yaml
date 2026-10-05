@@ -1,9 +1,20 @@
-appId: com.phyrexianarena.app
+appId: com.phyrexianarena.app.dev
+env:
+  METRO_URL: ""
 ---
 - launchApp:
     clearState: true
+- runFlow:
+    when:
+      true: ${METRO_URL != ""}
+    commands:
+      - openLink: ${METRO_URL}
 - tapOn:
     id: login-quick-game
+- scrollUntilVisible:
+    element:
+      id: counter-start-game
+    direction: DOWN
 - tapOn:
     id: counter-start-game
 - assertVisible:
