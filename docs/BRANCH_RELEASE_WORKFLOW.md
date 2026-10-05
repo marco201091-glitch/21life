@@ -1,8 +1,11 @@
 # Branch and release workflow
 
-The supported development path is `feature/*` → `Dev` → `main`. Keep feature
-changes reviewable in pull requests and preserve the ancestry of the long-lived
-release branches.
+`Dev` is the integration branch for development. Promote reviewed improvements
+from `Dev` to `main` for the standard release and to `fdroid-prep` for F-Droid,
+preserving the intentional F-Droid exclusions. These are the only permanent
+remote branches. Feature and dependency-update branches are temporary: remove
+them after integration or explicit closure, after checking for unique work.
+Keep changes reviewable in pull requests and preserve release branch ancestry.
 
 ## Feature integration
 
