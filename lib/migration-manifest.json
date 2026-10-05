@@ -444,6 +444,11 @@
       "version": "20261005132724",
       "name": "20261005132724_arena_archidekt_server_sync.sql",
       "checksum": "2a53ceca8a2f15f66c10e211eb028fe8be1eded22ffffdda6205be65e0e1e7aa"
+    },
+    {
+      "version": "20261005140052",
+      "name": "20261005140052_recommend_v9_0_5_runtime_update.sql",
+      "checksum": "2a46b3d9685b50056f228439504d9cfa99aa3a7bf2b5bb1b43798c84fc8ac0eb"
     }
   ]
 }
