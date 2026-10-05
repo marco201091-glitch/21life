@@ -1,6 +1,6 @@
 # F-Droid-style release readiness
 
-Version 9.0.4 is being prepared in the official F-Droid `fdroiddata` merge request. Source build, reproducibility, and device review must pass before inclusion.
+Version 9.0.5 with server-side arena Archidekt sync is being prepared in the official F-Droid `fdroiddata` merge request. Source build, reproducibility, and device review must pass before inclusion.
 
 ## Current assessment
 
@@ -80,3 +80,7 @@ docs/FDROID_OFFICIAL_SUBMISSION.md
 - Remaining work is external maintainer review and any requested follow-up.
 - Keep the neutral-identity fallback plan only if store review rejects the
   current name, domain, or symbols.
+
+## 9.0.5 channel isolation
+
+The common Expo wizard fix is imported from main. Production backend and migrations are already deployed; the F-Droid APK consumes the same authenticated endpoint. Google OAuth, push and Sentry exclusions remain intact. Reference tags use fdroid-v*, releases are prereleases and never Latest. Standard Obtainium releases use v* and commits belonging to main. The immutable 9.0.4 reference/source tag remains unchanged.

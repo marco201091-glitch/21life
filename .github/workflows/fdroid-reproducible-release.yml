@@ -167,4 +167,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" "$APK" "$APK.sha256" \
             --repo "$GITHUB_REPOSITORY" \
             --title "F-Droid reference $GITHUB_REF_NAME" \
+            --prerelease --latest=false \
             --notes 'Developer-signed reference APK for F-Droid reproducible-build verification.'
