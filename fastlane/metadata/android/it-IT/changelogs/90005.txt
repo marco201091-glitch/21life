@@ -1,0 +1,1 @@
+Aggiorna dal wizard i mazzi Archidekt di ogni membro dell’arena con sync abilitato, anche con il suo telefono offline. Esiti chiari e pulsante per riprovare. I mazzi esistenti restano disponibili in caso di errore.
