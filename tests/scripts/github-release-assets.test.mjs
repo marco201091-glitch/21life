@@ -24,7 +24,7 @@ function assets() {
   ];
 }
 
-function fakeApi({ existing = null, releaseLookupError = null, uploadFailureAt = 0, remoteCommit = commitSha } = {}) {
+function fakeApi({ existing = null, releaseLookupError = null, uploadFailureAt = 0, remoteCommit = commitSha, mainAncestor = true, hideDraftByTag = false } = {}) {
   const state = { release: existing, posts: 0, patches: [], uploads: 0, calls: [], failedUpload: false };
   const api = {
     async request(method, path, body) {
@@ -32,9 +32,12 @@ function fakeApi({ existing = null, releaseLookupError = null, uploadFailureAt =
       if (path.endsWith(`/git/ref/tags/${tag}`)) {
         return { object: { type: 'commit', sha: remoteCommit } };
       }
+      if (path.includes('/compare/')) return { merge_base_commit: { sha: mainAncestor ? commitSha : 'f'.repeat(40) } };
+      if (path.endsWith('/releases?per_page=100&page=1')) return state.release ? [structuredClone(state.release)] : [];
+      if (path.endsWith('/releases/17') && method === 'GET') return structuredClone(state.release);
       if (path.endsWith(`/releases/tags/${tag}`)) {
         if (releaseLookupError) throw Object.assign(new Error('API unavailable'), { status: releaseLookupError });
-        if (!state.release) throw Object.assign(new Error('Not found'), { status: 404 });
+        if (!state.release || (hideDraftByTag && state.release.draft)) throw Object.assign(new Error('Not found'), { status: 404 });
         return structuredClone(state.release);
       }
       if (path.endsWith('/releases') && method === 'POST') {
@@ -167,4 +170,36 @@ test('rejects an SBOM for another release version', () => {
   sbom.metadata.component.version = '9.0.3';
   invalid[2] = { ...invalid[2], bytes: Buffer.from(JSON.stringify(sbom)) };
   assert.throws(() => validateReleaseAssets(version, invalid), /version/);
+});
+
+test('verifies a newly-created draft by ID when the tag endpoint returns404', async () => {
+  const { api, state } = fakeApi({ hideDraftByTag: true });
+  await input(api);
+  assert.equal(state.release.draft, false);
+  assert.ok(state.calls.some(call => call.method === 'GET' && call.path.endsWith('/releases/17')));
+});
+test('resumes an existing draft hidden by tag without creating a duplicate release', async () => {
+  const { api, state } = fakeApi({ existing: existingRelease(assets().slice(0,2), { draft:true }), hideDraftByTag:true });
+  await input(api);
+  assert.equal(state.posts,0);
+  assert.equal(state.uploads,2);
+  assert.equal(state.release.draft,false);
+});
+test('rejects a F-Droid-only commit before uploading or creating an Obtainium release', async () => {
+  const { api, state } = fakeApi({ mainAncestor:false });
+  await assert.rejects(input(api), /main/);
+  assert.equal(state.posts,0);
+  assert.equal(state.uploads,0);
+});
+
+test('does not create a release when hidden-draft listing is denied', async () => {
+  const { api, state } = fakeApi();
+  const request=api.request;
+  api.request=async (method,path,body)=>{
+    if(path.includes('/releases?')) throw Object.assign(new Error('Listing denied'),{status:403});
+    return request(method,path,body);
+  };
+  await assert.rejects(input(api),/Listing denied/);
+  assert.equal(state.posts,0);
+  assert.equal(state.patches.length,0);
 });
