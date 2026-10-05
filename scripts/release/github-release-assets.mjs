@@ -85,21 +85,32 @@ export async function publishReleaseAssets({ api, repo, tag, version, commitSha,
     throw new GitHubReleaseError('Release tag resolves to a different commit than the candidate.');
   }
 
+  const ancestry = await api.request('GET', `/repos/${repo}/compare/${taggedCommit}...main`);
+  if (ancestry.merge_base_commit?.sha !== taggedCommit) {
+    throw new GitHubReleaseError('Only commits belonging to main may publish Obtainium releases.');
+  }
+
   let release;
   let created = false;
   try {
     release = await api.request('GET', `/repos/${repo}/releases/tags/${encodeURIComponent(tag)}`);
   } catch (error) {
     if (error.status !== 404) throw error;
-    release = await api.request('POST', `/repos/${repo}/releases`, {
-      tag_name: tag,
-      target_commitish: commitSha,
-      name: title,
-      body,
-      draft: true,
-      prerelease: false,
-    });
-    created = true;
+    // Drafts can be absent from the by-tag endpoint. Find them before creating
+    // another release, and fail closed if listing itself fails.
+    for (let page = 1; page <= 20; page += 1) {
+      const entries = await api.request('GET', `/repos/${repo}/releases?per_page=100&page=${page}`);
+      release = entries.find(entry => entry.tag_name === tag);
+      if (release || entries.length < 100) break;
+      if (page === 20) throw new GitHubReleaseError('Release search exceeded its safe pagination limit.');
+    }
+    if (!release) {
+      release = await api.request('POST', `/repos/${repo}/releases`, {
+        tag_name: tag, target_commitish: commitSha, name: title, body,
+        draft: true, prerelease: false,
+      });
+      created = true;
+    }
   }
 
   if (release.tag_name !== tag || !release.upload_url) {
@@ -121,7 +132,7 @@ export async function publishReleaseAssets({ api, repo, tag, version, commitSha,
     await api.uploadAsset(release.upload_url, candidate.name, candidate.bytes);
   }
 
-  const verified = await api.request('GET', `/repos/${repo}/releases/tags/${encodeURIComponent(tag)}`);
+  const verified = await api.request('GET', `/repos/${repo}/releases/${release.id}`);
   if (verified.tag_name !== tag) throw new GitHubReleaseError('Release tag changed during asset publication.');
   const finalAssets = new Map((verified.assets ?? []).map((asset) => [asset.name, asset]));
   for (const candidate of preparedAssets) {
