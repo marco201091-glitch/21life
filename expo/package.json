@@ -24,7 +24,7 @@
     "doctor:ci": "node ../scripts/expo-doctor-ci.mjs",
     "android": "expo run:android",
     "android:bundle:check": "expo export --platform android --output-dir .qa-android-export --clear",
-    "audit:production": "npm audit --omit=dev --audit-level=high",
+    "audit:production": "node ../scripts/dependency-audit.mjs --expo",
     "verify:bundle-budget": "node ../scripts/check-build-budgets.mjs --expo",
     "android:prebuild": "expo prebuild --platform android --clean",
     "android:refresh-icons": "npm run assets:logo && npm run assets:android-icon && npm run android:prebuild && npm run verify:logos",
