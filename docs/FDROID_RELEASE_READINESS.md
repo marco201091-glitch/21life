@@ -73,8 +73,11 @@ docs/FDROID_OFFICIAL_SUBMISSION.md
 ## Submission status
 
 - Official merge request: <https://gitlab.com/fdroid/fdroiddata/-/merge_requests/44721>
-- The 9.0.4 official pipeline passed: <https://gitlab.com/marco201091-glitch/fdroiddata/-/pipelines/2912844691>. Source build, scanner, reproducibility against the signed reference, metadata checks and APK checks are green.
-- Published reference: <https://github.com/marco201091-glitch/PhyrexianArena/releases/tag/fdroid-v9.0.4>; immutable source commit `688268860b1946ec8c060825d0780c0164f4a702`.
+- The 9.0.5 official pipeline passed: <https://gitlab.com/marco201091-glitch/fdroiddata/-/pipelines/2914442626>. Source build, scanner, reproducibility against the signed reference, metadata checks and APK checks are green.
+- Published 9.0.5 reference: <https://github.com/marco201091-glitch/PhyrexianArena/releases/tag/fdroid-v9.0.5>; immutable source commit `f6d23f4db0b539586b6349f91b4a12513c5ff977`.
+- Reference SHA-256: `fa42494be5a0f6dceddbc0629773e74382ef09c7991a1395b2b1391ca12fb24e`; version 9.0.5 / 90005, arm64-v8a, existing allowed signing certificate verified after download.
+- Reference workflow <https://github.com/marco201091-glitch/PhyrexianArena/actions/runs/37337201417> passed two byte-identical clean builds, source/APK scanners and permission/signature checks.
+- The 9.0.4 source tag (`688268860b1946ec8c060825d0780c0164f4a702`) and its reference remain fixed and available.
 - `NonFreeNet` is declared for the fixed hosted and third-party network services.
 - Store text and changelog live upstream under `fastlane/metadata/android/en-US`.
 - Remaining work is external maintainer review and any requested follow-up.
