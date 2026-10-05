@@ -21,9 +21,9 @@ Repo: https://github.com/marco201091-glitch/PhyrexianArena.git
 Binaries: https://github.com/marco201091-glitch/PhyrexianArena/releases/download/fdroid-v%v/mtg-tracker-fdroid-v%v.apk
 
 Builds:
-  - versionName: 9.0.4
-    versionCode: 90004
-    commit: fdroid-v9.0.4
+  - versionName: 9.0.5
+    versionCode: 90005
+    commit: fdroid-v9.0.5
     subdir: expo
     sudo:
       - apt-get update
@@ -82,5 +82,5 @@ AllowedAPKSigningKeys: 5d25e32cdf901becfba81adf93189e1d755e50a90b897efa21da4c2ab
 AutoUpdateMode: Version
 UpdateCheckMode: Tags fdroid-v[0-9.]+$
 UpdateCheckData: expo/app.json|"versionCode":\s*(\d+),|.|"version":\s*"([^"]+)"
-CurrentVersion: 9.0.4
-CurrentVersionCode: 90004
+CurrentVersion: 9.0.5
+CurrentVersionCode: 90005
