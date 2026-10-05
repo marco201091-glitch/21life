@@ -79,3 +79,14 @@ verifies package/version/ABI/permissions and the preserved signing certificate,
 then scans the signed binary before publishing. The official pipeline and
 maintainer on-device review remain separate gates. Never claim acceptance
 based only on local quality checks or the GitHub reference build.
+
+On 2026-10-05 the final official pipeline passed:
+<https://gitlab.com/marco201091-glitch/fdroiddata/-/pipelines/2912844691>.
+Build job 16933655464 successfully compared its APK with the supplied reference
+and verified the allowed signer; check APK job 16933655472 passed. All metadata
+jobs passed, including current fdroidserver master rewritemeta. The MR source
+head is `46907e9d15c485e1c22807e1fc0d480aae30e7d4`; its recipe pins immutable
+app source `688268860b1946ec8c060825d0780c0164f4a702`.
+The reference is public at
+<https://github.com/marco201091-glitch/PhyrexianArena/releases/tag/fdroid-v9.0.4>.
+Maintainer approval and on-device testing are still external pending gates.

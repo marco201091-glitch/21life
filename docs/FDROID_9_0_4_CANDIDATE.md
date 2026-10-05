@@ -105,3 +105,30 @@ was created (EACCES). The action now runs after directory creation/chown. No
 9.0.4 release or APK existed, and the official MR still referenced 9.0.1; only
 this unpublished candidate tag may be realigned to the corrected source, using
 an explicit force-with-lease against 7079dd597e42d2acb850adee59d36ded8ac1f6bd.
+
+Final reference run 37287041006 passed on immutable source/tag
+688268860b1946ec8c060825d0780c0164f4a702. The final Linux source scan, two
+byte-identical unsigned builds, APK identity/ABI/permissions, signing certificate
+and signed binary scan all passed. Release fdroid-v9.0.4 contains the reference
+APK and checksum; downloading both confirms SHA-256
+b6d14c27cbeaeae7092a394542baaff1be7cadb6e48634cde584c978e227c865.
+Do not move this published tag. Official MR 44721 now contains fdroiddata commit
+52e0624c3251a0a53282901e273d3bbe9865bdf5, pinning that exact source SHA.
+Official pipeline 2912832364 is running; independent F-Droid reproducibility
+and maintainer on-device review remain pending.
+
+The official rewritemeta job uses fdroidserver master c21c177, whose formatter
+wraps the long Binaries URL differently from local fdroidserver 2.4.5. Official
+recipe follow-up 46907e9d1 applies its exact output (blob
+13f254cfb3c8f562c030ffe5e1da29fddacd1b94). This formatting-only correction
+preserves the source pin, published APK and build instructions. The formatter
+itself writes a space after Binaries: before its newline; this is intentional
+official output, not an accidental trailing-whitespace change.
+
+Final official pipeline 2912844691 PASSED on 2026-10-05, source head
+46907e9d15c485e1c22807e1fc0d480aae30e7d4. Build job 16933655464 reports
+"compared built binary to supplied reference binary successfully" and the
+allowed signer 5d25e32cdf901becfba81adf93189e1d755e50a90b897efa21da4c2ab3002106.
+Check APK job 16933655472 and every metadata/source check passed. The technical
+release/submission work is complete; maintainer approval and physical device
+review are pending. No Android device was connected to this workstation.
