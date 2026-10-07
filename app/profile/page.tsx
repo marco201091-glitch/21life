@@ -78,7 +78,7 @@ import {
   type DeckPerformanceInputRow,
   type DeckPerformanceStats,
 } from '@/lib/deck-performance-analytics';
-import { getDeckMastery } from '@/lib/deck-mastery';
+import { getDeckMastery, getHighestMasteryDeck } from '@/lib/deck-mastery';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { PasswordRequirements, isPasswordPolicyValid } from '@/components/auth/password-requirements';
 import { isGoogleAuthUser } from '@/lib/oauth-profile';
@@ -1020,7 +1020,7 @@ export default function ProfilePage() {
     const performances = visibleDecks.map((deck) => deckPerformance.get(deck.id)).filter((entry): entry is DeckPerformanceStats => Boolean(entry));
     const games = performances.reduce((total, entry) => total + entry.gamesPlayed, 0);
     const wins = performances.reduce((total, entry) => total + entry.wins, 0);
-    const favorite = visibleDecks.find((deck) => deck.is_favorite) || visibleDecks[0];
+    const favorite = getHighestMasteryDeck(visibleDecks, (deck) => deckPerformance.get(deck.id));
     const mostPlayed = [...visibleDecks].sort((a, b) => (deckPerformance.get(b.id)?.gamesPlayed || 0) - (deckPerformance.get(a.id)?.gamesPlayed || 0))[0];
     return { games, wins, winRate: games ? Math.round((wins / games) * 100) : 0, favorite, mostPlayed };
   }, [deckPerformance, visibleDecks]);

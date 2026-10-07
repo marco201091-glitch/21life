@@ -1,5 +1,7 @@
 # Project checklist
 
+- [x] Profilo 2026-10-07: mazzo preferito selezionato per punti mastery massimi su web/Expo, indipendente da stelle e ordine lista; parita conserva il primo. 317 test web e 262 Expo, typecheck/lint OK. Nessun build richiesto; rilascio con i prossimi aggiornamenti.
+
 Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checklist.
 
 - [x] Login password manager: semantica username/current-password/new-password e disattivazione maiuscola automatica nei campi password web/Android; test Playwright, build web, typecheck/lint e test web/Expo OK.

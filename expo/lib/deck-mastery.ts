@@ -52,6 +52,23 @@ export function getDeckMastery(gamesPlayed = 0, wins = 0): DeckMastery {
   };
 }
 
+export function getHighestMasteryDeck<T>(
+  decks: readonly T[],
+  getPerformance: (deck: T) => { gamesPlayed: number; wins: number } | undefined,
+): T | undefined {
+  let highest: T | undefined;
+  let highestPoints = -1;
+  for (const deck of decks) {
+    const performance = getPerformance(deck);
+    const { points } = getDeckMastery(performance?.gamesPlayed ?? 0, performance?.wins ?? 0);
+    if (points > highestPoints) {
+      highest = deck;
+      highestPoints = points;
+    }
+  }
+  return highest;
+}
+
 export function getDeckMasteryLabel(tier: DeckMasteryTier, language: 'it' | 'en'): string {
   const labels: Record<DeckMasteryTier, { it: string; en: string }> = {
     unranked: { it: 'Non classificato', en: 'Unranked' },
