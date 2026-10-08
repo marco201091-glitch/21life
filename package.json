@@ -21,7 +21,7 @@
     "test:all": "vitest run --coverage && node scripts/verify-security.mjs",
     "test:coverage": "vitest run --coverage",
     "quality": "node scripts/build-migration-manifest.mjs && npm run lint && npm run typecheck && npm run test:all && npm run test:scripts && npm run verify:operations-migration && npm run knip:dependencies",
-    "test:scripts": "node --test tests/scripts/backup-package.test.mjs tests/scripts/dependency-audit.test.mjs tests/scripts/github-release-assets.test.mjs tests/scripts/migration-manifest.test.mjs",
+    "test:scripts": "node --test tests/scripts/build-domain-isolation.test.mjs tests/scripts/mobile-domain-rollout.test.mjs tests/scripts/backup-package.test.mjs tests/scripts/dependency-audit.test.mjs tests/scripts/github-release-assets.test.mjs tests/scripts/migration-manifest.test.mjs",
     "knip": "knip",
     "knip:dependencies": "knip --dependencies",
     "verify:security": "node scripts/verify-security.mjs",
