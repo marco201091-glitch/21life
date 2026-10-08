@@ -1,7 +1,7 @@
 # 21Life
 
 [![Web app](https://img.shields.io/badge/Open-Web_App-16a34a?style=flat-square)](https://app.phyrexianarena.dpdns.org)
-[![Android](https://img.shields.io/badge/Android-v9.0.5-7c3aed?style=flat-square)](https://github.com/marco201091-glitch/PhyrexianArena/releases/latest)
+[![Android](https://img.shields.io/badge/Android-v9.0.5-7c3aed?style=flat-square)](https://github.com/marco201091-glitch/21life/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 Track Commander games, manage your playgroup, and turn match history into statistics that actually mean something — without a spreadsheet.
@@ -54,11 +54,11 @@ Open **[app.phyrexianarena.dpdns.org](https://app.phyrexianarena.dpdns.org)** in
 1. Install Obtainium.
 2. Choose **Add App** and paste this repository URL:
 
-   `https://github.com/marco201091-glitch/PhyrexianArena`
+   `https://github.com/marco201091-glitch/21life`
 
 3. Confirm the detected release and install the APK.
 
-Obtainium will tell you when a new signed release is available. You can also grab the APK from [GitHub Releases](https://github.com/marco201091-glitch/PhyrexianArena/releases/latest), where each release ships a SHA-256 checksum so you can verify it before installing.
+Obtainium will tell you when a new signed release is available. You can also grab the APK from [GitHub Releases](https://github.com/marco201091-glitch/21life/releases/latest), where each release ships a SHA-256 checksum so you can verify it before installing.
 
 ### iOS
 
@@ -78,7 +78,7 @@ Sign-in is email/password, with optional Google sign-in on the web and the stand
 
 - Built with Next.js for the web, Expo/React Native for mobile, and a self-hosted Supabase backend.
 - Every migration, deploy script, and release workflow lives in this repository.
-- Contributions, bug reports, and feature requests are welcome through [issues](https://github.com/marco201091-glitch/PhyrexianArena/issues).
+- Contributions, bug reports, and feature requests are welcome through [issues](https://github.com/marco201091-glitch/21life/issues).
 
 ## Privacy and legal
 
