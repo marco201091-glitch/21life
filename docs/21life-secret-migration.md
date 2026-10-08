@@ -26,10 +26,13 @@ Inventario read-only del 2026-10-08. Nessun valore segreto incluso.
 | GOOGLE_CLIENT_ID/SECRET, GITLAB_TOKEN, SELFHOSTED_PRODUCTION_* | Nessun match statico diretto o nomi composti dinamicamente | Non classificare come obsoleti: integrazioni/operazioni esterne e runner generico |
 | Vecchio e nuovo token Cloudflare | Attivi con scope differenti; vecchio conservato dal PM | Usare il nuovo per migrazione; preservare backup precedente |
 
-## Blocchi correnti
+## Stato verificato 2026-10-08
 
-- Ricezione support@21life.win: entrambi i token restituiscono403 per Cloudflare Email Routing. PM carta bianca: destinazione scelta Marco201091@gmail.com. Occorrono i permessi Addresses/Rules; destinatario eventualmente da verificare tramite Cloudflare.
-- PR174 draft: check Expo fallisce nell'audit produzione (22high,1critical), prima dei test; nessun merge tentato e nessun bypass. La causa non è accertata oltre il report dipendenze: servono advisory/artifact prima di scegliere aggiornamenti.
-- Canonical/env produzione e backend nuovi non ancora commutati. Nessun deploy web o release mobile avviati.
+- Cloudflare Global API key autenticata: routing enabled/ready, support@21life.win inoltrato a marco201091@gmail.com già verificata. Nessun test di consegna email eseguito.
+- Supabase Dev: supabase-dev.21life.win TLS valido, Auth health e REST HTTP200 anche tramite alias precedente. Site URL e callback Google aggiornati; redirect Supabase e pagina login Google HTTP200 verificati, login interattivo non eseguito.
+- URL Dev/mail aggiornati in Dokploy runtime/buildArgs, env locali e GitHub STAGING_SUPABASE_URL. Stesse chiavi e firma; session storage preservato tra hostname backend. Configurazione Dokploy efficace al prossimo deploy.
+- VERCEL_OIDC_TOKEN rimosso dalla configurazione locale dopo backup: hosting Vercel ritirato, zero consumatori operativi. Altri candidati non revocati: assenza di riferimenti non dimostra inutilizzo esterno.
+- CI iniziale PR174 bloccata da sharp/source-map-js/shell-quote: lock aggiornati ai fix. Audit produzione web zero; Expo zero critical,21high nel perimetro tooling già approvato, scadenza19-10 invariata. Policy ristretta rimuovendo una dipendenza transitiva risolta; nessuna nuova eccezione.
+- Main/produzione, nuovo binario mobile, associazioni Android/iOS e ritiro alias legacy restano fasi separate. Nessun merge/deploy applicativo eseguito al momento di questo record.
 
 La sola assenza di un riferimento testuale non prova che un secret sia eliminabile. La rimozione finale richiede prova del consumatore ritirato, snapshot dei valori recuperabili e verifica dei flussi che restano attivi.

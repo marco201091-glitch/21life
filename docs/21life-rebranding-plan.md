@@ -40,9 +40,9 @@
 **Files:** lib/canonical-host.ts, lib/legal-site.ts, expo/lib/env.ts, docs/SUPABASE_OPERATIONS.md, ops/vm-health-alert.sh, scripts/vm-health-alert.sh, env locali e remoti.
 
 - [ ] Registrare/ottenere controllo dominio; creare host app/dev/test/backend necessari secondo inventario effettivo, TLS e routing Dokploy.
-- [ ] Aggiornare configurazioni Dev, CORS, Supabase Auth site URL/redirect, Google OAuth, Turnstile, email Resend e DNS SPF/DKIM/DMARC.
+- [x] Aggiornare configurazioni Dev, Supabase Auth site URL/redirect, Google OAuth, Turnstile, email Resend e DNS SPF/DKIM/DMARC. Supabase Dev pubblico nuovo e legacy verificati; env Dokploy efficaci al prossimo deploy.
 - [ ] Verificare health, login/password/reset, inviti, API, Realtime e invio email Dev.
-- [ ] Conservare vecchi endpoint backend e callback; redirect web solo dopo valutazione dati offline e client vecchi.
+- [x] Conservare vecchi endpoint backend e callback; redirect web solo dopo valutazione dati offline e client vecchi.
 
 ### Task 3: Codice e compatibilità su Dev
 
@@ -50,14 +50,14 @@
 
 - [ ] Aggiornare riferimenti correnti, URL, email, metadata, script, workflow e documentazione operativa secondo matrice.
 - [ ] Introdurre scheme nuovo con supporto callback legacy; verificare Google/login, reset, join e deep link Android/iOS.
-- [ ] Migrare storage solo con prove di dati legacy, retry/idempotenza e offline; preservare compatibilità sessioni.
-- [ ] Preservare package/bundle ID, EAS projectId, firma e identità notifiche se il PM sceglie aggiornamenti compatibili.
+- [x] Preservare storage offline e compatibilità sessioni: stessi nomi legacy anche sui nuovi hostname backend; test di isolamento Dev/produzione e fallback SDK.
+- [x] Preservare package/bundle ID, EAS projectId, firma e identità notifiche per gli aggiornamenti compatibili autorizzati.
 - [ ] Eseguire quality web/Expo e regressioni pertinenti. Build ed export solo dopo gate checklist e richiesta esecutiva applicabile.
 
 ### Task 4: Rinomina GitHub coordinata
 
-- [ ] Rinominare marco201091-glitch/PhyrexianArena in marco201091-glitch/21life tramite gh/API con admin già confermato.
-- [ ] Aggiornare origin nei checkout, riferimenti correnti GitHub, webhook/source Dokploy e integrazioni che usano URL/nome repo.
+- [x] Rinominare marco201091-glitch/PhyrexianArena in marco201091-glitch/21life tramite gh/API con admin già confermato.
+- [x] Aggiornare origin nei checkout, riferimenti correnti GitHub e source Dokploy Dev/main. Integrazioni EAS/store e proposta F-Droid restano verifica separata.
 - [ ] Verificare release/tag/asset, CI, protezioni branch, Obtainium e link pubblici; nessuna riscrittura tag storici.
 - [ ] Aggiornare metadata F-Droid e proposta GitLab in fase separata, preservando app ID e revisione ufficiale.
 - [ ] Rinominare directory locale con sessioni/processi chiusi e aggiornamento percorsi workspace/skill/automazioni; non necessaria per rinominare GitHub.

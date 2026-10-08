@@ -166,3 +166,17 @@ Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checkli
 - [ ] Ruling PM carta bianca 2026-10-08: destinazione ricezione support@21life.win scelta Marco201091@gmail.com. Entrambi i token CF restituiscono403 su Email Routing Addresses/Settings: impossibile configurare inoltro con scope disponibili; richieste le due righe Account Email Routing Addresses Edit / Zone Email Routing Rules Edit. Resend21life.win verified, codice email pronto su branch isolato; Dev canonical nuovo e legacy alias preservato. Produzione rimane fase separata, nessun test email inviato.
 
 - [ ] PM2026-10-08 audit secret incluso nel rebranding: docs/21life-secret-migration.md. GitHub12 secret/2vars inventariati, Preview/Production vuoti; candidatI locali VERCEL_OIDC_TOKEN/XAI_API_KEY/SOURCE_DB_URL/TEST_USER_*/SUPABASE_ACCESS_TOKEN da verificare prima pulizia finale. Credenziali Google/SSH/GitLab/GPG e backup CF preservati. PR174 d9da3f7 checkExpoFAIL audit22high/1critical, log artifacts/rebranding/expo-ci.log; nessun merge tentato/bypass. Email Routing CF ancora403.
+
+## Migrazione 21life.win — checklist operativa aggiornata 2026-10-08
+Le note precedenti descrivono le fasi storiche; questa sezione indica lo stato corrente.
+- [x] Repository GitHub 21life, origin e sorgenti Dokploy rinominati e verificati; branch di lavoro chore/21life-domain, destinazione Dev, PR174.
+- [x] Cloudflare accesso amministratore verificato, DNS/TLS dev.21life.win e supabase-dev.21life.win; vecchi alias conservati per app installate.
+- [x] Supabase Dev Site URL/API/public URL/callback Google aggiornati; backup VM, Auth/REST200 su entrambi i backend. Redirect nuovo e pagina login Google200, nessun login interattivo.
+- [x] Turnstile21Life nuovi domini aggiunti e precedenti preservati; Resend21life.win verified, DKIM/SPF/MX/DMARC configurati.
+- [x] Ricezione support@21life.win: Cloudflare routing ready, inoltro Gmail gia verificata. Invio/ricezione effettivi non testati.
+- [x] Env locali ordinati e URL/email Dev aggiornati con snapshot; Dokploy runtime/buildArgs nuovi salvati; GitHub STAGING_SUPABASE_URL nuova verificata. VERCEL_OIDC_TOKEN ritirato rimosso; altri candidati documentati e backup Cloudflare conservato.
+- [x] Compatibilita app: package/firma/EAS/scheme/offline invariati, deep link nuovi additivi, nomi session storage mantenuti anche sul backend nuovo. Test mirati passati.
+- [x] Quality web320 test,32 script; Expo260 test, lint/typecheck/knip. Audit produzione web0; Expo21high/0critical nelle sole eccezioni tooling precedenti fino19-10; patch sharp/source-map-js/shell-quote, policy ristretta senza nuove deroghe.
+- [ ] Review finale, build candidato pulito, check PR obbligatori e merge remoto Dev verificato; poi avvio deploy Dokploy Dev sullo SHA finale.
+- [ ] Collaudo utente login Google/password/reset, inviti, posta, Realtime/offline e aggiornamento APK; nessuna verifica interattiva dichiarata prima della prova.
+- [ ] Promozione main/produzione app.21life.win e supabase.21life.win, nuovo rilascio mobile e F-Droid: fase successiva; vecchi endpoint non ritirati.

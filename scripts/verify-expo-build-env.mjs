@@ -44,10 +44,11 @@ if (mode === 'production') {
 
 if (mode === 'dev') {
   const allowedApis = ['https://dev.21life.win', 'https://dev.phyrexianarena.dpdns.org'];
+  const allowedBackends = ['https://supabase-dev.21life.win', 'https://supabase-staging.phyrexianarena.dpdns.org'];
   const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL.replace(/\/$/, '');
   const siteUrl = process.env.EXPO_PUBLIC_SITE_URL.replace(/\/$/, '');
   const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL.replace(/\/$/, '');
-  if (supabaseUrl !== 'https://supabase-staging.phyrexianarena.dpdns.org'
+  if (!allowedBackends.includes(supabaseUrl)
     || !allowedApis.includes(apiUrl) || siteUrl !== apiUrl) {
     console.error('Refusing Dev build: expected Supabase Test and Dev API.');
     process.exit(1);

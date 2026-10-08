@@ -10,8 +10,10 @@ function check(api, site = api, db = 'https://supabase-staging.phyrexianarena.dp
 }
 test('Dev accepts new and legacy web domains with the staging backend', () => {
   for (const host of ['dev.21life.win', 'dev.phyrexianarena.dpdns.org']) {
-    const result = check(`https://${host}`);
-    assert.equal(result.status, 0, result.stderr);
+    for (const db of ['https://supabase-dev.21life.win', 'https://supabase-staging.phyrexianarena.dpdns.org']) {
+      const result = check(`https://${host}`, `https://${host}`, db);
+      assert.equal(result.status, 0, result.stderr);
+    }
   }
 });
 test('Dev rejects production, lookalike, insecure and mismatched origins', () => {
@@ -21,5 +23,7 @@ test('Dev rejects production, lookalike, insecure and mismatched origins', () =>
     ['http://dev.21life.win'],
     ['https://dev.21life.win', 'https://app.21life.win'],
     ['https://dev.21life.win', 'https://dev.21life.win', 'https://phyrexianarena.dpdns.org'],
+    ['https://dev.21life.win', 'https://dev.21life.win', 'https://supabase.21life.win'],
+    ['https://dev.21life.win', 'https://dev.21life.win', 'https://supabase-dev.21life.win.attacker.example'],
   ]) assert.notEqual(check(api, site, db).status, 0);
 });
