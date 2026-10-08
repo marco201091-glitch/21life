@@ -21,7 +21,6 @@
         "@expo/code-signing-certificates",
         "@expo/metro",
         "@expo/metro-config",
-        "@expo/metro-file-map",
         "node-forge"
       ]
     },

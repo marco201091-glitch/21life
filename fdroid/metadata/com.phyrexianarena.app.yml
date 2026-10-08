@@ -8,9 +8,9 @@ Categories:
 License: MIT
 AuthorName: blackistoostrong
 WebSite: https://app.phyrexianarena.dpdns.org
-SourceCode: https://github.com/marco201091-glitch/PhyrexianArena
-IssueTracker: https://github.com/marco201091-glitch/PhyrexianArena/issues
-Changelog: https://github.com/marco201091-glitch/PhyrexianArena/releases
+SourceCode: https://github.com/marco201091-glitch/21life
+IssueTracker: https://github.com/marco201091-glitch/21life/issues
+Changelog: https://github.com/marco201091-glitch/21life/releases
 
 AutoName: 21Life
 Description: |-
@@ -30,7 +30,7 @@ Description: |-
   other mentioned services.
 
 RepoType: git
-Repo: https://github.com/marco201091-glitch/PhyrexianArena.git
+Repo: https://github.com/marco201091-glitch/21life.git
 
 Builds:
   - versionName: 8.0.0

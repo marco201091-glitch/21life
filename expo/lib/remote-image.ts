@@ -2,7 +2,7 @@ const SCRYFALL_IMAGE_PREFIX = 'https://cards.scryfall.io/';
 
 export const SCRYFALL_IMAGE_HEADERS = {
   Accept: 'image/*',
-  'User-Agent': 'MTGCommander/9.0.5 (https://phyrexianarena.app)',
+  'User-Agent': '21Life/9.0.5 (support@21life.win)',
 } as const;
 
 export function getRemoteImageHeaders(uri: string): Record<string, string> | undefined {

@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getAuthCookieOptions } from '@/lib/auth-persistence';
+import { getSupabaseAuthStorageKey } from '@/expo/lib/supabase-auth-storage-key';
 import { getSafeRedirectPath } from '@/lib/safe-redirect';
 import { ensureOAuthUserProfile } from '@/lib/oauth-profile';
 import { CANONICAL_SITE_ORIGIN } from '@/lib/canonical-host';
@@ -57,6 +58,7 @@ export async function GET(request: NextRequest) {
     {
       cookieOptions: getAuthCookieOptions(),
       auth: {
+        storageKey: getSupabaseAuthStorageKey(supabaseUrl),
         detectSessionInUrl: false,
       },
       cookies: {

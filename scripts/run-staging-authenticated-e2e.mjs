@@ -26,8 +26,9 @@ if (driver === 'maestro') {
   const api = process.env.EXPO_PUBLIC_API_BASE_URL;
   const site = process.env.EXPO_PUBLIC_SITE_URL;
   const deviceDb = process.env.EXPO_PUBLIC_SUPABASE_URL;
-  if (!api || !site || !deviceDb || new URL(api).hostname !== 'dev.phyrexianarena.dpdns.org'
-    || new URL(site).hostname !== 'dev.phyrexianarena.dpdns.org' || new URL(deviceDb).hostname !== stagingHost) {
+  const allowedApis = ['https://dev.21life.win', 'https://dev.phyrexianarena.dpdns.org'];
+  if (!api || !site || !deviceDb || !allowedApis.includes(new URL(api).origin)
+    || new URL(site).origin !== new URL(api).origin || new URL(deviceDb).hostname !== stagingHost) {
     throw new Error('Require explicit staging Expo DB/API/site configuration before provisioning device fixtures. The installed APK/Metro must use these same values.');
   }
 }
@@ -69,6 +70,7 @@ try {
   process.env.E2E_LIVE_GAME_FLOW = '1';
   const sessionCookies = [];
   const authClient = createServerClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+    auth: { storageKey: 'sb-supabase-staging-auth-token' },
     cookies: { getAll: () => sessionCookies, setAll: (values) => sessionCookies.push(...values) },
   });
   const { error: sessionError } = await authClient.auth.signInWithPassword({ email, password });

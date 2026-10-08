@@ -44,3 +44,9 @@ L'avanzamento dei task resta in `PROJECT_CHECKLIST.md`.
 - Correzione applicata e prova del recupero:
 - Controllo preventivo aggiunto alla checklist:
 
+
+## 2026-10-08 — ritorno hotfix main nel candidato Dev
+- Merge locale origin/main c3d5ae34 nella feature chore/21life-domain b632fff: git merge exit1, conflitto soltanto PROJECT_CHECKLIST.md per note aggiunte alla stessa posizione.
+- Verifica remota: PR175 MERGED, commit c3d5ae34; nessun build/tag/deploy dipendente avviato dopo il conflitto.
+- Risoluzione revisionata: mantenere tutte le note rebranding e il record incidente comune; nessuna differenza applicativa rispetto ai due candidati testati. Conservare ancestry main, senza subset di schema/test.
+- Prevenzione: verificare i conflitti checklist su back-merge e fermare build/deploy finche markers e file unmerged non sono assenti.
