@@ -71,7 +71,7 @@ for (const relativePath of [
   'expo/tests/lib/remote-image.test.ts',
 ]) {
   update(relativePath, [
-    [/MTGCommander\/\d+\.\d+\.\d+/, `MTGCommander/${version}`],
+    [/21Life\/\d+\.\d+\.\d+/, `21Life/${version}`],
   ]);
 }
 console.log(`Version ${version} (code ${versionCode}) synchronized.`);
