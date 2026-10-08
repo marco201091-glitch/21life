@@ -30,8 +30,8 @@
 
 ### Task 1: Inventario e preflight accessi
 
-- [ ] Confermare dominio, email supporto, transizione e scelta identificativi mobili.
-- [ ] Inventariare file tracciati, env ignorate, CI/segreti, servizi VM e integrazioni. Non stampare segreti.
+- [x] Confermare dominio21life.win, support@21life.win, transizione additiva e identità mobili compatibili.
+- [x] Inventariare file tracciati, env ignorate, CI/segreti, servizi VM e integrazioni. Valori riservati esclusi dai report; inventario in21life-secret-migration.md.
 - [ ] Verificare read-only disponibilità repo 21life, DNS/provider, scope API Dokploy/Cloudflare/Resend/Sentry/GitLab e progetto Google/Expo.
 - [ ] Registrare matrice occorrenze: rinominare, migrare, alias legacy, storico immutabile.
 
@@ -49,10 +49,10 @@
 **Files:** README.md, package.json/lockfile se necessario, expo/package.json/lockfile, expo/app.json, expo/app.config.js, public/.well-known/assetlinks.json, .github/workflows/*, scripts/verify-*.mjs, lib/legal-documents.ts, expo/lib/legal-documents.ts, lib/reserved-usernames.ts, file importatori/User-Agent, lib/live-game-offline.ts, lib/live-game-setup.ts, expo/lib/{live-game-offline,live-game-setup,arena-cache,language-storage-core}.ts e test associati.
 
 - [ ] Aggiornare riferimenti correnti, URL, email, metadata, script, workflow e documentazione operativa secondo matrice.
-- [ ] Introdurre scheme nuovo con supporto callback legacy; verificare Google/login, reset, join e deep link Android/iOS.
+- [x] Aggiungere host nuovi ai deep link Android/iOS mantenendo gli scheme degli aggiornamenti compatibili. Test configurazione per Dev/produzione/F-Droid; prove su dispositivo separate.
 - [x] Preservare storage offline e compatibilità sessioni: stessi nomi legacy anche sui nuovi hostname backend; test di isolamento Dev/produzione e fallback SDK.
 - [x] Preservare package/bundle ID, EAS projectId, firma e identità notifiche per gli aggiornamenti compatibili autorizzati.
-- [ ] Eseguire quality web/Expo e regressioni pertinenti. Build ed export solo dopo gate checklist e richiesta esecutiva applicabile.
+- [x] Quality web/Expo, regressioni OAuth/sessioni/isolamento e review indipendente; build web e bundle Android Dev con URL nuovi verificati. Budget web2.82/18MiB, Expo9.19/12MiB. Nessun APK/IPA nuovo pubblicato.
 
 ### Task 4: Rinomina GitHub coordinata
 
