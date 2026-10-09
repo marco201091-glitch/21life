@@ -277,7 +277,7 @@ export function StandaloneCounter() {
   const shieldPlayer = state.players.find((player) => player.participantKey === shieldKey) ?? null;
   const counterRows: Array<[PlayerCounter, string]> = [['energy', 'Energia'], ['experience', 'Esperienza'], ['commanderTax', 'Commander Tax']];
 
-  return <main ref={hostRef} className={`fixed inset-0 select-none overflow-hidden bg-black text-white ${preferences.reducedMotion ? '[&_*]:!animate-none [&_*]:!transition-none' : ''}`}>
+  return <main ref={hostRef} data-reduced-motion={preferences.reducedMotion || undefined} className="fixed inset-0 select-none overflow-hidden bg-black text-white">
     {size.width > 0 && assignments.map(({ player, layout }) => {
       const rotation = orientation === 'landscape' ? getLandscapeSeatRotation(layout, size.width) : getSeatRotation(layout.role, state.players.length);
       const sideways = Math.abs(rotation) === 90;

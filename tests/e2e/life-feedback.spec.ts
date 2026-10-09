@@ -8,6 +8,7 @@ for (const mode of ['normal', 'system', 'app'] as const) {
     });
     await page.goto('/counter');
     await page.getByRole('button', { name: 'Start game' }).click();
+    await page.waitForLoadState('networkidle');
     const seat = page.locator('section').first();
     const total = seat.locator('.font-black.leading-none');
     const before = await total.boundingBox();
