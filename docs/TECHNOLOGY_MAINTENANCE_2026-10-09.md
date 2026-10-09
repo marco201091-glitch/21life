@@ -103,3 +103,9 @@ Google è abilitato in produzione e la allow-list contiene lo schema nativo stor
 ## Evidenze e integrazione
 
 Log e report senza chiavi private in `artifacts/technology-maintenance/`; runtime locale verificato tramite SHA-256 ufficiale. Nessuna modifica al Node globale della workstation. Server ed emulatore temporanei chiusi dopo le verifiche. Scansione client web/APK/log: zero corrispondenze con token privati. Il candidato va integrato su Dev tramite PR e CI Linux; nessun merge o deploy di produzione eseguito durante questa manutenzione.
+
+## Correzione successiva: orientamento danni iPad
+
+Il pannello dopo drag & drop riceveva gia la rotazione della card dell'attaccante, ma `DamageConfirmSheet` applicava il transform solo con `!isIPad`. Rimossa quella esclusione: pannello, immagine e controlli ora seguono la card sorgente anche su iPad. Dimensioni quadrate/centratura restano invariate; componente comune a partita rapida e arena live.
+
+Regressione sul componente reale con host native mock: prima8casi iPad falliti/8phone passati; dopo16/16 passati, rotazioni0/+90/-90/180 su iPad portrait/landscape, iPhone e Android. Quality Expo finale:280test, lint, TypeScript, coverage ratchet101file, asset e knip passati. Nessuna nuova build APK/IPA o pubblicazione per questa patch; conferma visiva su iPad fisico ancora da fare.
