@@ -15,7 +15,7 @@
   "packages": {
     "@expo/cli": {
       "nodes": {
-        "node_modules/expo/node_modules/@expo/cli": "57.0.26"
+        "node_modules/expo/node_modules/@expo/cli": "57.0.28"
       },
       "via": [
         "@expo/code-signing-certificates",
@@ -45,18 +45,10 @@
     },
     "@expo/metro-config": {
       "nodes": {
-        "node_modules/@expo/metro-config": "57.0.12"
+        "node_modules/@expo/metro-config": "57.0.13"
       },
       "via": [
         "@expo/metro"
-      ]
-    },
-    "@expo/metro-file-map": {
-      "nodes": {
-        "node_modules/@expo/metro-file-map": "57.0.3"
-      },
-      "via": [
-        "micromatch"
       ]
     },
     "@react-native/community-cli-plugin": {
@@ -103,7 +95,7 @@
     },
     "expo": {
       "nodes": {
-        "node_modules/expo": "57.0.24"
+        "node_modules/expo": "57.0.27"
       },
       "via": [
         "@expo/cli",
@@ -196,5 +188,6 @@
         "react-native"
       ]
     }
-  }
+  },
+  "reviewedOn": "2026-10-09"
 }
