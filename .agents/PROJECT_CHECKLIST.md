@@ -198,3 +198,7 @@ Le note precedenti descrivono le fasi storiche; questa sezione indica lo stato c
 - [ ] Bug iPad damage management2026-10-09: pannello drag gia riceve sourceRotation ma esclude iPad dal transform; correzione comune counter/live senza cambiare dimensioni600quadrate. Regressione sul componente reale con host native mock:8iPad falliti/8phone pass prima della patch, verifica16rotazioni/portrait-landscape e quality in corso. Nessun deploy.
 
 - [x] Fix damage management iPad2026-10-09: rimossa esclusioneiPad dal transform sourceRotation in DamageConfirmSheet condiviso counter/live. Testcomponente reale16orientamenti:8iPadRED/8phoneGREEN prima,16GREEN dopo; qualityExpo280test/lint/typecheck/coverage101/asset/knip verdi. Pannello segueattaccante, dimensioniquadrate e phone preservati. Patch su PR179, nessunbuild/deploy; iPadfisico da confermare.
+
+- [ ] PM2026-10-09 chiudere tutto eseguibile senza dispositivifisici: fixCI web coverage envhelper (ExpoLinuxverde), integrazioneDev dopo gate, artefatti finali stessiSHA, riesameadvisory/peer e OAuthreadiness senza cutoverprod. PR179 merge non tentato mentrewebrosso; no pubblicazionesito.
+
+- [x] CIparity web causa confermata: server-envbranch70Windows/50Linux per envCI;5test espliciti fallback/missing/serverpriorita, quality328web+41script passata, baseline invariata. ExpoLinux quality/doctor/export verdi su068901f. Nessunmergefallito, merge ancora dipendente CIweb.
