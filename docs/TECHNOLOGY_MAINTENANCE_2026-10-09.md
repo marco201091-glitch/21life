@@ -4,7 +4,7 @@
 
 Manutenzione implementata nel worktree isolato `21life-rebranding`, branch `chore/technology-maintenance-9.1`, dalla baseline Dev `bbfbaa6`. Versione applicativa mantenuta a **9.1.0 / 90100**. Il checkout del PM è stato preservato. Nessuna pubblicazione del sito, promozione main, modifica di database/configurazioni production o aggiornamento dei container remoti.
 
-La build web verificata proviene da `b681938`; export Android/iOS dallo stesso albero applicativo. La build nativa parte da `5ed8a91`. I commit successivi modificano verifiche, documentazione e runner; non il codice applicativo incorporato in questi artefatti.
+I sorgenti delle animazioni sono nel commit `e40fd32`; il precedente candidato manutenzione `0b98a45` ha superato anche la build APK nativa. Build e collaudi conclusivi delle animazioni sono registrati di seguito.
 
 ## Aggiornamenti eseguiti
 
@@ -20,7 +20,7 @@ La build web verificata proviene da `b681938`; export Android/iOS dallo stesso a
 
 React rimane nella combinazione di ciascuna piattaforma: 19.3.0 web, 19.2.3 mobile con RN 0.86.3. I minor nativi proposti fuori matrice sono stati provati, rilevati da Expo e riallineati. Nessun `audit fix --force`.
 
-La migrazione Vitest elimina **due segnalazioni critical** della catena precedente Vitest/tinypool, oltre alle moderate osservate. La diversa pipeline di mapping/trasformazione della coverage cambia le percentuali anche sui medesimi sorgenti e test; Vitest 3.2 utilizzava già un mapper AST. Baseline misurata prima delle modifiche applicative, comprendente tutti i **103 file web e 100 mobile**, con quattro metriche per file. Nuovo gate impedisce regressioni per file, metriche non valide e scomparsa di file. Soglie aggregate riallineate alla misura nuova, senza escludere file per recuperare percentuali. Review indipendente ha verificato corrispondenza completa tra baseline e report. L'equivalenza numerica Windows/Linux resta da confermare in CI.
+La migrazione Vitest elimina **due segnalazioni critical** della catena precedente Vitest/tinypool, oltre alle moderate osservate. La diversa pipeline di mapping/trasformazione della coverage cambia le percentuali anche sui medesimi sorgenti e test; Vitest 3.2 utilizzava già un mapper AST. Baseline misurata prima delle modifiche applicative, comprendente tutti i **103 file web e 100 mobile iniziali**, con quattro metriche per file. Nuovo gate impedisce regressioni per file, metriche non valide e scomparsa di file. Soglie aggregate riallineate alla misura nuova, senza escludere file per recuperare percentuali. Review indipendente ha verificato corrispondenza completa tra baseline e report. L'equivalenza numerica Windows/Linux resta da confermare in CI.
 
 ## Correzioni funzionali e pipeline
 
@@ -34,12 +34,18 @@ La migrazione Vitest elimina **due segnalazioni critical** della catena preceden
 
 Review indipendente: zero Critical, due Important, entrambi corretti (path Node dell'audit e override Sentry nella ricetta unsigned). Corretta anche la documentazione obsoleta sul doctor. La successiva protezione hydration è stata verificata direttamente tramite regressione e flussi browser.
 
+## Animazioni in partita
+
+Feedback web/mobile distingue gain e loss, intensita proporzionata e limitata, halo verde o rosso native, pulsazione del solo numero e delta che sfuma/flette verso alto o basso. Totale reale aggiornato immediatamente, delta netto dei tocchi ravvicinati visibile per 2,2 secondi. Nome e centro del totale rimangono fermi. Nessuna dipendenza aggiunta; trasformazioni/opacita, native sul thread UI. Movimento ridotto interrompe animazioni native gia attive e conserva feedback statico; web rispetta sistema e preferenza della partita rapida. Scadenza non viene cancellata cambiando preferenza.
+
+Quattro test nuovi della logica RED→GREEN verificano limiti, invalidi, burst misti, cancellazione e nuova finestra; review indipendente senza nuove regressioni, migliorato anche il posizionamento del delta precedentemente instabile.
+
 ## Verifiche eseguite
 
 | Verifica | Esito |
 | --- | --- |
 | Quality web | lint, TypeScript, 323 test, security, manifest, knip passati |
-| Quality mobile | lint, TypeScript, 260 test, coverage, asset/logo, knip passati |
+| Quality mobile | lint, TypeScript, 264 test, coverage, asset/logo, knip passati; helper nuovo al 100%, baseline portata a 101 file senza abbassare le precedenti |
 | Script | 41 test passati, inclusi casi negativi di gate/coverage/domains |
 | Integrazione PostgREST | 1 test reale Dev: export completo di 1.001 mazzi, cleanup verificato |
 | Browser pubblico | 14 test desktop/mobile passati; accessibilità e screenshot inclusi |
@@ -51,7 +57,9 @@ Review indipendente: zero Critical, due Important, entrambi corretti (path Node 
 | Esposizione advisory nel bundle | mappe complete Android 3.045 e iOS 3.000 moduli: nessuna sorgente braces/node-forge |
 | Expo doctor | 21/21 passato, con DNS verificato per il solo processo |
 | Gate iOS/iPad | passato, versione e profili coerenti |
-| Android nativo | verifica in corso |
+| Android nativo | APK Dev standalone 9.1.0/90100, ARM64+x86_64, firma locale verificata; sei controlli manuali startup/guest/40→41/undo/redo e tre flussi Auth reali passati |
+
+Il test UIAutomator arena non riesce a ottenere lo stato idle per il timer della partita: quel tentativo resta fallito, le sei verifiche arena sono manuali con screenshot, non automazione dichiarata. Login password nativo, sessione dopo force-stop e logout sono stati eseguiti tramite UIAutomator/ADB con account sintetico poi rimosso e verificato.
 
 Il resolver Windows non risolveva `exp.host`. Due resolver DNS HTTPS indipendenti hanno concordato l'indirizzo; il solo processo doctor ha usato tale risoluzione mantenendo HTTPS e tutti i controlli. Nessuna modifica DNS persistente o bypass del gate. A resolver standard resta il problema esterno da risolvere sulla workstation.
 
