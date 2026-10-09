@@ -1,4 +1,11 @@
-module.exports = ({ config: base }) => {
+module.exports = ({ config: input } = {}) => {
+  const defaults = require('./app.json').expo;
+  const base = {
+    ...defaults,
+    ...input,
+    android: { ...defaults.android, ...input?.android },
+    ios: { ...defaults.ios, ...input?.ios },
+  };
   const isDevVariant = process.env.APP_VARIANT === 'dev';
   const isFdroidVariant = process.env.APP_VARIANT === 'fdroid'
     || process.env.EXPO_PUBLIC_FDROID_BUILD === 'true';
@@ -54,7 +61,6 @@ module.exports = ({ config: base }) => {
           organization: process.env.SENTRY_ORG,
           project: process.env.SENTRY_MOBILE_PROJECT || process.env.SENTRY_PROJECT,
           url: process.env.SENTRY_URL,
-          disableAutoUpload: isDevVariant || !process.env.SENTRY_AUTH_TOKEN,
         },
       ]] : []),
       './plugins/with-clean-intent-filter-markers',

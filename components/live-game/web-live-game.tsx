@@ -103,7 +103,7 @@ import {
   type WebLiveGameSeatSetup,
 } from '@/lib/live-game-setup';
 import type { ParticipantKey } from '@/lib/participant-keys';
-import { RecentLifeDelta } from '@/components/ui/recent-life-delta';
+import { LifeReadout } from '@/components/ui/recent-life-delta';
 import { useScreenWakeLock } from '@/hooks/use-screen-wake-lock';
 import {
   LIVE_GAME_SYNC_BATCH_SIZE,
@@ -1505,8 +1505,7 @@ export function WebLiveGame({
                   </div>
                 ) : null}
                 <div className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
-                  <RecentLifeDelta life={player.life} className="mb-1 text-xl" />
-                  <div className="font-black leading-none drop-shadow-[0_3px_4px_rgba(0,0,0,.9)]" style={{ fontSize: `clamp(54px, ${shortestSide * 0.28}px, 112px)` }}>{player.life}</div>
+                  <LifeReadout life={player.life} className="font-black leading-none drop-shadow-[0_3px_4px_rgba(0,0,0,.9)]" style={{ fontSize: `clamp(54px, ${shortestSide * 0.28}px, 112px)` }} />
                 </div>
                 <button
                   onClick={(event) => { event.stopPropagation(); setDamagePanelKey(player.participantKey); }}
