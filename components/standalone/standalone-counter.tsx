@@ -30,7 +30,7 @@ import {
 import { rollTableRandom, type TableRandomKind } from '@/lib/table-randomizer';
 import type { ParticipantKey } from '@/lib/participant-keys';
 import { useLanguage } from '@/components/language-provider';
-import { RecentLifeDelta } from '@/components/ui/recent-life-delta';
+import { LifeReadout } from '@/components/ui/recent-life-delta';
 import { useScreenWakeLock } from '@/hooks/use-screen-wake-lock';
 
 const STORAGE_KEY = 'phyrexian:standalone-counter:v1';
@@ -277,7 +277,7 @@ export function StandaloneCounter() {
   const shieldPlayer = state.players.find((player) => player.participantKey === shieldKey) ?? null;
   const counterRows: Array<[PlayerCounter, string]> = [['energy', 'Energia'], ['experience', 'Esperienza'], ['commanderTax', 'Commander Tax']];
 
-  return <main ref={hostRef} className="fixed inset-0 select-none overflow-hidden bg-black text-white">
+  return <main ref={hostRef} className={`fixed inset-0 select-none overflow-hidden bg-black text-white ${preferences.reducedMotion ? '[&_*]:!animate-none [&_*]:!transition-none' : ''}`}>
     {size.width > 0 && assignments.map(({ player, layout }) => {
       const rotation = orientation === 'landscape' ? getLandscapeSeatRotation(layout, size.width) : getSeatRotation(layout.role, state.players.length);
       const sideways = Math.abs(rotation) === 90;
@@ -292,8 +292,7 @@ export function StandaloneCounter() {
           <HoldActionButton variant="ghost" onShort={() => mutate({ type: 'adjust', targetKey: player.participantKey, amount: -1, mode: 'life' })} onLong={() => mutate({ type: 'adjust', targetKey: player.participantKey, amount: -10, mode: 'life' })} className="absolute right-[5%] top-1/2 z-10 grid h-14 w-16 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/55 text-3xl"><Plus /></HoldActionButton>
           <div className="pointer-events-none absolute left-1/2 top-[8%] max-w-[70%] -translate-x-1/2 truncate rounded-full border border-white/15 bg-black/65 px-4 py-1 font-black">{player.displayName}</div>
           <div className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
-            <RecentLifeDelta life={player.life} className="mb-1 text-xl" />
-            <div className="font-black leading-none drop-shadow-xl" style={{ fontSize: Math.max(52, Math.min(110, shortest * .3)) }}>{player.life}</div>
+            <LifeReadout life={player.life} className="font-black leading-none drop-shadow-xl" style={{ fontSize: Math.max(52, Math.min(110, shortest * .3)) }} />
           </div>
           <button onClick={() => setShieldKey(player.participantKey)} className="absolute left-1/2 top-[74%] grid h-12 w-12 -translate-x-1/2 place-items-center rounded-full border border-emerald-200/30 bg-black/65"><Shield /></button>
         </div>
