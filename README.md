@@ -2,6 +2,9 @@
 
 # 21Life
 
+[![Android 9.1.0](https://img.shields.io/badge/Android-v9.1.0-7c3aed?style=flat-square)](https://21life.win/download/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+
 **Your Commander table, from the first life total to the last match statistic.**
 
 21Life helps you run Commander games, manage your playgroup and understand its meta. Record a game once; share its result and use the same history for player, deck and commander analytics.
