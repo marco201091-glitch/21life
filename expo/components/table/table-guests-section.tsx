@@ -14,6 +14,8 @@ type TableGuestsSectionProps = {
     noGuestsBody: string;
     guestBadge: string;
     upgradeGuest: string;
+    addDeckToGuest: string;
+    deleteGuest: string;
   };
   onAddGuest: () => void;
   onAddDeckToGuest: (guestId: string) => void;
@@ -62,6 +64,7 @@ export function TableGuestsSection({
                 </Pressable>
                 <Pressable
                   onPress={() => onAddDeckToGuest(guest.id)}
+                  accessibilityLabel={labels.addDeckToGuest}
                   hitSlop={4}
                   accessibilityRole="button"
                   style={({ pressed }) => [
@@ -73,6 +76,7 @@ export function TableGuestsSection({
                 </Pressable>
                 <Pressable
                   onPress={() => onDeleteGuest(guest.id)}
+                  accessibilityLabel={labels.deleteGuest}
                   hitSlop={4}
                   accessibilityRole="button"
                   style={({ pressed }) => [
