@@ -151,7 +151,7 @@ function ResetPasswordForm() {
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form method="post" onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <h1 className="text-lg font-semibold text-foreground">
                 {t({ it: 'Nuova password', en: 'New password' })}
