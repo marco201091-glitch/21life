@@ -27,3 +27,25 @@ test('Dev rejects production, lookalike, insecure and mismatched origins', () =>
     ['https://dev.21life.win', 'https://dev.21life.win', 'https://supabase-dev.21life.win.attacker.example'],
   ]) assert.notEqual(check(api, site, db).status, 0);
 });
+
+function production(api,db,generation='21life') {
+  return spawnSync(process.execPath,['scripts/verify-expo-build-env.mjs','production'],{
+    encoding:'utf8',env:{...process.env,APP_VARIANT:'production',PRODUCTION_DOMAIN_GENERATION:generation,
+      EXPO_PUBLIC_SUPABASE_URL:db,EXPO_PUBLIC_SUPABASE_ANON_KEY:'test-key',
+      EXPO_PUBLIC_API_BASE_URL:api,EXPO_PUBLIC_SITE_URL:api},
+  });
+}
+test('Production accepts the new matched pair and explicit legacy rollback',()=>{
+  assert.equal(production('https://app.21life.win','https://supabase.21life.win').status,0);
+  assert.equal(production('https://app.phyrexianarena.dpdns.org','https://phyrexianarena.dpdns.org','legacy').status,0);
+});
+test('Production rejects mixed generations, Dev targets and unselected legacy',()=>{
+  for(const [api,db,generation] of [
+    ['https://app.21life.win','https://phyrexianarena.dpdns.org'],
+    ['https://app.phyrexianarena.dpdns.org','https://phyrexianarena.dpdns.org'],
+    ['https://dev.21life.win','https://supabase-dev.21life.win'],
+    ['https://app.21life.win.attacker.example','https://supabase.21life.win'],
+    ['http://app.21life.win','https://supabase.21life.win'],
+    ['https://app.21life.win','https://supabase.21life.win','unknown'],
+  ])assert.notEqual(production(api,db,generation).status,0);
+});

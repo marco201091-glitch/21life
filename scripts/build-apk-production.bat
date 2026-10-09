@@ -35,9 +35,8 @@ if errorlevel 1 goto :fail
 echo [2/6] Set production endpoints
 set "APP_VARIANT=production"
 set "NODE_ENV=production"
-set "EXPO_PUBLIC_API_BASE_URL=https://app.phyrexianarena.dpdns.org"
-set "EXPO_PUBLIC_SITE_URL=https://app.phyrexianarena.dpdns.org"
-set "EXPO_PUBLIC_SUPABASE_URL=https://phyrexianarena.dpdns.org"
+rem Endpoints come from the reviewed production env file; the gate rejects mixed domains.
+set "SENTRY_DISABLE_AUTO_UPLOAD=false"
 node "%~dp0verify-expo-build-env.mjs" production
 if errorlevel 1 goto :fail
 node "%~dp0verify-obtainium-readiness.mjs" --release

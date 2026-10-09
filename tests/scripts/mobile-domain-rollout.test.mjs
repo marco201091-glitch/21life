@@ -5,6 +5,13 @@ const require = createRequire(import.meta.url);
 const base = require('../../expo/app.json').expo;
 const configure = require('../../expo/app.config.js');
 
+test('dynamic Expo configuration accepts a partial tooling context without losing native identity', () => {
+  const config=configure({config:{plugins:[]}});
+  assert.equal(config.android.package,base.android.package);
+  assert.equal(config.ios.bundleIdentifier,base.ios.bundleIdentifier);
+  assert.ok(config.android.intentFilters.length);
+});
+
 for (const variant of ['production', 'dev', 'fdroid']) {
   test(`${variant}: new domains preserve identity and legacy links`, () => {
     const previous = process.env.APP_VARIANT;

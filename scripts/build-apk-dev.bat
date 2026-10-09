@@ -33,6 +33,7 @@ node "%~dp0update-mobile-version.mjs" "%VERSION%"
 if errorlevel 1 goto :fail
 
 set "APP_VARIANT=dev"
+set "SENTRY_DISABLE_AUTO_UPLOAD=true"
 node "%~dp0verify-expo-build-env.mjs" dev
 if errorlevel 1 goto :fail
 
@@ -56,7 +57,7 @@ popd
 
 echo [6/6] Build release APK
 pushd "%EXPO_DIR%\android"
-call "%EXPO_DIR%\android\gradlew.bat" assembleRelease -PreactNativeArchitectures=arm64-v8a --console=plain
+call "%EXPO_DIR%\android\gradlew.bat" assembleRelease -PreactNativeArchitectures=arm64-v8a,x86_64 --console=plain
 if errorlevel 1 (
     popd
     goto :fail
