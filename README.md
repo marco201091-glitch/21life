@@ -1,91 +1,131 @@
+<p align="center"><img src="public/icon-192.png" width="96" height="96" alt="21Life emblem"></p>
+
 # 21Life
 
-[![Web app](https://img.shields.io/badge/Open-Web_App-16a34a?style=flat-square)](https://app.phyrexianarena.dpdns.org)
-[![Android](https://img.shields.io/badge/Android-v9.1.0-7c3aed?style=flat-square)](https://github.com/marco201091-glitch/21life/releases/latest)
+[![Android 9.1.0](https://img.shields.io/badge/Android-v9.1.0-7c3aed?style=flat-square)](https://21life.win/download/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
-Track Commander games, manage your playgroup, and turn match history into statistics that actually mean something — without a spreadsheet.
+**Your Commander table, from the first life total to the last match statistic.**
 
-## What it is
+21Life helps you run Commander games, manage your playgroup and understand its meta. Record a game once; share its result and use the same history for player, deck and commander analytics.
 
-A tracker for Commander pods. You run the game on a phone or tablet on the table, and the result lands in a shared history your playgroup can look back at: who is winning, with which deck, in which bracket, and why.
+[**Visit 21life.win**](https://21life.win) · [**Open the web app**](https://app.21life.win) · [**Download**](https://21life.win/download/) · [**Getting started**](https://21life.win/guida/)
 
-Every game is one tap away from being recorded, and every recorded game feeds the same analytics, so the numbers stay honest without anyone maintaining them by hand.
+English is the default language. Italian is available in both the app and the website.
 
-## What you get
+## At the table
 
-**Run the game**
+- Track life, commander damage, infect and eliminations for **2–6 players**.
+- Use undo and recover an interrupted game.
+- Record wins, draws and how the game ended: last player standing, combo, concession or an alternate win condition.
+- Play with registered members or guests in private playgroups.
+- Keep shared match history, decks, rankings and awards together.
+- Import decks from **Archidekt or Moxfield**, with commander and colour metadata.
+- Explore player, deck and commander performance, brackets, colours and trends.
 
-- Life, commander damage, infect, and eliminations for 2–6 players
-- Undo at any point, and recovery if the app closes mid-game
-- Win conditions are recorded, not just the winner: last standing, combo, concession, alternate win card
-- Draws are tracked as their own outcome and never counted as a loss
+Accounts, shared history, imports and synchronization require an internet connection. Interrupted-game recovery does not make every feature available offline.
 
-**Keep the group together**
+Learn more on the [About page](https://21life.win/info/) or follow the [guide](https://21life.win/guida/).
 
-- Private playgroups with invitations and guests — nobody needs an account to sit at the table
-- Shared match history that everyone sees
-- Optional public results page to share the standings outside the group
-
-**Understand the meta**
-
-- Rankings across players, decks, and commanders
-- Deck and commander performance with brackets, colours, and trends
-- Personal analytics: your decks, your streaks, your win rate
-- Playgroup awards for the memorable stuff — fastest win, most damage, best comeback
-
-**Bring your decks**
-
-- Import from Archidekt or Moxfield
-- Deck metadata, commanders, and colour identity resolved automatically
-
-English and Italian interfaces throughout.
-
-## Install
+## Install and update
 
 ### Web
 
-Open **[app.phyrexianarena.dpdns.org](https://app.phyrexianarena.dpdns.org)** in any modern browser. Nothing to install.
+Open [**app.21life.win**](https://app.21life.win) in a modern browser. The web and mobile clients share your account and hosted data service.
 
-### Android with Obtainium
+### Android
 
-[Obtainium](https://obtainium.imranr.dev/) keeps the app updated straight from this repository's releases — no store account.
+Download the signed APK from the [**official download page**](https://21life.win/download/) or [GitHub Releases](https://github.com/marco201091-glitch/21life/releases/latest). Each new release includes a SHA-256 checksum.
 
-1. Install Obtainium.
-2. Choose **Add App** and paste this repository URL:
+For automatic update checks with [Obtainium](https://obtainium.imranr.dev/):
 
-   `https://github.com/marco201091-glitch/21life`
+1. Install Obtainium and choose **Add App**.
+2. Paste the repository URL:
 
-3. Confirm the detected release and install the APK.
+   ```text
+   https://github.com/marco201091-glitch/21life
+   ```
 
-Obtainium will tell you when a new signed release is available. You can also grab the APK from [GitHub Releases](https://github.com/marco201091-glitch/21life/releases/latest), where each release ships a SHA-256 checksum so you can verify it before installing.
+3. Confirm the detected release and install its APK.
 
-### iOS
+Use the standard production APK when updating an existing production installation. Dev and F-Droid builds have separate purposes and build policies.
 
-A public build is not available yet. An unsigned IPA can be built from source and sideloaded.
+### iPhone and iPad
 
-### F-Droid
+The web app works in the browser. An [**unsigned 9.1.0 IPA**](https://github.com/marco201091-glitch/21life/releases/download/v9.1.0/21life-v9.1.0-unsigned.ipa) is also available for compatible **TrollStore Lite** installations. It is built on Expo from the production release source, includes iPad support and needs a compatible sideloading setup. It is not an App Store release.
 
-The official F-Droid submission is under review. The F-Droid edition keeps the same core tracking and analytics, but uses email/password authentication only and omits Google sign-in, push notifications, and Sentry, to comply with the F-Droid build policy.
+The website's download page lists Android and Web only.
 
-## How it works
+## Start a playgroup
 
-The web app and the Android app share one hosted account and data service, so matches, decks, playgroups, and statistics stay in sync across whatever you sign in on.
+1. Create an account or sign in. The standard release supports email/password and Google sign-in.
+2. Create or join a private playgroup; invite its members and add guests as needed.
+3. Add your decks or import them from Archidekt or Moxfield.
+4. Set up a game, track the table and record the result.
+5. Open history and analytics to see how players, decks and commanders perform over time.
 
-Sign-in is email/password, with optional Google sign-in on the web and the standard Android build. An internet connection is needed for account sync, multiplayer data, and external deck or card services.
+See the [guide](https://21life.win/guida/) and [FAQ](https://21life.win/supporto/) for more detail.
 
-## Project
+## What's new in 9.1.0
 
-- Built with Next.js for the web, Expo/React Native for mobile, and a self-hosted Supabase backend.
-- Every migration, deploy script, and release workflow lives in this repository.
-- Contributions, bug reports, and feature requests are welcome through [issues](https://github.com/marco201091-glitch/21life/issues).
+- New home at **21life.win**, with production web and backend domains migrated together.
+- English by default, with Italian available.
+- Improved life gain/loss feedback and arena animations that respect reduced motion.
+- The profile selects the deck with the highest mastery score: **games played + 2 × wins**.
+- iPad damage management follows the attacking player's card orientation.
+- Improved guest management on iPad, including form recovery on errors and safer claim sharing.
+- Updated web/mobile tooling and expanded automated regression checks.
 
-## Privacy and legal
+Read the [release notes](docs/releases/9.1.0.md) and [official releases](https://github.com/marco201091-glitch/21life/releases).
 
-- [Privacy policy](https://app.phyrexianarena.dpdns.org/legal/privacy)
-- [Terms of service](https://app.phyrexianarena.dpdns.org/legal/terms)
-- [Account deletion](https://app.phyrexianarena.dpdns.org/legal/delete-account)
-- [Third-party notices](THIRD_PARTY_NOTICES.md)
-- [MIT License](LICENSE)
+## Domains and compatibility
 
-21Life - Tracker & Analytics is unofficial fan content. It is not approved, endorsed, or sponsored by Wizards of the Coast. Portions of the materials used are property of Wizards of the Coast LLC.
+| Purpose | Address |
+| --- | --- |
+| Website and download guide | [21life.win](https://21life.win) |
+| Production web app | [app.21life.win](https://app.21life.win) |
+| Production Supabase backend | `https://supabase.21life.win` |
+| Development web app | `https://dev.21life.win` |
+| Development Supabase backend | `https://supabase-dev.21life.win` |
+
+Existing accounts and data are preserved. Previous production endpoints remain available as compatibility aliases for installed clients and the registered Google callback. Native package identifiers, deep-link schemes and local session keys retain their established values to preserve upgrades and sessions.
+
+## Support, privacy and legal
+
+- [Support and FAQ](https://21life.win/supporto/)
+- [Report a bug or request a feature](https://github.com/marco201091-glitch/21life/issues)
+- Email: [support@21life.win](mailto:support@21life.win)
+- [Privacy policy](https://app.21life.win/legal/privacy)
+- [Terms of service](https://app.21life.win/legal/terms)
+- [Cookies and storage](https://app.21life.win/legal/cookies)
+- [Account deletion guide](https://21life.win/supporto/#account)
+- [Account data export](docs/ACCOUNT_EXPORT.md)
+
+## Development
+
+The repository contains the **Next.js web app**, the **Expo / React Native mobile app** and the configuration for a **self-hosted Supabase backend**. The presentation website is a separate project deployed through Dokploy.
+
+Use the Node version in [.node-version](.node-version) and the package manager declared in [package.json](package.json). Create a local `.env.local` from [.env.example](.env.example) with **Dev** credentials; native configuration examples live in [expo/.env.example](expo/.env.example) and [expo/.env.production.example](expo/.env.production.example). Keep production credentials out of development builds.
+
+```sh
+npm ci
+npm --prefix expo ci
+npm run dev
+```
+
+For automated verification:
+
+```sh
+npm run quality
+npm --prefix expo run quality
+```
+
+See [branch and release workflow](docs/BRANCH_RELEASE_WORKFLOW.md), [Obtainium release checks](docs/OBTAINIUM_RELEASE_CHECKLIST.md) and [Supabase operations](docs/SUPABASE_OPERATIONS.md). Supabase runs on the project VM; the local workstation does not need a local database container for remote operations.
+
+The F-Droid submission is under review. Its separate edition uses email/password authentication and omits Google sign-in, push notifications and Sentry; see [F-Droid readiness](docs/FDROID_RELEASE_READINESS.md). It is not currently advertised as a download on the website.
+
+## License and attribution
+
+21Life is released under the [MIT License](LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md) for bundled and external components.
+
+21Life - Tracker & Analytics is unofficial fan content. It is not approved, endorsed or sponsored by Wizards of the Coast. Magic: The Gathering and related trademarks belong to their respective owners.
