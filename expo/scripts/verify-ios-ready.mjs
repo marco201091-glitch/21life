@@ -83,7 +83,7 @@ for (const marker of [
   'pod install',
   "generic/platform=iOS",
   'CODE_SIGNING_ALLOWED=NO',
-  'SENTRY_DISABLE_AUTO_UPLOAD=true',
+  'SENTRY_DISABLE_AUTO_UPLOAD:?',
   'main.jsbundle',
   '21Life-unsigned.ipa',
   'eas/upload_artifact',
@@ -92,6 +92,8 @@ for (const marker of [
 }
 
 assert(!workflow.includes('SENTRY_ALLOW_FAILURE'), 'Unsigned IPA workflow must not bypass React Native bundling');
+assert(!workflow.includes('export SENTRY_DISABLE_AUTO_UPLOAD=true'), 'Unsigned IPA must preserve the profile upload policy');
+assert(eas.build['ios-release-unsigned'].env.SENTRY_DISABLE_AUTO_UPLOAD === 'false', 'Production unsigned IPA must upload symbols');
 
 for (const asset of ['assets/icon.png', 'assets/splash-icon.png']) {
   assert(fs.existsSync(path.join(expoDir, asset)), `Missing iOS asset: ${asset}`);

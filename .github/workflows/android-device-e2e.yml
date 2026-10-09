@@ -15,8 +15,8 @@ jobs:
       APP_VARIANT: dev
       EXPO_PUBLIC_SUPABASE_URL: ${{ vars.STAGING_SUPABASE_URL }}
       EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
-      EXPO_PUBLIC_API_BASE_URL: https://dev.phyrexianarena.dpdns.org
-      EXPO_PUBLIC_SITE_URL: https://dev.phyrexianarena.dpdns.org
+      EXPO_PUBLIC_API_BASE_URL: https://dev.21life.win
+      EXPO_PUBLIC_SITE_URL: https://dev.21life.win
     defaults:
       run:
         working-directory: expo
@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          node-version: 24.18.0
+          node-version-file: .node-version
           cache: npm
           cache-dependency-path: expo/package-lock.json
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
@@ -33,7 +33,7 @@ jobs:
           java-version: '21'
       - name: Require explicit staging configuration
         run: |
-          node -e 'const u=new URL(process.env.EXPO_PUBLIC_SUPABASE_URL); const api=new URL(process.env.EXPO_PUBLIC_API_BASE_URL); const site=new URL(process.env.EXPO_PUBLIC_SITE_URL); if(u.hostname!=="supabase-staging.phyrexianarena.dpdns.org" || api.hostname!=="dev.phyrexianarena.dpdns.org" || site.hostname!==api.hostname || !process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY) throw Error("Configure staging DB/API/site; production is refused")'
+          node ../scripts/verify-expo-build-env.mjs dev
       - run: npm ci
       - run: npx --no-install expo prebuild --platform android --no-install
       - name: Build isolated Dev debug package

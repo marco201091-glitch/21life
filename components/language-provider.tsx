@@ -24,9 +24,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const browserLanguage = window.navigator.language.toLowerCase();
-    setLanguageState(browserLanguage.startsWith('it') ? 'it' : 'en');
   }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   const setLanguage = (nextLanguage: Language) => {
     setLanguageState(nextLanguage);

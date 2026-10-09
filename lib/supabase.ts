@@ -1,6 +1,7 @@
 import { createBrowserClient } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getAuthCookieOptions } from '@/lib/auth-persistence';
+import { getSupabaseAuthStorageKey } from '@/expo/lib/supabase-auth-storage-key';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -11,6 +12,7 @@ export function createBrowserSupabaseClient() {
   return createBrowserClient(supabaseUrl, supabaseAnonKey, {
     cookieOptions: getAuthCookieOptions(),
     auth: {
+      storageKey: getSupabaseAuthStorageKey(supabaseUrl),
       // Callback exchange is handled explicitly in /auth/callback route.
       detectSessionInUrl: false,
     },

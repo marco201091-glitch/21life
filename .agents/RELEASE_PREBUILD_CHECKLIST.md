@@ -62,3 +62,4 @@ che ne dipende; non equivale a un risultato positivo.
 - [ ] Confermare accettazione/avvio. Monitorare fino alla conclusione soltanto
   quando richiesto dal PM. Non dichiarare «pubblicato» o «completato» a questo punto.
 
+- [ ] Back-merge main/Dev: controllare checklist concorrenti; zero marker di conflitto e zero file unmerged prima di build/deploy.

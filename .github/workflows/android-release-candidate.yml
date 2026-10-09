@@ -54,7 +54,7 @@ jobs:
 
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          node-version: 24.18.0
+          node-version-file: .node-version
           cache: npm
           cache-dependency-path: expo/package-lock.json
 
@@ -90,11 +90,15 @@ jobs:
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           if (-not $env:RELEASE_KEYSTORE_BASE64) { throw "Missing release keystore secret" }
           if (-not $env:SENTRY_AUTH_TOKEN -or -not $env:SENTRY_ORG -or -not $env:SENTRY_MOBILE_PROJECT -or -not $env:SENTRY_DSN) {
             throw "Missing Sentry release configuration"
           }
-          $turnstile = Invoke-RestMethod -Uri "https://app.phyrexianarena.dpdns.org/api/auth/turnstile/config" -TimeoutSec 15
+          $env:PRODUCTION_DOMAIN_GENERATION = '21life'
+          $domains = node scripts/build-domains.mjs production | ConvertFrom-Json
+          $turnstile = Invoke-RestMethod -Uri "$($domains.api)/api/auth/turnstile/config" -TimeoutSec 15
           if (-not $turnstile.siteKey) { throw "Production Turnstile site key is unavailable" }
           $keystorePath = Join-Path $env:RUNNER_TEMP "phyrexian-arena-release.jks"
           [IO.File]::WriteAllBytes($keystorePath, [Convert]::FromBase64String($env:RELEASE_KEYSTORE_BASE64))
@@ -109,12 +113,12 @@ jobs:
           ) | Set-Content -LiteralPath $signingPath
 
           @(
-            "EXPO_PUBLIC_SUPABASE_URL=https://phyrexianarena.dpdns.org"
+            "EXPO_PUBLIC_SUPABASE_URL=$($domains.supabase)"
             "EXPO_PUBLIC_SUPABASE_ANON_KEY=$env:PRODUCTION_SUPABASE_ANON_KEY"
-            "EXPO_PUBLIC_API_BASE_URL=https://app.phyrexianarena.dpdns.org"
-            "EXPO_PUBLIC_SITE_URL=https://app.phyrexianarena.dpdns.org"
+            "EXPO_PUBLIC_API_BASE_URL=$($domains.api)"
+            "EXPO_PUBLIC_SITE_URL=$($domains.api)"
             "EXPO_PUBLIC_TURNSTILE_SITE_KEY=$($turnstile.siteKey)"
-            "EXPO_PUBLIC_SUPPORT_EMAIL=support@phyrexianarena.dpdns.org"
+            "EXPO_PUBLIC_SUPPORT_EMAIL=support@21life.win"
             "EXPO_PUBLIC_SENTRY_ENABLED=true"
             "EXPO_PUBLIC_SENTRY_DSN=$env:SENTRY_DSN"
           ) | Set-Content -LiteralPath "expo/.env.production.local"

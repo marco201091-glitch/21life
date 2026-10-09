@@ -35,9 +35,8 @@ if errorlevel 1 goto :fail
 echo [2/6] Set production endpoints
 set "APP_VARIANT=production"
 set "NODE_ENV=production"
-set "EXPO_PUBLIC_API_BASE_URL=https://app.phyrexianarena.dpdns.org"
-set "EXPO_PUBLIC_SITE_URL=https://app.phyrexianarena.dpdns.org"
-set "EXPO_PUBLIC_SUPABASE_URL=https://phyrexianarena.dpdns.org"
+rem Endpoints come from the reviewed production env file; the gate rejects mixed domains.
+set "SENTRY_DISABLE_AUTO_UPLOAD=false"
 node "%~dp0verify-expo-build-env.mjs" production
 if errorlevel 1 goto :fail
 node "%~dp0verify-obtainium-readiness.mjs" --release
@@ -46,8 +45,14 @@ node "%~dp0verify-android-signing-config.mjs"
 if errorlevel 1 goto :fail
 
 echo [3/6] Stop Gradle and clean native cache
-if exist "%EXPO_DIR%\android\gradlew.bat" call "%EXPO_DIR%\android\gradlew.bat" --stop
-if exist "%EXPO_DIR%\node_modules\react-native-reanimated\android\.cxx" rmdir /s /q "%EXPO_DIR%\node_modules\react-native-reanimated\android\.cxx"
+if exist "%EXPO_DIR%\android\gradlew.bat" (
+    call "%EXPO_DIR%\android\gradlew.bat" --stop
+    if errorlevel 1 goto :fail
+)
+if exist "%EXPO_DIR%\node_modules\react-native-reanimated\android\.cxx" (
+    rmdir /s /q "%EXPO_DIR%\node_modules\react-native-reanimated\android\.cxx"
+    if errorlevel 1 goto :fail
+)
 
 echo [4/6] Generate Android production project
 rem Expo SDK 57 autolinking resolves package.json via the real project path.
@@ -61,7 +66,7 @@ popd
 
 echo [5/6] Build release APK
 pushd "%EXPO_DIR%\android"
-call "%EXPO_DIR%\android\gradlew.bat" assembleRelease -PreactNativeArchitectures=arm64-v8a,x86_64 --console=plain
+call "%EXPO_DIR%\android\gradlew.bat" :app:assembleRelease -PreactNativeArchitectures=arm64-v8a,x86_64 --console=plain
 if errorlevel 1 (
     popd
     goto :fail
