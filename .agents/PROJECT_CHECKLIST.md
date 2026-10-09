@@ -202,3 +202,7 @@ Le note precedenti descrivono le fasi storiche; questa sezione indica lo stato c
 - [ ] PM2026-10-09 chiudere tutto eseguibile senza dispositivifisici: fixCI web coverage envhelper (ExpoLinuxverde), integrazioneDev dopo gate, artefatti finali stessiSHA, riesameadvisory/peer e OAuthreadiness senza cutoverprod. PR179 merge non tentato mentrewebrosso; no pubblicazionesito.
 
 - [x] CIparity web causa confermata: server-envbranch70Windows/50Linux per envCI;5test espliciti fallback/missing/serverpriorita, quality328web+41script passata, baseline invariata. ExpoLinux quality/doctor/export verdi su068901f. Nessunmergefallito, merge ancora dipendente CIweb.
+
+- [ ] Profilo mastery 9.1.0 (2026-10-09): APK Dev c3b0daf usa ancora is_favorite/primo mazzo; vecchia PR173 OPEN, mai integrata. Portata correzione sul Dev attuale in fix/profile-mastery-9.1.0, web/Expo condividono punteggio partite + 2*vittorie. Test regressione, quality e integrazione Dev in corso; niente produzione.
+
+  Verifica locale: quality web ed Expo completate exit0 (lint, typecheck, coverage ratchet, test, security/operations/knip). Revisione indipendente senza problemi; test mastery web9/9, Expo4/4. Correzione pronta per PR Dev; versione resta9.1.0.
