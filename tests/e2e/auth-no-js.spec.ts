@@ -2,8 +2,9 @@ import {expect,test} from '@playwright/test';
 test.use({javaScriptEnabled:false});
 test('an unhydrated login never puts credentials in the navigation URL',async({page})=>{
   await page.goto('/auth/login');
-  await expect(page.getByLabel('Email or username')).toBeDisabled();
-  await expect(page.getByLabel('Password',{exact:true})).toBeDisabled();
-  await expect(page.getByRole('button',{name:'Enter',exact:true})).toBeDisabled();
-  await expect(page.locator('form')).toHaveAttribute('method','post');
+  // Static production renders the Suspense fallback; Dev can server-render the form.
+  // Neither may expose usable credential inputs before hydration.
+  await expect(page.locator('input[name="username"]:not(:disabled)')).toHaveCount(0);
+  await expect(page.locator('input[name="password"]:not(:disabled)')).toHaveCount(0);
+  await expect(page.locator('form:not([method="post"])')).toHaveCount(0);
 });
