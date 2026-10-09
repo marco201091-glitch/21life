@@ -45,8 +45,14 @@ node "%~dp0verify-android-signing-config.mjs"
 if errorlevel 1 goto :fail
 
 echo [3/6] Stop Gradle and clean native cache
-if exist "%EXPO_DIR%\android\gradlew.bat" call "%EXPO_DIR%\android\gradlew.bat" --stop
-if exist "%EXPO_DIR%\node_modules\react-native-reanimated\android\.cxx" rmdir /s /q "%EXPO_DIR%\node_modules\react-native-reanimated\android\.cxx"
+if exist "%EXPO_DIR%\android\gradlew.bat" (
+    call "%EXPO_DIR%\android\gradlew.bat" --stop
+    if errorlevel 1 goto :fail
+)
+if exist "%EXPO_DIR%\node_modules\react-native-reanimated\android\.cxx" (
+    rmdir /s /q "%EXPO_DIR%\node_modules\react-native-reanimated\android\.cxx"
+    if errorlevel 1 goto :fail
+)
 
 echo [4/6] Generate Android production project
 rem Expo SDK 57 autolinking resolves package.json via the real project path.

@@ -57,6 +57,11 @@ jobs:
         run: node ../audit-tools/scripts/dependency-audit.mjs artifacts/dependency-audit
         env:
           AUDIT_TARGET_BRANCH: ${{ matrix.branch }}
+      - name: Audit critical vulnerabilities including build and test dependencies
+        if: success() || failure()
+        run: |
+          npm audit --audit-level=critical
+          npm --prefix expo audit --audit-level=critical
       - name: Upload audit reports
         if: always()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5

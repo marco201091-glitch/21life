@@ -62,6 +62,7 @@ jobs:
           } >> "$GITHUB_ENV"
       - run: npm ci
       - run: npm run audit:production
+      - run: npm audit --audit-level=critical
       # Web unit tests intentionally reuse shared game logic from expo/lib.
       - run: npm --prefix expo ci
       - name: Seed authenticated E2E account
@@ -101,6 +102,7 @@ jobs:
           cache-dependency-path: expo/package-lock.json
       - run: npm ci
       - run: npm run audit:production
+      - run: npm audit --audit-level=critical
       - run: npm run quality
       # doctor:ci esegue expo-doctor per intero e blocca su qualunque controllo
       # fallito, incluso qualunque scostamento di versione delle dipendenze SDK.

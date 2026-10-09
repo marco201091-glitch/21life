@@ -38,11 +38,15 @@ node "%~dp0verify-expo-build-env.mjs" dev
 if errorlevel 1 goto :fail
 
 echo [2/6] Stop Gradle
-if exist "%EXPO_DIR%\android\gradlew.bat" call "%EXPO_DIR%\android\gradlew.bat" --stop
+if exist "%EXPO_DIR%\android\gradlew.bat" (
+    call "%EXPO_DIR%\android\gradlew.bat" --stop
+    if errorlevel 1 goto :fail
+)
 
 echo [3/6] Clean native cache
 if exist "%EXPO_DIR%\node_modules\react-native-reanimated\android\.cxx" (
     rmdir /s /q "%EXPO_DIR%\node_modules\react-native-reanimated\android\.cxx"
+    if errorlevel 1 goto :fail
 )
 
 echo [4/6] Generate Android dev project
