@@ -26,8 +26,7 @@ and leaves the standard package/data intact. The optional manual CI workflow bel
 
 The optional `android-device-e2e.yml` workflow prepares a Dev emulator, Metro
 over `adb reverse`, and three quick-game runs. It requires the GitHub variable
-`STAGING_SUPABASE_URL` and secret `STAGING_SUPABASE_ANON_KEY`; neither is currently
-configured. The workflow is manual, has not been run, and is not a required check.
+`STAGING_SUPABASE_URL` and secret `STAGING_SUPABASE_ANON_KEY` to be configured. The workflow is manual, has not been run, and is not a required check.
 It does not claim coverage of authenticated games or archive flows.
 
 For the prepared authenticated archive flow, run from the repository root:
@@ -35,9 +34,9 @@ For the prepared authenticated archive flow, run from the repository root:
 ```powershell
 $env:E2E_ENV_ROOT = 'C:/Users/marco/Documents/GitHub/PhyrexianArena'
 $env:E2E_DRIVER = 'maestro'
-$env:EXPO_PUBLIC_SUPABASE_URL = 'https://supabase-staging.phyrexianarena.dpdns.org'
-$env:EXPO_PUBLIC_API_BASE_URL = 'https://dev.phyrexianarena.dpdns.org'
-$env:EXPO_PUBLIC_SITE_URL = 'https://dev.phyrexianarena.dpdns.org'
+$env:EXPO_PUBLIC_SUPABASE_URL = 'https://supabase-dev.21life.win'
+$env:EXPO_PUBLIC_API_BASE_URL = 'https://dev.21life.win'
+$env:EXPO_PUBLIC_SITE_URL = 'https://dev.21life.win'
 # For a development-client APK, also set the link to its running Metro instance:
 $env:E2E_METRO_URL = 'phyrexianarena-dev://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081'
 node scripts/run-staging-authenticated-e2e.mjs
