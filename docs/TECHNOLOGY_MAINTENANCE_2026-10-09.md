@@ -4,7 +4,7 @@
 
 Manutenzione implementata nel worktree isolato `21life-rebranding`, branch `chore/technology-maintenance-9.1`, dalla baseline Dev `bbfbaa6`. Versione applicativa mantenuta a **9.1.0 / 90100**. Il checkout del PM è stato preservato. Nessuna pubblicazione del sito, promozione main, modifica di database/configurazioni production o aggiornamento dei container remoti.
 
-I sorgenti delle animazioni sono nel commit `e40fd32`; il precedente candidato manutenzione `0b98a45` ha superato anche la build APK nativa. Build e collaudi conclusivi delle animazioni sono registrati di seguito.
+I sorgenti delle animazioni sono nel commit `e40fd32`; il precedente candidato manutenzione `0b98a45` ha superato anche la build APK nativa. Web finale costruito dal commit pulito `b8f630a`; APK ed export iOS da `e40fd32` (codice native identico nei commit successivi). APK SHA-256 `612dea6a785a7ca41b91daa805985b8bcf812eb4f76b5e61bedb8a435e137bc5`, firma locale verificata; non firma store/EAS.
 
 ## Aggiornamenti eseguiti
 
@@ -40,6 +40,8 @@ Feedback web/mobile distingue gain e loss, intensita proporzionata e limitata, h
 
 Quattro test nuovi della logica RED→GREEN verificano limiti, invalidi, burst misti, cancellazione e nuova finestra; review indipendente senza nuove regressioni, migliorato anche il posizionamento del delta precedentemente instabile.
 
+Sei E2E finali desktop/mobile passati: feedback normale, sistema con movimento ridotto e preferenza app salvata. Il test ha riprodotto un problema di hit testing dei controlli ruotati con la disattivazione generica delle transizioni: preferenza ora applicata solo al feedback vita, regressione verde. Sei screenshot Android nuovi verificano gain, burst, loss, movimento ridotto e scadenza. Nessun benchmark FPS o dispositivo iOS fisico dichiarato.
+
 ## Verifiche eseguite
 
 | Verifica | Esito |
@@ -57,13 +59,14 @@ Quattro test nuovi della logica RED→GREEN verificano limiti, invalidi, burst m
 | Esposizione advisory nel bundle | mappe complete Android 3.045 e iOS 3.000 moduli: nessuna sorgente braces/node-forge |
 | Expo doctor | 21/21 passato, con DNS verificato per il solo processo |
 | Gate iOS/iPad | passato, versione e profili coerenti |
+| Animazioni browser | 6/6 test finali; 32 scenari browser distinti complessivi |
 | Android nativo | APK Dev standalone 9.1.0/90100, ARM64+x86_64, firma locale verificata; sei controlli manuali startup/guest/40→41/undo/redo e tre flussi Auth reali passati |
 
 Il test UIAutomator arena non riesce a ottenere lo stato idle per il timer della partita: quel tentativo resta fallito, le sei verifiche arena sono manuali con screenshot, non automazione dichiarata. Login password nativo, sessione dopo force-stop e logout sono stati eseguiti tramite UIAutomator/ADB con account sintetico poi rimosso e verificato.
 
 Il resolver Windows non risolveva `exp.host`. Due resolver DNS HTTPS indipendenti hanno concordato l'indirizzo; il solo processo doctor ha usato tale risoluzione mantenendo HTTPS e tutti i controlli. Nessuna modifica DNS persistente o bypass del gate. A resolver standard resta il problema esterno da risolvere sulla workstation.
 
-I primi E2E sul server Next dev hanno evidenziato anche navigazioni prima della hydration e attese di compilazione a freddo. La verifica conclusiva usa la build ottimizzata locale aggiornata, non il Dev remoto precedente: tutte le 26 verifiche browser sono state eseguite fra suite pubblica e fixture autenticata. Fixture separate e account sintetici rimossi; finalizzazione produce esattamente due partite per due flussi, senza duplicati. La suite quality salta per impostazione il test PostgREST, eseguito separatamente con esito positivo.
+I primi E2E sul server Next dev hanno evidenziato anche navigazioni prima della hydration e attese di compilazione a freddo. La verifica conclusiva usa la build ottimizzata locale aggiornata, non il Dev remoto precedente: le 26 verifiche browser di manutenzione sono state eseguite fra suite pubblica e fixture autenticata. Fixture separate e account sintetici rimossi; finalizzazione produce esattamente due partite per due flussi, senza duplicati. La suite quality salta per impostazione il test PostgREST, eseguito separatamente con esito positivo.
 
 ## Debito residuo e decisioni
 
@@ -99,4 +102,4 @@ Google è abilitato in produzione e la allow-list contiene lo schema nativo stor
 
 ## Evidenze e integrazione
 
-Log e report senza chiavi private in `artifacts/technology-maintenance/`; runtime locale verificato tramite SHA-256 ufficiale. Nessuna modifica al Node globale della workstation. Server/emulatore temporanei vengono chiusi dopo le verifiche. Il candidato va integrato su Dev tramite PR e CI Linux; nessun merge o deploy di produzione eseguito durante questa manutenzione.
+Log e report senza chiavi private in `artifacts/technology-maintenance/`; runtime locale verificato tramite SHA-256 ufficiale. Nessuna modifica al Node globale della workstation. Server ed emulatore temporanei chiusi dopo le verifiche. Scansione client web/APK/log: zero corrispondenze con token privati. Il candidato va integrato su Dev tramite PR e CI Linux; nessun merge o deploy di produzione eseguito durante questa manutenzione.
