@@ -66,7 +66,7 @@ popd
 
 echo [5/6] Build release APK
 pushd "%EXPO_DIR%\android"
-call "%EXPO_DIR%\android\gradlew.bat" assembleRelease -PreactNativeArchitectures=arm64-v8a,x86_64 --console=plain
+call "%EXPO_DIR%\android\gradlew.bat" :app:assembleRelease -PreactNativeArchitectures=arm64-v8a,x86_64 --console=plain
 if errorlevel 1 (
     popd
     goto :fail
