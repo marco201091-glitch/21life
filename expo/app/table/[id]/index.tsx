@@ -1,6 +1,7 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Keyboard,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,7 +12,9 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { showAppAlert } from '@/lib/app-alert';
+import { showAppAlert, type AppAlert, type AppAlertButton } from '@/lib/app-alert';
+import { GuestDialogHost } from '@/components/table/guest-dialog-host';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { AddGuestModal, type GuestModalMode } from '@/components/table/add-guest-modal';
 import { EditMatchModal } from '@/components/table/edit-match-modal';
 import { MatchDetailsModal } from '@/components/table/match-details-modal';
@@ -153,6 +156,7 @@ export default function TableScreen() {
   const [savingGuest, setSavingGuest] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showGuestsManager, setShowGuestsManager] = useState(false);
+  const [guestAlert, setGuestAlert] = useState<Omit<AppAlert, 'id'> | null>(null);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showInviteQr, setShowInviteQr] = useState(false);
@@ -647,8 +651,13 @@ export default function TableScreen() {
     ]);
   };
 
+  const showGuestAlert = (title: string, message?: string, buttons?: AppAlertButton[]) => {
+    Keyboard.dismiss();
+    setGuestAlert({ title, message, buttons: buttons?.length ? buttons : [{ text: 'OK' }] });
+  };
+
   const handleDeleteGuest = (guestId: string) => {
-    showAppAlert(copy('deleteGuest'), copy('deleteGuestConfirm'), [
+    showGuestAlert(copy('deleteGuest'), copy('deleteGuestConfirm'), [
       { text: copy('cancel'), style: 'cancel' },
       {
         text: copy('deleteGuest'),
@@ -656,9 +665,9 @@ export default function TableScreen() {
         onPress: async () => {
           try {
             await removeGuest(guestId);
-            showAppAlert(copy('guestDeleted'));
+            showGuestAlert(copy('guestDeleted'));
           } catch (error) {
-            showAppAlert(copy('error'), getSupabaseErrorMessage(error, copy('saveGuestFailed')));
+            showGuestAlert(copy('error'), getSupabaseErrorMessage(error, copy('saveGuestFailed')));
           }
         },
       },
@@ -666,13 +675,17 @@ export default function TableScreen() {
   };
 
   const handleCreateGuestClaimLink = async (guestId: string) => {
-    const guest = guests.find((entry) => entry.id === guestId);
-    const { data, error, status } = await apiPost<{ url: string }>('/api/guest-claims', { guestId });
-    if (status !== 200 || !data?.url) {
-      showAppAlert(copy('error'), error || copy('createGuestLinkFailed'));
-      return;
+    try {
+      const guest = guests.find((entry) => entry.id === guestId);
+      const { data, error, status } = await apiPost<{ url: string }>('/api/guest-claims', { guestId });
+      if (status !== 200 || !data?.url) {
+        showGuestAlert(copy('error'), error || copy('createGuestLinkFailed'));
+        return;
+      }
+      await Share.share({ title: guest?.display_name || copy('guestBadge'), message: `${copy('joinInviteHint')}\n${data.url}`, url: data.url });
+    } catch (error) {
+      showGuestAlert(copy('error'), getSupabaseErrorMessage(error, copy('createGuestLinkFailed')));
     }
-    await Share.share({ title: guest?.display_name || copy('guestBadge'), message: `${copy('joinInviteHint')}\n${data.url}`, url: data.url });
   };
 
   const handleDeleteMatch = (matchId: string) => {
@@ -946,6 +959,8 @@ export default function TableScreen() {
               noGuestsBody: copy('noGuestsBody'),
               guestBadge: copy('guestBadge'),
               upgradeGuest: copy('upgradeGuest'),
+              addDeckToGuest: copy('addDeckToGuest'),
+              deleteGuest: copy('deleteGuest'),
             }}
             onAddGuest={() => {
               setGuestModalMode(undefined);
@@ -1004,91 +1019,128 @@ export default function TableScreen() {
         sharing={sharing}
       />
 
-      <AddGuestModal
-        visible={showGuestModal}
-        saving={savingGuest}
-        guests={guests}
-        initialMode={guestModalMode}
-        initialGuestId={guestModalTargetId}
-        labels={{
-          title: copy('addGuestTitle'),
-          addDeckTitle: copy('addGuestDeckTitle'),
-          hint: copy('addGuestHint'),
-          addDeckHint: copy('addGuestDeckHint'),
-          pickExistingHint: copy('pickExistingGuestHint'),
-          existingGuests: copy('existingGuests'),
-          createNewGuest: copy('createNewGuest'),
-          backToExistingGuests: copy('backToExistingGuests'),
-          guestName: copy('guestName'),
-          guestNamePlaceholder: copy('guestNamePlaceholder'),
-          deckName: copy('deckName'),
-          deckNamePlaceholder: copy('deckNamePlaceholder'),
-          searchCommander: copy('searchCommander'),
-          searchPlaceholder: copy('searchPlaceholder'),
-          searching: copy('searching'),
-          noResults: copy('noCommanderResults'),
-          selectedCommander: copy('selectedCommander'),
-          partnerHint: copy('partnerHint'),
-          chooseCommanderArt: copy('chooseCommanderArt'),
-          loadingArts: copy('loadingArts'),
-          noArtsFound: copy('noArtsFound'),
-          printing: copy('printing'),
-          cancel: copy('cancel'),
-          save: copy('save'),
-          saveDeck: copy('saveGuestDeck'),
-          saving: copy('saving'),
-          nameRequired: copy('nameRequired'),
-          commanderRequired: copy('commanderRequired'),
-          decks: copy('decks'),
-          addDeckToGuest: copy('addDeckToGuest'),
-        }}
+      <GuestDialogHost
+        managerOpen={showGuestsManager}
+        editorOpen={showGuestModal}
         onClose={() => {
-          setShowGuestModal(false);
-          setGuestModalMode(undefined);
-          setGuestModalTargetId(null);
-        }}
-        onError={(message) => showAppAlert(copy('error'), message)}
-        onPickExisting={() => setShowGuestModal(false)}
-        onSaveCreate={async (input) => {
-          setSavingGuest(true);
-          try {
-            await addGuest({
-              displayName: input.displayName,
-              commander: input.commander,
-              partnerCommander: input.partnerCommander,
-              deckName: input.deckName,
-              selectedArtUrl: input.selectedArtUrl,
-            });
+          if (guestAlert) setGuestAlert(null);
+          else if (showGuestModal) {
             setShowGuestModal(false);
             setGuestModalMode(undefined);
             setGuestModalTargetId(null);
-            showToast(copy('guestAddedHint'));
-          } catch (error) {
-            showAppAlert(copy('error'), getSupabaseErrorMessage(error, copy('saveGuestFailed')));
-          } finally {
-            setSavingGuest(false);
-          }
+          } else setShowGuestsManager(false);
         }}
-        onSaveAddDeck={async (input) => {
-          setSavingGuest(true);
-          try {
-            await addGuestDeck({
-              guestId: input.guestId,
-              commander: input.commander,
-              partnerCommander: input.partnerCommander,
-              deckName: input.deckName,
-              selectedArtUrl: input.selectedArtUrl,
-            });
-            setShowGuestModal(false);
-            setGuestModalMode(undefined);
-            setGuestModalTargetId(null);
-            showToast(copy('guestDeckAddedHint'));
-          } catch (error) {
-            showAppAlert(copy('error'), getSupabaseErrorMessage(error, copy('saveGuestFailed')));
-          } finally {
-            setSavingGuest(false);
-          }
-        }}
+        alert={guestAlert ? (
+          <ConfirmModal embedded visible title={guestAlert.title} message={guestAlert.message}
+            onClose={() => setGuestAlert(null)}
+            actions={guestAlert.buttons.map((button) => ({
+              label: button.text || 'OK',
+              variant: button.style === 'destructive' ? 'destructive' : button.style === 'cancel' ? 'ghost' : 'primary',
+              onPress: () => { setGuestAlert(null); void button.onPress?.(); },
+            }))}
+          />
+        ) : null}
+        manager={<>
+            <Text style={styles.modalTitle}>{copy('guestManagement')}</Text>
+            <TableGuestsSection
+              guests={guests}
+              canManage={canManage}
+              labels={{ guestManagement: copy('guestManagement'), addGuest: copy('addGuest'), noGuestsBody: copy('noGuestsBody'), guestBadge: copy('guestBadge'), upgradeGuest: copy('upgradeGuest'), addDeckToGuest: copy('addDeckToGuest'), deleteGuest: copy('deleteGuest') }}
+              onAddGuest={() => { setGuestModalMode(undefined); setGuestModalTargetId(null); setShowGuestModal(true); }}
+              onAddDeckToGuest={(guestId) => { setGuestModalMode('add-deck-to-guest'); setGuestModalTargetId(guestId); setShowGuestModal(true); }}
+              onDeleteGuest={handleDeleteGuest}
+              onUpgradeGuest={(guestId) => void handleCreateGuestClaimLink(guestId)}
+            />
+        </>}
+        editor={(
+          <AddGuestModal
+            embedded
+            visible={showGuestModal}
+            saving={savingGuest}
+            guests={guests}
+            initialMode={guestModalMode}
+            initialGuestId={guestModalTargetId}
+            labels={{
+              title: copy('addGuestTitle'),
+              addDeckTitle: copy('addGuestDeckTitle'),
+              hint: copy('addGuestHint'),
+              addDeckHint: copy('addGuestDeckHint'),
+              pickExistingHint: copy('pickExistingGuestHint'),
+              existingGuests: copy('existingGuests'),
+              createNewGuest: copy('createNewGuest'),
+              backToExistingGuests: copy('backToExistingGuests'),
+              guestName: copy('guestName'),
+              guestNamePlaceholder: copy('guestNamePlaceholder'),
+              deckName: copy('deckName'),
+              deckNamePlaceholder: copy('deckNamePlaceholder'),
+              searchCommander: copy('searchCommander'),
+              searchPlaceholder: copy('searchPlaceholder'),
+              searching: copy('searching'),
+              noResults: copy('noCommanderResults'),
+              selectedCommander: copy('selectedCommander'),
+              partnerHint: copy('partnerHint'),
+              chooseCommanderArt: copy('chooseCommanderArt'),
+              loadingArts: copy('loadingArts'),
+              noArtsFound: copy('noArtsFound'),
+              printing: copy('printing'),
+              cancel: copy('cancel'),
+              save: copy('save'),
+              saveDeck: copy('saveGuestDeck'),
+              saving: copy('saving'),
+              nameRequired: copy('nameRequired'),
+              commanderRequired: copy('commanderRequired'),
+              decks: copy('decks'),
+              addDeckToGuest: copy('addDeckToGuest'),
+            }}
+            onClose={() => {
+              setShowGuestModal(false);
+              setGuestModalMode(undefined);
+              setGuestModalTargetId(null);
+            }}
+            onError={(message) => showGuestAlert(copy('error'), message)}
+            onPickExisting={() => setShowGuestModal(false)}
+            onSaveCreate={async (input) => {
+              setSavingGuest(true);
+              try {
+                await addGuest({
+                  displayName: input.displayName,
+                  commander: input.commander,
+                  partnerCommander: input.partnerCommander,
+                  deckName: input.deckName,
+                  selectedArtUrl: input.selectedArtUrl,
+                });
+                setShowGuestModal(false);
+                setGuestModalMode(undefined);
+                setGuestModalTargetId(null);
+                showToast(copy('guestAddedHint'));
+              } catch (error) {
+                showGuestAlert(copy('error'), getSupabaseErrorMessage(error, copy('saveGuestFailed')));
+              } finally {
+                setSavingGuest(false);
+              }
+            }}
+            onSaveAddDeck={async (input) => {
+              setSavingGuest(true);
+              try {
+                await addGuestDeck({
+                  guestId: input.guestId,
+                  commander: input.commander,
+                  partnerCommander: input.partnerCommander,
+                  deckName: input.deckName,
+                  selectedArtUrl: input.selectedArtUrl,
+                });
+                setShowGuestModal(false);
+                setGuestModalMode(undefined);
+                setGuestModalTargetId(null);
+                showToast(copy('guestDeckAddedHint'));
+              } catch (error) {
+                showGuestAlert(copy('error'), getSupabaseErrorMessage(error, copy('saveGuestFailed')));
+              } finally {
+                setSavingGuest(false);
+              }
+            }}
+          />
+        )}
       />
 
       <RecordMatchModal
@@ -1309,18 +1361,7 @@ export default function TableScreen() {
         </View>
       </Modal>
 
-      <Modal visible={showGuestsManager} onClose={() => setShowGuestsManager(false)}>
-        <Text style={styles.modalTitle}>{copy('guestManagement')}</Text>
-        <TableGuestsSection
-          guests={guests}
-          canManage={canManage}
-          labels={{ guestManagement: copy('guestManagement'), addGuest: copy('addGuest'), noGuestsBody: copy('noGuestsBody'), guestBadge: copy('guestBadge'), upgradeGuest: copy('upgradeGuest') }}
-          onAddGuest={() => { setGuestModalMode(undefined); setGuestModalTargetId(null); setShowGuestModal(true); }}
-          onAddDeckToGuest={(guestId) => { setGuestModalMode('add-deck-to-guest'); setGuestModalTargetId(guestId); setShowGuestModal(true); }}
-          onDeleteGuest={handleDeleteGuest}
-          onUpgradeGuest={(guestId) => void handleCreateGuestClaimLink(guestId)}
-        />
-      </Modal>
+
 
       <Modal visible={showLeaveModal} onClose={() => setShowLeaveModal(false)}>
         <Text style={styles.modalTitle}>{copy('leaveArenaTitle')}</Text>

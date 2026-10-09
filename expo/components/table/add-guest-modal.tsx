@@ -21,6 +21,8 @@ type GuestSaveInput = {
 
 type AddGuestModalProps = {
   visible: boolean;
+  /** Render within an existing native modal. */
+  embedded?: boolean;
   saving: boolean;
   guests: ArenaGuest[];
   initialMode?: GuestModalMode;
@@ -66,6 +68,7 @@ type AddGuestModalProps = {
 
 export function AddGuestModal({
   visible,
+  embedded = false,
   saving,
   guests,
   initialMode,
@@ -174,8 +177,7 @@ export function AddGuestModal({
       ? labels.pickExistingHint
       : labels.hint;
 
-  return (
-    <Modal visible={visible} onClose={onClose}>
+  const content = (
       <View style={styles.content}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.hint}>{hint}</Text>
@@ -253,8 +255,8 @@ export function AddGuestModal({
           </View>
         ) : null}
       </View>
-    </Modal>
   );
+  return embedded ? content : <Modal visible={visible} onClose={onClose}>{content}</Modal>;
 }
 
 const styles = StyleSheet.create({

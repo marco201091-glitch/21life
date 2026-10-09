@@ -206,3 +206,5 @@ Le note precedenti descrivono le fasi storiche; questa sezione indica lo stato c
 - [ ] Profilo mastery 9.1.0 (2026-10-09): APK Dev c3b0daf usa ancora is_favorite/primo mazzo; vecchia PR173 OPEN, mai integrata. Portata correzione sul Dev attuale in fix/profile-mastery-9.1.0, web/Expo condividono punteggio partite + 2*vittorie. Test regressione, quality e integrazione Dev in corso; niente produzione.
 
   Verifica locale: quality web ed Expo completate exit0 (lint, typecheck, coverage ratchet, test, security/operations/knip). Revisione indipendente senza problemi; test mastery web9/9, Expo4/4. Correzione pronta per PR Dev; versione resta9.1.0.
+
+- [ ] Guests iPad9.1.0: corretto manager/modulo/alert su un singolo host nativo; form preservato su errori, condivisione claim con catch, label accessibili. quality Expo293test/lint/typecheck/coverage101/asset/knip verdi; regressioni15mirate, review indipendente senza problemi. Verifica reale Dev con fixture sintetiche e bundle iOS in corso, nessuna produzione/collaudo fisico.
