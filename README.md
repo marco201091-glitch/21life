@@ -2,7 +2,7 @@
 
 # 21Life
 
-[![Android 9.1.1](https://img.shields.io/badge/Android-v9.1.1-7c3aed?style=flat-square)](https://21life.win/download/)
+[![Android 9.1.2](https://img.shields.io/badge/Android-v9.1.2-7c3aed?style=flat-square)](https://21life.win/download/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 **Your Commander table, from the first life total to the last match statistic.**
@@ -66,7 +66,14 @@ The website's download page lists Android and Web only.
 
 See the [guide](https://21life.win/guida/) and [FAQ](https://21life.win/supporto/) for more detail.
 
-## What's new in 9.1.1
+## What's new in 9.1.2
+
+- Use an **Occasional deck** for a registered player when borrowing or trying a deck, in live games, manual records and existing match edits.
+- Results count toward the player's statistics; the occasional deck stays in match history, outside the personal collection and profile mastery.
+- Changing a recorded match's deck updates the original deck's statistics while keeping the player and result.
+- Create occasional decks online; created decks retain their identity in offline games and Recovery Center.
+
+### From 9.1.1
 
 - Restored the compact game editor, with player replacements opened on demand and consistent deck/winner selections.
 - Recovery Center displays synchronization progress and actionable errors, and supports retrying stalled requests.

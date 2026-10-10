@@ -38,6 +38,7 @@ import { FormattedMarkdown } from '@/components/ui/formatted-markdown';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { OccasionalDeckForm } from '@/components/arena/occasional-deck-form';
 import { GuestCommanderPicker } from '@/components/arena/guest-commander-picker';
 import { DirectArenaInvite } from '@/components/arena/direct-arena-invite';
 import { MatchParticipantRow, toDeckOption } from '@/components/arena/match-participant-row';
@@ -252,6 +253,8 @@ async function fetchArenaMemberDecks(groupId: string, memberIds: string[]) {
         .from('decks')
         .select(ARENA_DECK_PICKER_COLUMNS)
         .eq('user_id', memberId)
+        .is('group_id', null)
+        .or('source_type.is.null,source_type.neq.occasional')
         .order('is_favorite', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(ARENA_MEMBER_DECK_LIMIT);
@@ -465,6 +468,9 @@ export default function TablePage() {
   const [detailsRecapLoading, setDetailsRecapLoading] = useState(false);
   const [showInviteQr, setShowInviteQr] = useState(false);
   const [selectedParticipantKeys, setSelectedParticipantKeys] = useState<ParticipantKey[]>([]);
+  const [occasionalCreationBusy, setOccasionalCreationBusy] = useState<Record<string, boolean>>({});
+  const anyOccasionalCreationBusy = Object.values(occasionalCreationBusy).some(Boolean);
+  const [occasionalChoices, setOccasionalChoices] = useState<Deck[]>([]);
   const [participantDecks, setParticipantDecks] = useState<Record<string, string>>({});
   const [participantDeckSearches, setParticipantDeckSearches] = useState<Record<string, string>>({});
   const [hiddenParticipantDeckLists, setHiddenParticipantDeckLists] = useState<Record<string, boolean>>({});
@@ -1272,7 +1278,7 @@ export default function TablePage() {
     if (!parsed) return [] as Array<Deck | ArenaGuestDeck>;
 
     if (parsed.type === 'user') {
-      return decks.filter((deck) => deck.user_id === parsed.id);
+      return decks.filter((deck) => deck.user_id === parsed.id && deck.source_type !== 'occasional');
     }
 
     const guest = guests.find((entry) => entry.id === parsed.id);
@@ -1304,7 +1310,7 @@ export default function TablePage() {
     if (!parsed) return null;
 
     if (parsed.type === 'user') {
-      return decks.find((deck) => deck.id === deckId) || null;
+      return [...decks, ...occasionalChoices].find((deck) => deck.id === deckId && deck.user_id === parsed.id) || null;
     }
 
     const guest = guests.find((entry) => entry.id === parsed.id);
@@ -1328,12 +1334,13 @@ export default function TablePage() {
     if (!deckId) return null;
     const parsed = parseParticipantKey(participantKey);
     if (!parsed) return null;
-    if (parsed.type === 'user') return decks.find((deck) => deck.id === deckId) || null;
+    if (parsed.type === 'user') return [...decks, ...occasionalChoices].find((deck) => deck.id === deckId && deck.user_id === parsed.id) || null;
     const guest = guests.find((entry) => entry.id === parsed.id);
     return guest?.arena_guest_decks?.find((deck) => deck.id === deckId) || null;
   };
 
   const toggleParticipantSelection = (participantKey: ParticipantKey) => {
+    if (anyOccasionalCreationBusy) return;
     setSelectedParticipantKeys((prev) => {
       const selected = prev.includes(participantKey);
       if (selected) {
@@ -1779,6 +1786,7 @@ export default function TablePage() {
   };
 
   const handleCreateMatch = async () => {
+    if (anyOccasionalCreationBusy) return;
     if (selectedParticipantKeys.length < 2) {
       toast({ title: t({ it: 'Errore', en: 'Error' }), description: t({ it: 'Seleziona almeno 2 giocatori', en: 'Select at least 2 players' }), variant: 'destructive' });
       return;
@@ -2245,6 +2253,9 @@ export default function TablePage() {
   };
 
   const openEditMatch = (match: Match) => {
+    setOccasionalChoices(match.match_participants.flatMap((p) =>
+      p.deck_id && p.user_id && p.decks?.source_type === 'occasional'
+        ? [{ ...p.decks, id: p.deck_id, user_id: p.user_id, group_id: groupId, is_favorite: false, source_url: null, created_at: '' } as Deck] : []));
     setEditingMatch(match);
     setEditMatchWinnerKey(resolveWinnerParticipantKey(match) || '');
     setEditMatchIsDraw(Boolean(match.is_draw));
@@ -2276,6 +2287,7 @@ export default function TablePage() {
   };
 
   const handleSaveEditMatch = async () => {
+    if (anyOccasionalCreationBusy) return;
     if (!editingMatch) return;
     if (!editMatchIsDraw && !editMatchWinnerKey) {
       toast({ title: t({ it: 'Errore', en: 'Error' }), description: t({ it: 'Seleziona un vincitore o segna come patta', en: 'Select a winner or mark as draw' }), variant: 'destructive' });
@@ -3429,8 +3441,8 @@ export default function TablePage() {
                       const selectedDeck = getSelectedParticipantDeck(participantKey);
 
                       return (
+                        <div key={participantKey}>
                         <MatchParticipantRow
-                          key={participantKey}
                           participantKey={participantKey}
                           displayName={getProfileDisplayName(member)}
                           deckCount={deckOptions.length}
@@ -3443,9 +3455,14 @@ export default function TablePage() {
                           onToggle={() => toggleParticipantSelection(participantKey)}
                           onSearchChange={(value) => setParticipantDeckSearches((prev) => ({ ...prev, [participantKey]: value }))}
                           onToggleDeckList={() => setHiddenParticipantDeckLists((prev) => ({ ...prev, [participantKey]: !prev[participantKey] }))}
-                          onSelectDeck={(deckId) => setParticipantDecks((prev) => ({ ...prev, [participantKey]: deckId }))}
+                          onSelectDeck={(deckId) => { if (!anyOccasionalCreationBusy) setParticipantDecks((prev) => ({ ...prev, [participantKey]: deckId })); }}
 
                         />
+                        {selectedParticipantKeys.includes(participantKey) && <OccasionalDeckForm key={`${participantKey}:${participantDecks[participantKey] || ''}`} groupId={groupId} userId={member.id} disabled={anyOccasionalCreationBusy} onBusyChange={busy => setOccasionalCreationBusy(current => ({ ...current, [participantKey]: busy }))} onCreated={(deck) => {
+                          setOccasionalChoices(current => [...current.filter(item => item.id !== deck.id), deck as Deck]);
+                          setParticipantDecks(current => ({ ...current, [participantKey]: deck.id }));
+                        }} />}
+                        </div>
                       );
                     })}
                   </div>
@@ -3500,7 +3517,7 @@ export default function TablePage() {
                               onToggle={() => toggleParticipantSelection(participantKey)}
                               onSearchChange={(value) => setParticipantDeckSearches((prev) => ({ ...prev, [participantKey]: value }))}
                               onToggleDeckList={() => setHiddenParticipantDeckLists((prev) => ({ ...prev, [participantKey]: !prev[participantKey] }))}
-                              onSelectDeck={(deckId) => setParticipantDecks((prev) => ({ ...prev, [participantKey]: deckId }))}
+                              onSelectDeck={(deckId) => { if (!anyOccasionalCreationBusy) setParticipantDecks((prev) => ({ ...prev, [participantKey]: deckId })); }}
     
                             />
                           );
@@ -3591,8 +3608,8 @@ export default function TablePage() {
             </CardContent>
             <div className="shrink-0 border-t border-border/70 bg-card px-6 py-4">
               <div className="flex gap-3">
-                <Button type="button" variant="outline" onClick={resetMatchForm} className="flex-1 border-border text-foreground">{t({ it: 'Annulla', en: 'Cancel' })}</Button>
-                <Button onClick={handleCreateMatch} disabled={savingMatch} className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-700">
+                <Button type="button" variant="outline" onClick={resetMatchForm} disabled={anyOccasionalCreationBusy} className="flex-1 border-border text-foreground">{t({ it: 'Annulla', en: 'Cancel' })}</Button>
+                <Button onClick={handleCreateMatch} disabled={savingMatch || anyOccasionalCreationBusy} className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-700">
                   {savingMatch ? t({ it: 'Registrazione...', en: 'Recording...' }) : t({ it: 'Registra partita', en: 'Record Battle' })}
                 </Button>
               </div>
@@ -4074,6 +4091,7 @@ export default function TablePage() {
                               <label className="text-xs font-medium text-muted-foreground">{t({ it: 'Giocatore', en: 'Player' })}</label>
                               <Select
                                 value={participantKey}
+                                disabled={anyOccasionalCreationBusy}
                                 onValueChange={(value) => {
                                   const nextKey = value as ParticipantKey;
                                   const previousKey = editMatchPlayerKeys[p.id] || getParticipantKey(p);
@@ -4096,6 +4114,11 @@ export default function TablePage() {
                             </div>
                           ) : null}
 
+                          {parsedPlayer?.type === 'user' && <OccasionalDeckForm key={`${participantKey}:${editMatchPlayerDecks[p.id] || ''}`} groupId={groupId} userId={parsedPlayer.id} disabled={anyOccasionalCreationBusy} onBusyChange={busy => setOccasionalCreationBusy(current => ({ ...current, [p.id]: busy }))} onCreated={(deck) => {
+                            setOccasionalChoices(current => [...current.filter(item => item.id !== deck.id), deck as Deck]);
+                            setEditMatchPlayerDecks(current => ({ ...current, [p.id]: deck.id }));
+                          }} />}
+
                           {deckOptions.length > 0 ? (
                             deckListHidden ? (
                               <div className="rounded-lg border border-border/70 bg-background/35 px-3 py-2 text-xs text-muted-foreground">
@@ -4108,7 +4131,8 @@ export default function TablePage() {
                                 <div className="grid grid-cols-1 gap-3 sm:grid-flow-col sm:auto-cols-[minmax(290px,320px)] sm:overflow-x-auto sm:pb-3">
                                   <button
                                     type="button"
-                                    onClick={() => setEditMatchPlayerDecks((prev) => ({ ...prev, [p.id]: '' }))}
+                                    disabled={anyOccasionalCreationBusy}
+                                    onClick={() => { if (!anyOccasionalCreationBusy) setEditMatchPlayerDecks((prev) => ({ ...prev, [p.id]: '' })); }}
                                     className={`h-28 rounded-lg border p-3 text-left text-xs transition-colors ${
                                       !editMatchPlayerDecks[p.id] ? 'border-emerald-500 bg-emerald-500/10' : 'border-border bg-background/25 hover:border-emerald-500/50'
                                     }`}
@@ -4121,7 +4145,8 @@ export default function TablePage() {
                                     <button
                                       key={deck.id}
                                       type="button"
-                                      onClick={() => setEditMatchPlayerDecks((prev) => ({ ...prev, [p.id]: deck.id }))}
+                                      disabled={anyOccasionalCreationBusy}
+                                      onClick={() => { if (!anyOccasionalCreationBusy) setEditMatchPlayerDecks((prev) => ({ ...prev, [p.id]: deck.id })); }}
                                       className={`min-h-[7.5rem] rounded-lg border p-3 text-left transition-colors ${
                                         editMatchPlayerDecks[p.id] === deck.id
                                           ? 'border-emerald-500 bg-emerald-500/10'
@@ -4243,7 +4268,9 @@ export default function TablePage() {
                 <Button
                   type="button"
                   variant="outline"
+                  disabled={anyOccasionalCreationBusy}
                   onClick={() => {
+                    if (anyOccasionalCreationBusy) return;
                     setEditingMatch(null);
                     setEditMatchDeckSearches({});
                     setHiddenEditMatchDeckLists({});
@@ -4254,7 +4281,7 @@ export default function TablePage() {
                 </Button>
                 <Button
                   onClick={handleSaveEditMatch}
-                  disabled={savingEditMatch || (!editMatchIsDraw && !editMatchWinnerKey)}
+                  disabled={savingEditMatch || anyOccasionalCreationBusy || (!editMatchIsDraw && !editMatchWinnerKey)}
                   className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-700"
                 >
                   {savingEditMatch ? t({ it: 'Salvataggio...', en: 'Saving...' }) : t({ it: 'Salva modifiche', en: 'Save Changes' })}

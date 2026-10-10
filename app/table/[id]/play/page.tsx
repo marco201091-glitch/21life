@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/components/language-provider';
 import { supabase } from '@/lib/supabase';
 import { toGuestParticipantKey, toUserParticipantKey } from '@/lib/participant-keys';
+import { loadWebLiveGameSetup } from '@/lib/live-game-setup';
 import { subscribeToArenaCatalog } from '@/lib/arena-catalog-realtime';
 
 type GroupPayload = {
@@ -26,6 +27,7 @@ type UserDeck = {
   commander: string;
   commander_image: string | null;
   is_favorite: boolean;
+  source_type?: string | null;
 };
 
 type GuestPayload = {
@@ -46,12 +48,13 @@ export default function WebLiveGamePage() {
   const { copy } = useLanguage();
   const groupId = params.id;
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [arenaName, setArenaName] = useState('');
   const [participants, setParticipants] = useState<WebTrackerParticipant[]>([]);
 
   const load = useCallback(async (silent = false) => {
     if (!user || !groupId) return;
-    if (!silent) setLoading(true);
+    if (!silent) { setLoading(true); setLoadError(false); }
     try {
       const [{ data: group, error: groupError }, { data: guests, error: guestsError }] = await Promise.all([
         supabase
@@ -92,12 +95,22 @@ export default function WebLiveGamePage() {
         .from('decks')
         .select('id,user_id,name,commander,commander_image,is_favorite')
         .in('user_id', memberIds)
+        .is('group_id', null)
+        .or('source_type.is.null,source_type.neq.occasional')
         .order('is_favorite', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(720);
       if (decksError) throw decksError;
 
       const userDecks = (decks ?? []) as UserDeck[];
+      const restoredIds = loadWebLiveGameSetup(groupId, user.id).seats.flatMap(seat => seat.deckId ? [seat.deckId] : []);
+      if (restoredIds.length) {
+        const { data: restored, error: restoreError } = await supabase.from('decks')
+          .select('id,user_id,name,commander,commander_image,is_favorite,source_type')
+          .in('id', restoredIds).in('user_id', memberIds).eq('group_id', groupId).eq('source_type', 'occasional');
+        if (restoreError) throw restoreError;
+        userDecks.push(...(restored ?? []) as UserDeck[]);
+      }
       const memberOptions: WebTrackerParticipant[] = payload.group_members
         .filter((member) => member.profiles)
         .map((member) => ({
@@ -112,6 +125,7 @@ export default function WebLiveGamePage() {
             commander: deck.commander,
             commanderImage: deck.commander_image,
             isFavorite: deck.is_favorite,
+            isOccasional: deck.source_type === 'occasional',
           })),
         }));
       const guestOptions: WebTrackerParticipant[] = ((guests ?? []) as GuestPayload[]).map((guest) => ({
@@ -132,7 +146,7 @@ export default function WebLiveGamePage() {
       setParticipants([...memberOptions, ...guestOptions]);
     } catch (error) {
       console.error('Failed to load web live tracker', error);
-      if (!silent) router.replace(`/table/${groupId}`);
+      if (!silent) setLoadError(true);
     } finally {
       if (!silent) setLoading(false);
     }
@@ -150,6 +164,11 @@ export default function WebLiveGamePage() {
   if (authLoading || loading || !user) {
     return <AppLoader label={copy({ it: 'Caricamento tracker...', en: 'Loading tracker...' })} />;
   }
+
+  if (loadError) return <div className="mx-auto max-w-md space-y-4 p-6">
+    <p role="alert">{copy({ en: 'Could not load players and selected decks. Check your connection and retry.', it: 'Impossibile caricare giocatori e mazzi selezionati. Controlla la connessione e riprova.' })}</p>
+    <button type="button" onClick={() => void load()} className="rounded-xl border border-border p-3">{copy({ en: 'Retry', it: 'Riprova' })}</button>
+  </div>;
 
   return (
     <WebLiveGame

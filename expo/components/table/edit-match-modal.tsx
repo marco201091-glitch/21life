@@ -1,3 +1,4 @@
+import { OccasionalDeckForm } from '@/components/table/occasional-deck-form';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Pressable,
@@ -32,6 +33,7 @@ import {
 } from '@/components/table/match-participant-row';
 
 type EditMatchModalProps = {
+  groupId: string;
   visible: boolean;
   saving: boolean;
   match: ArenaMatch | null;
@@ -114,6 +116,7 @@ function filterDecks(decks: DeckOption[], query: string): DeckOption[] {
 }
 
 export function EditMatchModal({
+  groupId,
   visible,
   saving,
   match,
@@ -146,15 +149,18 @@ export function EditMatchModal({
   const [replacementKeys, setReplacementKeys] = useState<Record<string, string>>({});
   const [replacementRowId, setReplacementRowId] = useState<string | null>(null);
 
+  const [creatingDecks, setCreatingDecks] = useState<Record<string, boolean>>({});
+  const creatingDeck = Object.values(creatingDecks).some(Boolean);
+  const [occasionalDecks, setOccasionalDecks] = useState<MemberDeck[]>([]);
   const decksByUser = useMemo(() => {
     const map = new Map<string, MemberDeck[]>();
-    decks.forEach((deck) => {
+    [...decks, ...occasionalDecks].forEach((deck) => {
       const current = map.get(deck.user_id) || [];
       current.push(deck);
       map.set(deck.user_id, current);
     });
     return map;
-  }, [decks]);
+  }, [decks, occasionalDecks]);
 
   const participantKeys = useMemo(() => {
     if (!match) return [] as ParticipantKey[];
@@ -198,6 +204,7 @@ export function EditMatchModal({
   }, [match, visible]);
 
   const replaceParticipant = (rowId: string, originalKey: string, nextKey: string) => {
+    if (creatingDeck) return;
     const previousKey = replacementKeys[rowId] || originalKey;
     setReplacementKeys((current) => ({ ...current, [rowId]: nextKey === originalKey ? '' : nextKey }));
     if (winnerKey === previousKey) setWinnerKey(nextKey);
@@ -263,10 +270,10 @@ export function EditMatchModal({
 
   const actionFooter = (
     <View style={styles.actions}>
-      <Button label={labels.cancel} variant="ghost" onPress={onClose} style={styles.actionButton} />
+      <Button label={labels.cancel} variant="ghost" disabled={creatingDeck} onPress={onClose} style={styles.actionButton} />
       <Button
         label={saving ? labels.saving : labels.save}
-        disabled={saving || (!isDraw && !winnerKey)}
+        disabled={saving || creatingDeck || (!isDraw && !winnerKey)}
         onPress={handleSave}
         style={styles.actionButton}
       />
@@ -274,7 +281,7 @@ export function EditMatchModal({
   );
 
   return (
-    <Modal visible={visible} onClose={onClose} scroll={false}>
+    <Modal visible={visible} onClose={() => { if (!creatingDeck) onClose(); }} scroll={false}>
       <View style={[styles.shell, { height: modalBodyHeight }]}>
         <Text style={styles.title}>{labels.title}</Text>
         <Text style={styles.hint}>{labels.hint}</Text>
@@ -305,6 +312,8 @@ export function EditMatchModal({
 
               const deckOptions = getDeckOptions(participantKey, decksByUser, guests);
               const selectedDeckId = participantDecks[participantKey] || '';
+              const historicalDeck = participant.decks;
+              if (participantKey === originalKey && historicalDeck && participant.deck_id && !deckOptions.some(deck => deck.id === participant.deck_id)) deckOptions.push(toDeckOption({ ...historicalDeck, id: participant.deck_id }));
               const selectedDeck = deckOptions.find((deck) => deck.id === selectedDeckId) || null;
               const isGuest = participantKey.startsWith('guest:');
               const displayName = participantKey === originalKey ? getParticipantDisplayName(participant)
@@ -336,9 +345,10 @@ export function EditMatchModal({
                       [participantKey]: !state[participantKey],
                     }))
                   }
-                  onSelectDeck={(deckId) =>
-                    setParticipantDecks((state) => ({ ...state, [participantKey]: deckId }))
-                  }
+                  onSelectDeck={(deckId) => {
+                    if (creatingDeck) return;
+                    setParticipantDecks((state) => ({ ...state, [participantKey]: deckId }));
+                  }}
                 />
                 {canManage ? (
                   <>
@@ -363,6 +373,10 @@ export function EditMatchModal({
                     ) : null}
                   </>
                 ) : null}
+                {!isGuest ? <OccasionalDeckForm disabled={creatingDeck} key={participantKey} onSavingChange={saving => setCreatingDecks(current => ({ ...current, [participantKey]: saving }))} groupId={groupId || match.group_id} userId={participantKey.slice(5)} selectedDeckId={selectedDeckId} onCreated={deck => {
+                  setOccasionalDecks(current => [...current.filter(item => item.id !== deck.id), deck]);
+                  setParticipantDecks(current => ({ ...current, [participantKey]: deck.id }));
+                }} /> : null}
                 </View>
               );
             })}

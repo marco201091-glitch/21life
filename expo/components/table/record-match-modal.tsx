@@ -1,3 +1,4 @@
+import { OccasionalDeckForm } from '@/components/table/occasional-deck-form';
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Switch, Text, Pressable, View } from 'react-native';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import {
 } from '@/components/table/match-participant-row';
 
 type RecordMatchModalProps = {
+  groupId: string;
   visible: boolean;
   saving: boolean;
   members: ArenaProfile[];
@@ -99,6 +101,7 @@ function filterDecks(decks: DeckOption[], query: string): DeckOption[] {
 }
 
 export function RecordMatchModal({
+  groupId,
   visible,
   saving,
   members,
@@ -120,15 +123,18 @@ export function RecordMatchModal({
   const [deckSearch, setDeckSearch] = useState<Record<string, string>>({});
   const [hiddenDeckLists, setHiddenDeckLists] = useState<Record<string, boolean>>({});
 
+  const [creatingDecks, setCreatingDecks] = useState<Record<string, boolean>>({});
+  const creatingDeck = Object.values(creatingDecks).some(Boolean);
+  const [occasionalDecks, setOccasionalDecks] = useState<MemberDeck[]>([]);
   const decksByUser = useMemo(() => {
     const map = new Map<string, MemberDeck[]>();
-    decks.forEach((deck) => {
+    [...decks, ...occasionalDecks].forEach((deck) => {
       const current = map.get(deck.user_id) || [];
       current.push(deck);
       map.set(deck.user_id, current);
     });
     return map;
-  }, [decks]);
+  }, [decks, occasionalDecks]);
 
   useEffect(() => {
     if (!visible) return;
@@ -144,6 +150,7 @@ export function RecordMatchModal({
   }, [visible]);
 
   const toggleParticipant = (key: string, deckOptions: DeckOption[]) => {
+    if (creatingDeck) return;
     setSelectedKeys((current) => {
       if (current.includes(key)) {
         const next = current.filter((value) => value !== key);
@@ -229,11 +236,11 @@ export function RecordMatchModal({
   };
 
   return (
-    <Modal visible={visible} onClose={onClose} footer={(        <View style={styles.actions}>
-          <Button label={labels.cancel} variant="ghost" onPress={onClose} style={styles.actionButton} />
+    <Modal visible={visible} onClose={() => { if (!creatingDeck) onClose(); }} footer={(        <View style={styles.actions}>
+          <Button label={labels.cancel} variant="ghost" disabled={creatingDeck} onPress={onClose} style={styles.actionButton} />
           <Button
             label={saving ? labels.saving : labels.save}
-            disabled={saving}
+            disabled={saving || creatingDeck}
             onPress={handleSave}
             style={styles.actionButton}
           />
@@ -252,12 +259,13 @@ export function RecordMatchModal({
             const selectedDeck = deckOptions.find((deck) => deck.id === selectedDeckId) || null;
 
             return (
+              <View key={member.id}>
               <MatchParticipantRow
-                key={member.id}
                 participantKey={key}
                 displayName={getProfileDisplayName(member)}
                 deckCount={deckOptions.length}
                 selected={selected}
+                readOnly={creatingDeck}
                 selectedDeck={selectedDeck}
                 deckListHidden={Boolean(hiddenDeckLists[key])}
                 searchValue={deckSearch[key] || ''}
@@ -269,10 +277,16 @@ export function RecordMatchModal({
                 onToggleDeckList={() =>
                   setHiddenDeckLists((state) => ({ ...state, [key]: !state[key] }))
                 }
-                onSelectDeck={(deckId) =>
-                  setParticipantDecks((state) => ({ ...state, [key]: deckId }))
-                }
+                onSelectDeck={(deckId) => {
+                    if (creatingDeck) return;
+                  setParticipantDecks((state) => ({ ...state, [key]: deckId }));
+                }}
               />
+              {selected ? <OccasionalDeckForm disabled={creatingDeck} onSavingChange={saving => setCreatingDecks(current => ({ ...current, [key]: saving }))} groupId={groupId} userId={member.id} selectedDeckId={selectedDeckId} onCreated={deck => {
+                setOccasionalDecks(current => [...current.filter(item => item.id !== deck.id), deck]);
+                setParticipantDecks(current => ({ ...current, [key]: deck.id }));
+              }} /> : null}
+              </View>
             );
           })}
         </View>
@@ -296,6 +310,7 @@ export function RecordMatchModal({
                     isGuest
                     deckCount={deckOptions.length}
                     selected={selected}
+                readOnly={creatingDeck}
                     selectedDeck={selectedDeck}
                     deckListHidden={Boolean(hiddenDeckLists[key])}
                     searchValue={deckSearch[key] || ''}
@@ -307,9 +322,10 @@ export function RecordMatchModal({
                     onToggleDeckList={() =>
                       setHiddenDeckLists((state) => ({ ...state, [key]: !state[key] }))
                     }
-                    onSelectDeck={(deckId) =>
-                      setParticipantDecks((state) => ({ ...state, [key]: deckId }))
-                    }
+                    onSelectDeck={(deckId) => {
+                    if (creatingDeck) return;
+                      setParticipantDecks((state) => ({ ...state, [key]: deckId }));
+                    }}
                   />
                 );
               })}

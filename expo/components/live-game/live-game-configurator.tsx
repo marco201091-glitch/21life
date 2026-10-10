@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { OccasionalDeckForm } from '@/components/table/occasional-deck-form';
+import type { MemberDeck } from '@/lib/types/arena';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CompactDeckCard } from '@/components/deck/compact-deck-card';
@@ -57,6 +59,8 @@ type Labels = {
 };
 
 type Props = {
+  groupId: string;
+  onOccasionalDeckCreated: (deck: MemberDeck) => void;
   playerCount: number;
   layoutVariant: TableLayoutVariant;
   seats: LiveGameSeatSetup[];
@@ -120,6 +124,8 @@ function LayoutPreview({ count, variant, orientation }: {
 }
 
 export function LiveGameConfigurator({
+  groupId,
+  onOccasionalDeckCreated,
   playerCount,
   layoutVariant,
   seats,
@@ -156,27 +162,31 @@ export function LiveGameConfigurator({
   useEffect(() => setCustomLife(String(startingLife)), [startingLife]);
   const currentSeat = editingSeat === null ? null : seats[editingSeat];
   const [draftPlayer, setDraftPlayer] = useState<ParticipantKey | null>(null);
+  const draftPlayerRef = useRef(draftPlayer);
   const [draftDeck, setDraftDeck] = useState<string | null>(null);
   const [deckSearch, setDeckSearch] = useState('');
+  const [creatingDeck, setCreatingDeck] = useState(false);
   const participantByKey = useMemo(
     () => new Map(participants.map((participant) => [participant.key, participant])),
     [participants],
   );
 
   const openSeat = (index: number) => {
+    if (creatingDeck) return;
     const seat = seats[index];
     setEditingSeat(index);
+    draftPlayerRef.current = seat?.participantKey ?? null;
     setDraftPlayer(seat?.participantKey ?? null);
     setDraftDeck(seat?.deckId ?? null);
     setDeckSearch('');
   };
 
   const selectPlayer = (participant: SetupParticipant) => {
+    if (creatingDeck) return;
     if (draftPlayer !== participant.key) onSelectParticipant?.(participant.key);
+    draftPlayerRef.current = participant.key;
     setDraftPlayer(participant.key);
-    const preferred = participant.decks.length === 1
-      ? participant.decks[0].id
-      : participant.decks.some((deck) => deck.id === participant.preferredDeckId)
+    const preferred = participant.decks.some((deck) => deck.id === participant.preferredDeckId)
         ? participant.preferredDeckId
         : null;
     setDraftDeck(preferred);
@@ -209,7 +219,7 @@ export function LiveGameConfigurator({
         </View>
         <Pressable
           style={({ pressed }) => [styles.resetButton, pressed && styles.interactivePressed]}
-          onPress={onReset}
+          disabled={creatingDeck} onPress={() => { if (!creatingDeck) onReset(); }}
         >
           <Ionicons name="refresh-outline" size={15} color={colors.muted} />
           <Text style={styles.resetText}>{labels.reset}</Text>
@@ -229,7 +239,7 @@ export function LiveGameConfigurator({
         {[2, 3, 4, 5, 6].map((count) => (
           <Pressable
             key={count}
-            onPress={() => onPlayerCountChange(count)}
+            disabled={creatingDeck} onPress={() => { if (!creatingDeck) onPlayerCountChange(count); }}
             style={({ pressed }) => [
               styles.countButton,
               count === playerCount && styles.countButtonActive,
@@ -253,7 +263,7 @@ export function LiveGameConfigurator({
           {lifePresets.map((life) => (
             <Pressable
               key={life}
-              onPress={() => onStartingLifeChange(life)}
+              disabled={creatingDeck} onPress={() => { if (!creatingDeck) onStartingLifeChange(life); }}
               style={({ pressed }) => [
                 styles.lifeButton,
                 startingLife === life && styles.lifeButtonActive,
@@ -285,7 +295,7 @@ export function LiveGameConfigurator({
             key={variant}
             accessibilityRole="radio"
             accessibilityState={{ checked: layoutVariant === variant }}
-            onPress={() => onLayoutChange(variant)}
+            disabled={creatingDeck} onPress={() => { if (!creatingDeck) onLayoutChange(variant); }}
             style={({ pressed }) => [
               styles.layoutOption,
               layoutVariant === variant && styles.layoutOptionActive,
@@ -325,15 +335,15 @@ export function LiveGameConfigurator({
 
       <View style={styles.wizardActions}>
         {step > 0 ? (
-          <Button label={labels.back} variant="outline" icon="arrow-back" onPress={() => setStep((value) => value - 1)} style={styles.actionButton} />
+          <Button label={labels.back} variant="outline" icon="arrow-back" disabled={creatingDeck} onPress={() => { if (!creatingDeck) setStep((value) => value - 1); }} style={styles.actionButton} />
         ) : <View style={styles.actionButton} />}
         {step < 3 ? (
-          <Button label={labels.next} icon="arrow-forward" onPress={() => setStep((value) => value + 1)} style={styles.actionButton} />
+          <Button label={labels.next} icon="arrow-forward" disabled={creatingDeck} onPress={() => { if (!creatingDeck) setStep((value) => value + 1); }} style={styles.actionButton} />
         ) : (
           <Button
             label={starting ? labels.starting : labels.start}
             icon="play"
-            disabled={starting || !setupComplete}
+            disabled={starting || creatingDeck || !setupComplete}
             onPress={onStart}
             style={styles.actionButton}
           />
@@ -342,14 +352,14 @@ export function LiveGameConfigurator({
 
       <Modal
         visible={editingSeat !== null}
-        onClose={() => setEditingSeat(null)}
+        onClose={() => { if (!creatingDeck) setEditingSeat(null); }}
         maxWidth={tablet ? 720 : 560}
       >
         <ModalHeader
           title={`${labels.seat} ${(editingSeat ?? 0) + 1}`}
           subtitle={labels.choosePlayer}
           icon="people-outline"
-          onClose={() => setEditingSeat(null)}
+          onClose={() => { if (!creatingDeck) setEditingSeat(null); }}
         />
         <View style={[styles.seatPickerColumns, tablet && styles.seatPickerColumnsTablet]}>
           <ScrollView
@@ -360,6 +370,7 @@ export function LiveGameConfigurator({
             {participants.filter((participant) => !occupiedElsewhere.has(participant.key)).map((participant) => (
               <Pressable
                 key={participant.key}
+                disabled={creatingDeck}
                 onPress={() => selectPlayer(participant)}
                 style={({ pressed }) => [
                   styles.playerOption,
@@ -422,13 +433,17 @@ export function LiveGameConfigurator({
                 ) : null}
               </View> : null}
               <ScrollView style={[styles.deckList, tablet && styles.deckListTablet]} contentContainerStyle={styles.optionListContent} nestedScrollEnabled>
+                {selectedParticipant.key.startsWith('user:') ? <OccasionalDeckForm onSavingChange={setCreatingDeck} key={selectedParticipant.key} groupId={groupId} userId={selectedParticipant.key.slice(5)} selectedDeckId={draftDeck || ''} onCreated={deck => {
+                  onOccasionalDeckCreated(deck);
+                  if (draftPlayerRef.current === `user:${deck.user_id}`) { setDraftDeck(deck.id); setDeckSearch(''); }
+                }} /> : null}
                 {filteredDecks.map((deck) => (
                   <CompactDeckCard
                     key={deck.id}
                     artUri={deck.commander_image}
                     title={deck.name}
                     commander={deck.commander}
-                    onPress={() => setDraftDeck(deck.id)}
+                    onPress={() => { if (!creatingDeck) setDraftDeck(deck.id); }}
                     accessibilityLabel={`${labels.chooseDeck}: ${deck.name}`}
                     style={draftDeck === deck.id ? styles.deckOptionActive : undefined}
                     trailing={<Ionicons
@@ -450,8 +465,10 @@ export function LiveGameConfigurator({
             <Button
               label={labels.clearSeat}
               variant="destructive"
+              disabled={creatingDeck}
               icon="close-circle-outline"
               onPress={() => {
+                if (creatingDeck) return;
                 if (editingSeat !== null) onAssignSeat(editingSeat, null, null);
                 setEditingSeat(null);
               }}
@@ -461,9 +478,9 @@ export function LiveGameConfigurator({
           <Button
             label={labels.confirm}
             icon="checkmark"
-            disabled={!draftPlayer || !draftDeck}
+            disabled={creatingDeck || !draftPlayer || !draftDeck}
             onPress={() => {
-              if (editingSeat === null || !draftPlayer) return;
+              if (creatingDeck || editingSeat === null || !draftPlayer) return;
               onAssignSeat(editingSeat, draftPlayer, draftDeck);
               setEditingSeat(null);
             }}

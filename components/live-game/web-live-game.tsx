@@ -111,7 +111,10 @@ import {
 } from '@/lib/live-game-sync-policy';
 import { authenticatedFetch } from '@/lib/authenticated-fetch';
 
+import { OccasionalDeckForm } from '@/components/arena/occasional-deck-form';
+
 export type WebTrackerDeck = {
+  isOccasional?: boolean;
   id: string;
   name: string;
   commander: string;
@@ -218,13 +221,19 @@ export function WebLiveGame({
   groupId,
   arenaName,
   userId,
-  participants,
+  participants: catalogParticipants,
 }: {
   groupId: string;
   arenaName: string;
   userId: string;
   participants: WebTrackerParticipant[];
 }) {
+  const [occasionalCreationRequests, setOccasionalCreationRequests] = useState<Record<string, boolean>>({});
+  const occasionalCreationBusy = Object.values(occasionalCreationRequests).some(Boolean);
+  const [occasionalDecks, setOccasionalDecks] = useState<Record<string, WebTrackerDeck[]>>({});
+  const participants = useMemo(() => catalogParticipants.map(participant => ({ ...participant,
+    decks: [...participant.decks, ...(occasionalDecks[participant.key] || []).filter(deck => !participant.decks.some(item => item.id === deck.id))],
+  })), [catalogParticipants, occasionalDecks]);
   const router = useRouter();
   const { copy } = useLanguage();
   const { toast } = useToast();
@@ -687,6 +696,7 @@ export function WebLiveGame({
   }, [record]);
 
   const changePlayerCount = (next: number) => {
+    if (occasionalCreationBusy) return;
     setPlayerCount(next);
     setSeats((current) => Array.from({ length: next }, (_, index) => (
       current[index] ?? { participantKey: null, deckId: null }
@@ -694,14 +704,15 @@ export function WebLiveGame({
   };
 
   const updateSeatParticipant = (index: number, key: ParticipantKey | null) => {
+    if (occasionalCreationBusy) return;
     setSetupDeckSearch('');
     setSeats((current) => current.map((seat, seatIndex) => {
       if (seatIndex !== index) return seat;
       const participant = participants.find((entry) => entry.key === key);
       const previous = initialSetup.seats.find((entry) => entry.participantKey === key)?.deckId;
-      const deckId = participant?.decks.some((deck) => deck.id === previous)
+      const deckId = participant?.decks.some((deck) => deck.id === previous && !deck.isOccasional)
         ? previous!
-        : participant?.decks[0]?.id ?? null;
+        : participant?.decks.find(deck => !deck.isOccasional)?.id ?? null;
       return { participantKey: key, deckId };
     }));
   };
@@ -715,6 +726,7 @@ export function WebLiveGame({
     const nextPlayerCount = override?.playerCount ?? playerCount;
     const nextLayoutVariant = override?.layoutVariant ?? layoutVariant;
     const nextStartingLife = override?.startingLife ?? startingLife;
+    if (occasionalCreationBusy) return;
     const nextSeats = override?.seats ?? seats;
     const selected = nextSeats.filter((seat) => seat.participantKey && seat.deckId);
     if (selected.length !== nextPlayerCount || new Set(selected.map((seat) => seat.participantKey)).size !== nextPlayerCount) {
@@ -1166,14 +1178,17 @@ export function WebLiveGame({
                     key={step}
                     type="button"
                     aria-label={`${copy({ it: 'Passaggio', en: 'Step' })} ${step + 1}`}
-                    onClick={() => setSetupStep(step)}
+                    disabled={occasionalCreationBusy}
+                    onClick={() => { if (!occasionalCreationBusy) setSetupStep(step); }}
                     className={cn('h-1.5 flex-1 rounded-full py-3 transition', step <= setupStep ? 'bg-emerald-400 bg-clip-content' : 'bg-white/10 bg-clip-content')}
                   />
                 ))}
                 <Button
                   size="sm"
                   variant="ghost"
+                  disabled={occasionalCreationBusy}
                   onClick={() => {
+                    if (occasionalCreationBusy) return;
                     setSeats((current) => current.map(() => ({ participantKey: null, deckId: null })));
                     setSetupDeckSearch('');
                   }}
@@ -1333,7 +1348,8 @@ export function WebLiveGame({
                           <button
                             key={index}
                             type="button"
-                            onClick={() => { setSetupSeatIndex(index); setSetupDeckSearch(''); }}
+                            disabled={occasionalCreationBusy}
+                            onClick={() => { if (occasionalCreationBusy) return; setSetupSeatIndex(index); setSetupDeckSearch(''); }}
                             aria-label={`${copy({ it: 'Posto', en: 'Seat' })} ${index + 1}${participant ? `: ${participant.displayName}` : ''}`}
                             aria-pressed={setupSeatIndex === index}
                             className={cn(
@@ -1362,6 +1378,7 @@ export function WebLiveGame({
                       <p className="mb-3 text-xs font-black uppercase tracking-[.18em] text-emerald-300">{copy({ it: 'Posto', en: 'Seat' })} {setupSeatIndex + 1}</p>
                       <select
                         data-testid="live-player-select"
+                        disabled={occasionalCreationBusy}
                           aria-label={copy({ it: 'Scegli giocatore', en: 'Choose player' })}
                         value={activeSetupSeat?.participantKey ?? ''}
                         onChange={(event) => updateSeatParticipant(setupSeatIndex, (event.target.value || null) as ParticipantKey | null)}
@@ -1374,6 +1391,16 @@ export function WebLiveGame({
                       </select>
                       {activeSetupParticipant ? (
                         <div className="mt-3 space-y-3">
+                          {!activeSetupParticipant.isGuest && activeSetupParticipant.userId && <OccasionalDeckForm
+                            key={`${activeSetupParticipant.key}:${activeSetupSeat?.deckId || ''}`} groupId={groupId} userId={activeSetupParticipant.userId} disabled={occasionalCreationBusy} onBusyChange={busy => setOccasionalCreationRequests(current => ({ ...current, [activeSetupParticipant.key]: busy }))}
+                            onCreated={deck => {
+                              const key = activeSetupParticipant.key;
+                              setOccasionalDecks(current => ({ ...current, [key]: [...(current[key] || []), {
+                                id: deck.id, name: deck.name, commander: deck.commander, commanderImage: deck.commander_image,
+                                isFavorite: false, isOccasional: true,
+                              }] }));
+                              setSeats(current => current.map((seat, index) => index === setupSeatIndex && seat.participantKey === key ? { ...seat, deckId: deck.id } : seat));
+                            }} />}
                           {featureFlags?.deckWizardSearch !== false ? (
                             <label className="relative block">
                               <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
@@ -1391,10 +1418,11 @@ export function WebLiveGame({
                             return (
                               <button
                                 data-testid="live-deck-option"
+                                disabled={occasionalCreationBusy}
                                 key={deck.id}
                                 type="button"
                                 aria-pressed={selected}
-                                onClick={() => setSeats((current) => current.map((item, index) => index === setupSeatIndex ? { ...item, deckId: deck.id } : item))}
+                                onClick={() => { if (!occasionalCreationBusy) setSeats((current) => current.map((item, index) => index === setupSeatIndex ? { ...item, deckId: deck.id } : item)); }}
                                 className={cn('w-24 shrink-0 overflow-hidden rounded-xl border bg-card text-left transition active:scale-[.98]', selected ? 'border-emerald-300 ring-2 ring-emerald-500/25' : 'border-white/10')}
                               >
                                 <DeckImage src={deck.commanderImage} alt={deck.commander} className="h-24 w-full rounded-none object-cover object-top" fallbackClassName="h-24 w-full rounded-none" />
@@ -1414,13 +1442,13 @@ export function WebLiveGame({
               </section>
 
               <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row">
-                {setupStep > 0 ? <Button variant="outline" onClick={() => setSetupStep((step) => step - 1)} className="w-full sm:w-auto"><ArrowLeft className="mr-2 h-4 w-4" />{copy({ it: 'Indietro', en: 'Back' })}</Button> : <span className="hidden flex-1 sm:block" />}
+                {setupStep > 0 ? <Button disabled={occasionalCreationBusy} variant="outline" onClick={() => setSetupStep((step) => step - 1)} className="w-full sm:w-auto"><ArrowLeft className="mr-2 h-4 w-4" />{copy({ it: 'Indietro', en: 'Back' })}</Button> : <span className="hidden flex-1 sm:block" />}
                 {setupStep < 3 ? (
-                  <Button onClick={() => setSetupStep((step) => step + 1)} className="h-12 w-full bg-gradient-to-r from-emerald-600 to-teal-600 px-7 font-black shadow-lg shadow-emerald-950/40 sm:ml-auto sm:w-auto">
+                  <Button disabled={occasionalCreationBusy} onClick={() => setSetupStep((step) => step + 1)} className="h-12 w-full bg-gradient-to-r from-emerald-600 to-teal-600 px-7 font-black shadow-lg shadow-emerald-950/40 sm:ml-auto sm:w-auto">
                     {copy({ it: 'Avanti', en: 'Next' })}<ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 ) : (
-                  <Button data-testid="live-start" onClick={() => void startGame()} disabled={starting || !setupComplete} className="h-12 w-full bg-gradient-to-r from-emerald-600 to-teal-600 px-5 font-black shadow-lg shadow-emerald-950/40 sm:ml-auto sm:w-auto sm:px-8">
+                  <Button data-testid="live-start" onClick={() => void startGame()} disabled={starting || occasionalCreationBusy || !setupComplete} className="h-12 w-full bg-gradient-to-r from-emerald-600 to-teal-600 px-5 font-black shadow-lg shadow-emerald-950/40 sm:ml-auto sm:w-auto sm:px-8">
                     {starting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Swords className="mr-2 h-5 w-5" />}
                     {setupComplete ? copy({ it: 'Avvia partita', en: 'Start game' }) : copy({ it: 'Completa tutti i posti', en: 'Complete every seat' })}
                   </Button>
