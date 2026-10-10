@@ -173,7 +173,7 @@ export async function fetchArenaMemberDecks(
     p_user_ids: memberIds,
     p_limit_per_user: MEMBER_DECK_LIMIT,
   });
-  if (!error) return (data || []) as MemberDeck[];
+  if (!error) return ((data || []) as MemberDeck[]).filter((deck) => deck.source_type !== 'occasional');
 
   // Compatibility fallback while a new deployment is waiting for migrations.
   const decks: MemberDeck[] = [];
@@ -185,6 +185,7 @@ export async function fetchArenaMemberDecks(
         .from('decks')
         .select(DECK_PICKER_COLUMNS)
         .eq('user_id', memberId)
+        .or('source_type.is.null,source_type.neq.occasional')
         .order('is_favorite', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(MEMBER_DECK_LIMIT);

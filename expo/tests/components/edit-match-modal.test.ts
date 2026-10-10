@@ -1,5 +1,6 @@
 import { isValidElement, type ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { EditMatchModal } from '@/components/table/edit-match-modal';
 const hooks = vi.hoisted(() => ({ values: [] as unknown[], cursor: 0, initialized: false }));
 vi.mock('react', async original => ({
   ...await original<typeof import('react')>(),
@@ -23,9 +24,9 @@ vi.mock('@/components/ui/button', () => ({ Button: 'Button' }));
 vi.mock('@/components/ui/date-field', () => ({ DateField: 'DateField' }));
 vi.mock('@/components/ui/rich-text-input', () => ({ RichTextInput: 'RichTextInput' }));
 vi.mock('@/components/table/match-participant-row', () => ({ MatchParticipantRow: 'ParticipantRow', toDeckOption: (deck: unknown) => deck }));
-import { EditMatchModal } from '@/components/table/edit-match-modal';
+vi.mock('@/components/table/occasional-deck-form', () => ({ OccasionalDeckForm: 'OccasionalForm' }));
 
-type Node = ReactElement<Record<string, any>>; // eslint-disable-line @typescript-eslint/no-explicit-any
+type Node = ReactElement<Record<string, any>>;
 function nodes(value: unknown): Node[] {
   if (Array.isArray(value)) return value.flatMap(nodes);
   if (!isValidElement(value)) return [];
@@ -82,4 +83,48 @@ describe('match editor replacement layout', () => {
     const choices = render().filter(n => n.props.testID?.startsWith('replacement-row-b-'));
     expect(choices.map(n => n.props.testID)).toEqual(['replacement-row-b-user:b']);
   });
+});
+
+describe('occasional editor deck', () => {
+  beforeEach(() => { hooks.values = []; hooks.cursor = 0; hooks.initialized = false; });
+  it('offers an occasional deck when a registered participant has no personal decks and preserves winner', async () => {
+    const { props, render } = fixture();
+    props.decks = [];
+    const form = render().find(n => n.type === 'OccasionalForm' && n.props.userId === 'a');
+    expect(form).toBeDefined();
+    form!.props.onCreated({ id: 'occasional', user_id: 'a', name: 'Borrowed', commander: 'Commander', source_type: 'occasional' });
+    const tree = render();
+    expect(tree.find(n => n.type === 'ParticipantRow' && n.props.participantKey === 'user:a')?.props.selectedDeckId).toBe('occasional');
+    await tree.find(n => n.type === 'Button' && n.props.label === 'Save')!.props.onPress();
+    expect(props.onSave).toHaveBeenCalledWith(expect.objectContaining({ winnerKey: 'user:a', participantDecks: expect.objectContaining({ 'user:a': 'occasional' }) }));
+    props.decks = [{ id: 'personal', user_id: 'a', name: 'Personal', commander: 'Commander' }] as typeof props.decks;
+    render().find(n => n.type === 'ParticipantRow' && n.props.participantKey === 'user:a')!.props.onSelectDeck('personal');
+    expect(render().find(n => n.type === 'ParticipantRow' && n.props.participantKey === 'user:a')?.props.selectedDeckId).toBe('personal');
+  });
+});
+
+describe('historical deck ownership after replacement', () => {
+ beforeEach(() => { hooks.values = []; hooks.cursor = 0; hooks.initialized = false; });
+ it('does not offer the original player historical deck to their replacement', () => {
+  const { props, render } = fixture();
+  props.match!.match_participants[0].decks = { id: 'historical-a', name: 'Historical A', commander: 'Commander', commander_image: null, bracket: null };
+  props.match!.match_participants[0].deck_id = 'historical-a';
+  render().find(n => n.props.testID === 'replace-player-row-a')!.props.onPress();
+  render().find(n => n.props.testID === 'replacement-row-a-user:c')!.props.onPress();
+  const row = render().find(n => n.type === 'ParticipantRow' && n.props.participantKey === 'user:c')!;
+  expect(row.props.filteredDecks.map((deck: { id: string }) => deck.id)).toEqual(['deck-c']);
+ });
+});
+
+describe('parallel occasional creation', () => {
+ beforeEach(() => { hooks.values = []; hooks.cursor = 0; hooks.initialized = false; });
+ it('keeps saving disabled until every registered participant request completes', () => {
+  const { render } = fixture();
+  const forms = render().filter(n => n.type === 'OccasionalForm');
+  forms[0].props.onSavingChange(true); forms[1].props.onSavingChange(true);
+  forms[0].props.onSavingChange(false);
+  expect(render().find(n => n.type === 'Button' && n.props.label === 'Save')!.props.disabled).toBe(true);
+  forms[1].props.onSavingChange(false);
+  expect(render().find(n => n.type === 'Button' && n.props.label === 'Save')!.props.disabled).toBe(false);
+ });
 });

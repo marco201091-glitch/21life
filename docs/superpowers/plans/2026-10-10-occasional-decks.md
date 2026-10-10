@@ -24,25 +24,25 @@
 ### Task 1: Storage and shared creation contract
 Files: new supabase migration; expo/lib/occasional-decks.ts; lib/occasional-decks.ts re-export; relevant query filters; tests for shared service and SQL security contract.
 Interface: `createOccasionalDeck(client: SupabaseClient, input: { id: string; groupId: string; userId: string; name: string; commander: string; commanderImage: string|null; colorIdentity: string[]; bracket: string|null; commanderOptions?: unknown[] }): Promise<MemberDeck>`; `isOccasionalDeck({source_type?:string|null}): boolean`.
-- [ ] Write failing service/security tests for stable ID, authorized scope, idempotency and exclusion from normal choices.
-- [ ] Implement RPC plus match/live scope validation, helper and filters. No production mutation during implementation.
-- [ ] Apply Dev migration, test real authorized/denied RPC calls, existing match editing, finalization and cleanup.
-- [ ] Review, verify and commit task files.
+- [x] Write failing service/security tests for stable ID, authorized scope, idempotency and exclusion from normal choices.
+- [x] Implement RPC plus match/live scope validation, helper and filters. No production mutation during implementation.
+- [x] Apply Dev migration, test real authorized/denied RPC calls, existing match editing, finalization and cleanup.
+- [x] Review, verify and commit task files.
 
 ### Task 2: Expo game and editor UX
 Files: new expo/components/table/occasional-deck-form.tsx; existing record-match-modal.tsx, edit-match-modal.tsx, live setup components/play route; translations/types where necessary; native UI tests.
 Consumes Task1 interface. Create client UUID once per form submission, persist returned deck in local choice list and select ID. Pass groupId explicitly from arena/play screen; embed form in existing modal. Use useTranslation/current language or existing label conventions. Regular deck selection clears temporary form. Hydrate existing occasional match deck from joined snapshot.
-- [ ] Write failing regressions for registered user/no decks and editor deck replacement preserving identity/winner.
-- [ ] Add compact inline form, existing commander picker and bracket; expose in manual/live/editor flows.
-- [ ] Verify targeted tests, typecheck and iPad portrait/landscape preview when feasible.
-- [ ] Review and commit task files.
+- [x] Write failing regressions for registered user/no decks and editor deck replacement preserving identity/winner.
+- [x] Add compact inline form, existing commander picker and bracket; expose in manual/live/editor flows.
+- [x] Verify targeted tests, typecheck and iPad portrait/landscape preview when feasible.
+- [x] Review and commit task files.
 
 ### Task 3: Web UX and collection isolation
 Files: components/arena/occasional-deck-form.tsx; app/table/[id]/page.tsx and play/page.tsx; profile/archive query filters if needed; shared arena queries. Read installed Next.js docs before writing app code.
 Consumes Task1 same helper; web form uses established guest commander picker. Normal picker excludes occasional rows; editor injects selected historical deck. Arena/player performance continues counting match rows; personal collection/group-null excludes occasional. No changes to source importer behavior.
-- [ ] Write failing regressions for collection/preferred-deck isolation and existing editor replacement.
-- [ ] Implement web live/manual/editor integration and audit all personal/preferred deck queries.
-- [ ] Verify web tests/typecheck/browser layout; review and commit.
+- [x] Write failing regressions for collection/preferred-deck isolation and existing editor replacement.
+- [x] Implement web live/manual/editor integration and audit all personal/preferred deck queries.
+- [x] Verify web tests/typecheck/browser layout; review and commit.
 
 ### Task 4: Release and deployment
 Files: official version updater outputs, README/release notes and root persistent checklist.

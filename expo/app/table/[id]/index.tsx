@@ -1144,6 +1144,7 @@ export default function TableScreen() {
       />
 
       <RecordMatchModal
+        groupId={groupId}
         visible={showRecordModal}
         saving={savingMatch}
         members={members}
@@ -1243,6 +1244,7 @@ export default function TableScreen() {
       />
 
       <EditMatchModal
+        groupId={groupId}
         visible={Boolean(editingMatch)}
         saving={savingEditMatch}
         canManage={isArenaManager}

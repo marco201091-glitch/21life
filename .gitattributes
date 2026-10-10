@@ -20,3 +20,8 @@ supabase/migrations/20261001105900_migration_registry_bootstrap.sql text eol=lf
 supabase/migrations/20261005132724_arena_archidekt_server_sync.sql text eol=lf
 
 supabase/migrations/20261005140052_recommend_v9_0_5_runtime_update.sql text eol=lf
+
+# Preserve the exact feature migration bytes applied through the SSH registry.
+supabase/migrations/20261010105147_occasional_decks.sql -text whitespace=cr-at-eol
+# Keep the prerequisite's bytes identical to both remote migration registries.
+supabase/migrations/20260729070641_v7_favorite_decks_first_in_arena_pickers.sql -text whitespace=cr-at-eol

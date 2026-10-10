@@ -1,3 +1,5 @@
+import { SetupRestoreGate } from '@/components/live-game/setup-restore-gate';
+import { restoreSetupDecks } from '@/components/live-game/restore-setup-decks';
 import { useFocusEffect , useLocalSearchParams, useRouter } from 'expo-router';
 import NetInfo from '@react-native-community/netinfo';
 
@@ -210,6 +212,10 @@ export default function LiveGameScreen() {
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
   const [syncError, setSyncError] = useState<string | null>(null);
   const telemetrySessionRef = useRef(Crypto.randomUUID());
+  const [setupReadyKey, setSetupReadyKey] = useState<string | null>(null);
+  const [setupRestoreError, setSetupRestoreError] = useState(false);
+  const [setupRetry, setSetupRetry] = useState(0);
+  const setupHydratingRef = useRef(false);
   const setupHydratedRef = useRef<string | null>(null);
 
   const openEndGameModal = useCallback((state: LiveGameState) => {
@@ -253,15 +259,16 @@ export default function LiveGameScreen() {
     return Number.parseInt(lifePreset, 10);
   }, [customLife, lifePreset]);
 
+  const [occasionalDecks, setOccasionalDecks] = useState<MemberDeck[]>([]);
   const decksByUser = useMemo(() => {
     const map = new Map<string, MemberDeck[]>();
-    decks.forEach((deck) => {
+    [...decks, ...occasionalDecks].forEach((deck) => {
       const current = map.get(deck.user_id) || [];
       current.push(deck);
       map.set(deck.user_id, current);
     });
     return map;
-  }, [decks]);
+  }, [decks, occasionalDecks]);
 
   const getDeckOptions = useCallback((key: ParticipantKey) => {
     if (key.startsWith('guest:')) {
@@ -694,19 +701,25 @@ export default function LiveGameScreen() {
   }, [copy, groupId, liveGame?.id, refreshAuthoritativeState, router, saveJournal, setOptimisticRecord, showToast, syncJournal]);
 
   useEffect(() => {
-    if (!groupId || !user || loading || setupHydratedRef.current === `${user.id}:${groupId}`) return;
-    setupHydratedRef.current = `${user.id}:${groupId}`;
-    void loadLiveGameSetup(groupId, user.id).then((saved) => {
-      if (!saved) return;
+    if (!groupId || !user || loading || setupHydratingRef.current || setupHydratedRef.current === `${user.id}:${groupId}`) return;
+    setupHydratingRef.current = true;
+    setSetupRestoreError(false);
+    void loadLiveGameSetup(groupId, user.id).then(async (saved) => {
+      if (!saved) { setupHydratedRef.current = `${user.id}:${groupId}`; setSetupReadyKey(`${user.id}:${groupId}`); return; }
+      const savedDeckIds = saved.seats.filter(seat => seat.participantKey?.startsWith('user:') && seat.deckId).map(seat => seat.deckId!);
+      let restoredDecks: MemberDeck[] = [];
+      if (savedDeckIds.length) {
+        restoredDecks = await restoreSetupDecks(supabase, groupId, savedDeckIds);
+        setOccasionalDecks(current => [...current.filter(deck => !restoredDecks.some(restored => restored.id === deck.id)), ...restoredDecks]);
+      }
       const participantMap = new Map(setupParticipants.map((participant) => [participant.key, participant]));
       const validatedSeats = saved.seats.map((seat) => {
         if (!seat.participantKey) return { participantKey: null, deckId: null };
         const participant = participantMap.get(seat.participantKey);
         if (!participant) return { participantKey: null, deckId: null };
-        const validDeck = participant.decks.some((deck) => deck.id === seat.deckId);
-        const fallbackDeck = participant.decks.length === 1
-          ? participant.decks[0].id
-          : participant.preferredDeckId;
+        const validDeck = participant.decks.some((deck) => deck.id === seat.deckId)
+          || restoredDecks.some(deck => deck.id === seat.deckId && `user:${deck.user_id}` === seat.participantKey);
+        const fallbackDeck = participant.preferredDeckId;
         return {
           participantKey: seat.participantKey,
           deckId: validDeck ? seat.deckId : fallbackDeck,
@@ -716,13 +729,15 @@ export default function LiveGameScreen() {
       setLayoutVariant(saved.layoutVariant);
       applyStartingLife(saved.startingLife);
       applySeatSetups(validatedSeats);
-    });
-  }, [applySeatSetups, applyStartingLife, groupId, loading, setupParticipants, user]);
+      setupHydratedRef.current = `${user.id}:${groupId}`;
+      setSetupReadyKey(`${user.id}:${groupId}`);
+    }).catch(() => { setSetupRestoreError(true); }).finally(() => { setupHydratingRef.current = false; });
+  }, [applySeatSetups, applyStartingLife, groupId, loading, setupParticipants, setupRetry, user]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       void NetInfo.fetch().then((state) => {
-        if (state.isConnected === true && state.isInternetReachable !== false) void syncJournal();
+        if (state.isConnected === true && state.isInternetReachable !== false) { void syncJournal(); setSetupRetry(current => current + 1); }
       });
     }, 10_000);
     const appStateSubscription = AppState.addEventListener('change', (state) => {
@@ -916,6 +931,7 @@ export default function LiveGameScreen() {
   };
 
   const handleStart = async () => {
+    if (setupReadyKey !== `${user?.id}:${groupId}`) return;
     if (!user) return;
     if (selectedKeys.length !== playerCount) {
       showToast(copy('liveGameFillSeats'));
@@ -1739,7 +1755,10 @@ export default function LiveGameScreen() {
             <Text style={styles.setupTitle}>{copy('liveGameSetupTitle')}</Text>
             <Text style={styles.setupHint}>{copy('liveGameSetupHint')}</Text>
 
+            <SetupRestoreGate ready={setupReadyKey === `${user?.id}:${groupId}`} error={setupRestoreError} language={language} onRetry={() => setSetupRetry(current => current + 1)}>
             <LiveGameConfigurator
+              groupId={groupId}
+              onOccasionalDeckCreated={deck => setOccasionalDecks(current => [...current.filter(item => item.id !== deck.id), deck])}
               playerCount={playerCount}
               layoutVariant={layoutVariant}
               seats={seatSetups}
@@ -1783,6 +1802,7 @@ export default function LiveGameScreen() {
               }}
             />
 
+            </SetupRestoreGate>
           </PhyrexianPanel>
       </ScrollView>
       <ConfirmModal
