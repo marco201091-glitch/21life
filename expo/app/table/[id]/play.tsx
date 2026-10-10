@@ -11,6 +11,8 @@ import { DeckImage } from '@/components/deck/deck-image';
 import { LiveGameConfigurator, type SetupParticipant } from '@/components/live-game/live-game-configurator';
 import { TableArena } from '@/components/live-game/table-arena';
 import { LiveGameRecapView } from '@/components/live-game/live-game-recap';
+import { LiveGameRecoveryPanel } from '@/components/live-game/recovery-panel';
+import { getSupabaseErrorMessage } from '@/lib/supabase-errors';
 import { toDeckOption } from '@/components/table/match-participant-row';
 import { Button } from '@/components/ui/button';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -88,7 +90,7 @@ import {
   type PendingLiveGameFinalization,
   type ArchivedLiveGameOperation,
 } from '@/lib/live-game-offline';
-import { persistLiveGameTelemetry, recordLiveGameQueueDepth } from '@/lib/live-game-telemetry';
+import { persistLiveGameTelemetry, recordLiveGameQueueDepth, recordLiveGameSyncError } from '@/lib/live-game-telemetry';
 import {
   createLiveGameHistory,
   recordLiveGameHistory,
@@ -500,12 +502,14 @@ export default function LiveGameScreen() {
         }
       } catch (error) {
         failed = true;
-        setSyncError(error instanceof Error ? error.message : 'Sync failed');
+        const message = getSupabaseErrorMessage(error, 'Sync failed');
+        setSyncError(message);
+        recordLiveGameSyncError(new Error(message));
         setSyncStatus('error');
         // Offline, timeout or a transient Realtime gap: the durable journal retries later.
       } finally {
         syncRunningRef.current = false;
-        if (!failed && !sessionClosedRef.current) {
+        if (!failed) {
           setSyncStatus(mutationQueueRef.current.length ? 'pending' : 'synced');
         }
         if (user) {
@@ -1728,10 +1732,8 @@ export default function LiveGameScreen() {
 
       <ScrollView contentContainerStyle={[scrollContentStyle, styles.content]}>
           {recoveryOutbox.length > 0 ? (
-            <PhyrexianPanel style={styles.recoveryPanel}>
-              <View style={styles.recoveryHeader}><Ionicons name="cloud-upload-outline" size={21} color="#fcd34d" /><View style={styles.recoveryCopy}><Text style={styles.recoveryTitle}>{language === 'it' ? 'Centro recupero' : 'Recovery center'}</Text><Text style={styles.recoveryHint}>{language === 'it' ? `${recoveryOutbox.length} salvataggi in attesa. La partita resta protetta sul dispositivo.` : `${recoveryOutbox.length} saves pending. The game remains protected on this device.`}</Text></View></View>
-              <View style={styles.recoveryActions}><Button label={language === 'it' ? 'Sincronizza ora' : 'Sync now'} icon="sync-outline" onPress={() => void syncJournal()} /><Button label={language === 'it' ? 'Scarta' : 'Discard'} variant="ghost" onPress={() => setShowClearRecoveryConfirm(true)} /></View>
-            </PhyrexianPanel>
+            <LiveGameRecoveryPanel count={recoveryOutbox.length} language={language} syncing={syncStatus === 'syncing'}
+              error={syncError} onSync={() => void syncJournal()} onDiscard={() => setShowClearRecoveryConfirm(true)} />
           ) : null}
           <PhyrexianPanel style={styles.setupPanel}>
             <Text style={styles.setupTitle}>{copy('liveGameSetupTitle')}</Text>
@@ -1882,12 +1884,6 @@ const styles = StyleSheet.create({
   },
   resultWarning: { flexDirection: 'row', gap: spacing.sm, borderWidth: 1, borderColor: 'rgba(251,191,36,0.35)', borderRadius: radii.md, backgroundColor: 'rgba(245,158,11,0.1)', padding: spacing.sm },
   resultWarningText: { flex: 1, color: '#fde68a', fontSize: 11, lineHeight: 16 },
-  recoveryPanel: { gap: spacing.sm, borderColor: 'rgba(251,191,36,0.35)' },
-  recoveryHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  recoveryCopy: { flex: 1, gap: 2 },
-  recoveryTitle: { color: '#fde68a', fontSize: 14, fontWeight: '900' },
-  recoveryHint: { color: colors.muted, fontSize: 11, lineHeight: 16 },
-  recoveryActions: { flexDirection: 'row', gap: spacing.sm },
   rematchActions: {
     gap: spacing.sm,
   },
