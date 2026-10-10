@@ -8,6 +8,7 @@ import {
   type LiveGameStatus,
   type WinCondition,
 } from '@/lib/live-game';
+import { withLiveGameRequestTimeout } from '@/lib/live-game-async';
 import type { PendingLiveGameFinalization } from '@/lib/live-game-offline';
 import { recordLiveGameMutationSync, recordLiveGameSyncError } from '@/lib/live-game-telemetry';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -100,7 +101,7 @@ export async function ensureLiveGameCreated(
   supabase: SupabaseClient,
   record: LiveGameRecord,
 ): Promise<LiveGameRecord> {
-  const { data, error } = await supabase
+  const { data, error } = await withLiveGameRequestTimeout({ abortSignal: signal => supabase
     .from('live_games')
     .upsert({
       id: record.id,
@@ -112,16 +113,18 @@ export async function ensureLiveGameCreated(
       started_at: record.started_at,
     }, { onConflict: 'id', ignoreDuplicates: true })
     .select('*')
-    .maybeSingle();
+    .abortSignal(signal)
+    .maybeSingle() });
 
   if (error) throw error;
   if (data) return { ...data, state: parseLiveGameState(data.state) } as LiveGameRecord;
 
-  const { data: existing, error: fetchError } = await supabase
+  const { data: existing, error: fetchError } = await withLiveGameRequestTimeout({ abortSignal: signal => supabase
     .from('live_games')
     .select('*')
     .eq('id', record.id)
-    .single();
+    .abortSignal(signal)
+    .single() });
   if (fetchError) throw fetchError;
   return { ...existing, state: parseLiveGameState(existing.state) } as LiveGameRecord;
 }
@@ -131,6 +134,13 @@ type MutationRpcResult = {
   duplicate: boolean;
   record: LiveGameRecord;
 };
+
+function applyQueuedMutation(state: LiveGameState, queued: QueuedLiveGameMutation): LiveGameState {
+  const next = applyLiveGameMutation(state, queued.mutation);
+  // The RPC version counts acknowledged operation IDs, including actions that
+  // became no-ops after another client changed the authoritative state.
+  return { ...next, version: state.version + 1 };
+}
 
 export async function applyQueuedLiveGameMutation(
   supabase: SupabaseClient,
@@ -142,13 +152,13 @@ export async function applyQueuedLiveGameMutation(
   let base = initialRecord;
   try {
     for (let attempt = 0; attempt < 6; attempt += 1) {
-      const nextState = applyLiveGameMutation(base.state, queued.mutation);
-      const { data, error } = await supabase.rpc('apply_live_game_mutation', {
+      const nextState = applyQueuedMutation(base.state, queued);
+      const { data, error } = await withLiveGameRequestTimeout(supabase.rpc('apply_live_game_mutation', {
         p_live_game_id: base.id,
         p_mutation_id: queued.id,
         p_expected_version: base.state.version,
         p_next_state: nextState,
-      });
+      }));
       if (error) throw error;
       const result = data as MutationRpcResult;
       const record = {
@@ -181,15 +191,23 @@ export async function applyQueuedLiveGameMutations(
   try {
     for (let attempt = 0; attempt < 6; attempt += 1) {
       const nextState = queuedMutations.reduce(
-        (current, queued) => applyLiveGameMutation(current, queued.mutation),
+        (current, queued) => applyQueuedMutation(current, queued),
         base.state,
       );
-      const { data, error } = await supabase.rpc('apply_live_game_mutation_batch', {
+      const { data, error } = await withLiveGameRequestTimeout(supabase.rpc('apply_live_game_mutation_batch', {
         p_live_game_id: base.id,
         p_mutation_ids: queuedMutations.map((queued) => queued.id),
         p_expected_version: base.state.version,
         p_next_state: nextState,
-      });
+      }));
+      if (error?.code === '23505' && error.message === 'Partially applied live game mutation batch') {
+        // A request may have committed before the device received its response.
+        // Single-mutation RPCs acknowledge existing IDs before applying new ones.
+        for (const queued of queuedMutations) {
+          base = await applyQueuedLiveGameMutation(supabase, base, queued);
+        }
+        return base;
+      }
       if (error) throw error;
       const result = data as MutationRpcResult;
       const record = {
@@ -258,10 +276,10 @@ export async function setLiveGameStatus(
     payload.match_id = matchId;
   }
 
-  const { error } = await supabase
+  const { error } = await withLiveGameRequestTimeout(supabase
     .from('live_games')
     .update(payload)
-    .eq('id', liveGameId);
+    .eq('id', liveGameId));
 
   if (error) throw error;
 }
@@ -321,7 +339,7 @@ export async function finalizeLiveGameAsMatch(
     }>;
   },
 ): Promise<string> {
-  const { data, error } = await supabase.rpc('finalize_live_game', {
+  const { data, error } = await withLiveGameRequestTimeout(supabase.rpc('finalize_live_game', {
     p_live_game_id: input.liveGameId,
     p_winner_key: input.winnerKey,
     p_is_draw: input.isDraw,
@@ -334,7 +352,7 @@ export async function finalizeLiveGameAsMatch(
       user_id: player.userId,
       guest_id: player.guestId,
     })),
-  });
+  }));
   if (error) throw error;
   return data as string;
 }

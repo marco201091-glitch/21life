@@ -144,6 +144,7 @@ export function EditMatchModal({
   const [deckSearch, setDeckSearch] = useState<Record<string, string>>({});
   const [hiddenDeckLists, setHiddenDeckLists] = useState<Record<string, boolean>>({});
   const [replacementKeys, setReplacementKeys] = useState<Record<string, string>>({});
+  const [replacementRowId, setReplacementRowId] = useState<string | null>(null);
 
   const decksByUser = useMemo(() => {
     const map = new Map<string, MemberDeck[]>();
@@ -193,7 +194,18 @@ export function EditMatchModal({
     });
     setParticipantDecks(deckMap);
     setReplacementKeys({});
+    setReplacementRowId(null);
   }, [match, visible]);
+
+  const replaceParticipant = (rowId: string, originalKey: string, nextKey: string) => {
+    const previousKey = replacementKeys[rowId] || originalKey;
+    setReplacementKeys((current) => ({ ...current, [rowId]: nextKey === originalKey ? '' : nextKey }));
+    if (winnerKey === previousKey) setWinnerKey(nextKey);
+    const options = getDeckOptions(nextKey, decksByUser, guests);
+    setParticipantDecks((current) => ({ ...current, [nextKey]: current[nextKey] || options[0]?.id || '' }));
+    setHiddenDeckLists((current) => ({ ...current, [nextKey]: true }));
+    setReplacementRowId(null);
+  };
 
   const handleSave = async () => {
     if (!match) return;
@@ -266,7 +278,6 @@ export function EditMatchModal({
       <View style={[styles.shell, { height: modalBodyHeight }]}>
         <Text style={styles.title}>{labels.title}</Text>
         <Text style={styles.hint}>{labels.hint}</Text>
-        {canManage ? <Text style={styles.replacementLabel}>{labels.replacePlayer}</Text> : null}
 
         <KeyboardAwareScrollView
           ref={formScrollRef}
@@ -288,46 +299,23 @@ export function EditMatchModal({
 
           <View style={styles.participantList}>
             {match.match_participants.map((participant) => {
-              const participantKey = getParticipantKey(participant);
-              if (!participantKey) return null;
+              const originalKey = getParticipantKey(participant);
+              if (!originalKey) return null;
+              const participantKey = (replacementKeys[participant.id] || originalKey) as ParticipantKey;
 
               const deckOptions = getDeckOptions(participantKey, decksByUser, guests);
               const selectedDeckId = participantDecks[participantKey] || '';
               const selectedDeck = deckOptions.find((deck) => deck.id === selectedDeckId) || null;
-              const isGuest = Boolean(participant.guest_id);
+              const isGuest = participantKey.startsWith('guest:');
+              const displayName = participantKey === originalKey ? getParticipantDisplayName(participant)
+                : isGuest ? guests.find(guest => `guest:${guest.id}` === participantKey)?.display_name || participantKey
+                : getProfileDisplayName(members.find(member => `user:${member.id}` === participantKey)!);
 
               return (
-                <View key={participant.id}>
-                {canManage && members.length + guests.length > 0 ? (
-                  <View style={styles.replacementControl}>
-                    <Text style={styles.replacementLabel}>{labels.replacePlayer}</Text>
-                    <Pressable
-                      style={styles.replacementOption}
-                      onPress={() => setReplacementKeys((current) => ({ ...current, [participant.id]: '' }))}
-                    ><Text style={styles.replacementText}>{labels.selectPlayer}: {getParticipantDisplayName(participant)}</Text></Pressable>
-                    {members.filter((member) => `user:${member.id}` !== participantKey && !participantKeys.includes(`user:${member.id}` as ParticipantKey)).map((member) => {
-                      const key = `user:${member.id}`;
-                      const selectedReplacement = replacementKeys[participant.id] === key;
-                      return <Pressable key={key} style={styles.replacementOption} onPress={() => {
-                        setReplacementKeys((current) => ({ ...current, [participant.id]: key }));
-                        const firstDeck = decks.find((deck) => deck.user_id === member.id);
-                        setParticipantDecks((current) => ({ ...current, [key]: firstDeck?.id || '' }));
-                      }}><Text style={[styles.replacementText, selectedReplacement && styles.replacementSelected]}>{getProfileDisplayName(member)}</Text></Pressable>;
-                    })}
-                    {guests.filter((guest) => `guest:${guest.id}` !== participantKey && !participantKeys.includes(`guest:${guest.id}` as ParticipantKey)).map((guest) => {
-                      const key = `guest:${guest.id}`;
-                      const selectedReplacement = replacementKeys[participant.id] === key;
-                      return <Pressable key={key} style={styles.replacementOption} onPress={() => {
-                        setReplacementKeys((current) => ({ ...current, [participant.id]: key }));
-                        const firstDeck = guest.arena_guest_decks?.[0];
-                        setParticipantDecks((current) => ({ ...current, [key]: firstDeck?.id || '' }));
-                      }}><Text style={[styles.replacementText, selectedReplacement && styles.replacementSelected]}>{guest.display_name}</Text></Pressable>;
-                    })}
-                  </View>
-                ) : null}
+                <View key={participant.id} style={styles.participantCard}>
                 <MatchParticipantRow
                   participantKey={participantKey}
-                  displayName={getParticipantDisplayName(participant)}
+                  displayName={displayName}
                   isGuest={isGuest}
                   deckCount={deckOptions.length}
                   selected
@@ -352,6 +340,29 @@ export function EditMatchModal({
                     setParticipantDecks((state) => ({ ...state, [participantKey]: deckId }))
                   }
                 />
+                {canManage ? (
+                  <>
+                    <Button testID={`replace-player-${participant.id}`} label={labels.replacePlayer} variant="ghost" size="sm"
+                      onPress={() => setReplacementRowId(current => current === participant.id ? null : participant.id)} />
+                    {replacementRowId === participant.id ? (
+                      <View style={styles.replacementControl}>
+                        <Text style={styles.replacementLabel}>{labels.selectPlayer}</Text>
+                        {[{ key: originalKey, name: getParticipantDisplayName(participant) },
+                          ...members.map(member => ({ key: `user:${member.id}`, name: getProfileDisplayName(member) })),
+                          ...guests.map(guest => ({ key: `guest:${guest.id}`, name: guest.display_name })),
+                        ].filter((option, index, options) => options.findIndex(item => item.key === option.key) === index
+                          && (option.key === originalKey || !participantKeys.includes(option.key as ParticipantKey))
+                          && (option.key === participantKey || !effectiveParticipantKeys.includes(option.key))).map(option => (
+                          <Pressable key={option.key} testID={`replacement-${participant.id}-${option.key}`}
+                            accessibilityRole="button" accessibilityState={{ selected: option.key === participantKey }}
+                            style={styles.replacementOption} onPress={() => replaceParticipant(participant.id, originalKey, option.key)}>
+                            <Text style={[styles.replacementText, option.key === participantKey && styles.replacementSelected]}>{option.name}</Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    ) : null}
+                  </>
+                ) : null}
                 </View>
               );
             })}
@@ -373,9 +384,7 @@ export function EditMatchModal({
           <Text style={styles.sectionLabel}>{labels.selectWinner}</Text>
           <View style={styles.chipRow}>
             {effectiveParticipantKeys.map((key) => {
-              const replacedRow = match.match_participants.find((participant) => replacementKeys[participant.id] === key);
-              const originalReplacementKey = replacedRow ? getParticipantKey(replacedRow) : null;
-              const selected = winnerKey === key || Boolean(originalReplacementKey && winnerKey === originalReplacementKey);
+              const selected = winnerKey === key;
               const label = key.startsWith('guest:')
                 ? guests.find((guest) => guest.id === key.slice(6))?.display_name || key
                 : (() => {
@@ -387,7 +396,7 @@ export function EditMatchModal({
                 <Pressable
                   key={key}
                   style={[styles.chip, selected && styles.winnerChip]}
-                  onPress={() => setWinnerKey(originalReplacementKey || key)}
+                  onPress={() => setWinnerKey(key)}
                 >
                   <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>
                     {label}
@@ -478,6 +487,7 @@ const styles = StyleSheet.create({
   participantList: {
     gap: spacing.sm,
   },
+  participantCard: { gap: spacing.xs },
   replacementControl: {
     gap: spacing.xs,
     padding: spacing.sm,
@@ -485,7 +495,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   replacementLabel: { color: colors.muted, fontSize: 12, fontWeight: '700' },
-  replacementOption: { paddingVertical: 5 },
+  replacementOption: { paddingVertical: 12, paddingHorizontal: spacing.sm, minHeight: 44 },
   replacementText: { color: colors.foreground, fontSize: 13 },
   replacementSelected: { color: colors.primary, fontWeight: '800' },
   sectionLabel: {
