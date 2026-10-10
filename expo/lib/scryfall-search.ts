@@ -33,7 +33,7 @@ type ScryfallSearchResponse = {
 
 const SCRYFALL_HEADERS = {
   Accept: 'application/json',
-  'User-Agent': '21Life/9.1.1 (support@21life.win)',
+  'User-Agent': '21Life/9.1.2 (support@21life.win)',
 };
 
 const SCRYFALL_MIN_REQUEST_INTERVAL_MS = 90;

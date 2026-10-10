@@ -449,6 +449,11 @@
       "version": "20261005140052",
       "name": "20261005140052_recommend_v9_0_5_runtime_update.sql",
       "checksum": "2a46b3d9685b50056f228439504d9cfa99aa3a7bf2b5bb1b43798c84fc8ac0eb"
+    },
+    {
+      "version": "20261010105147",
+      "name": "20261010105147_occasional_decks.sql",
+      "checksum": "0773179d44ea577d6b16558cef68870931b4379665f17eddeaf63693c97e07b1"
     }
   ]
 }

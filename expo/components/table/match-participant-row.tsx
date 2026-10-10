@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/language-context';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DeckImage } from '@/components/deck/deck-image';
@@ -70,6 +71,7 @@ export function MatchParticipantRow({
   onSelectDeck,
   readOnly = false,
 }: MatchParticipantRowProps) {
+  const { language } = useLanguage();
   const deckCardWidth = useDeckCarouselCardWidth();
 
   return (
@@ -198,7 +200,7 @@ export function MatchParticipantRow({
                                 {deck.source_type ? (
                                   <View style={[styles.sourceBadge, { backgroundColor: tone.bg }]}>
                                     <Text style={[styles.sourceText, { color: tone.text }]}>
-                                      {deck.source_type}
+                                      {deck.source_type === 'occasional' ? (language === 'it' ? 'Mazzo occasionale' : 'Occasional deck') : deck.source_type}
                                     </Text>
                                   </View>
                                 ) : null}
