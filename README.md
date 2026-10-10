@@ -2,7 +2,7 @@
 
 # 21Life
 
-[![Android 9.1.0](https://img.shields.io/badge/Android-v9.1.0-7c3aed?style=flat-square)](https://21life.win/download/)
+[![Android 9.1.1](https://img.shields.io/badge/Android-v9.1.1-7c3aed?style=flat-square)](https://21life.win/download/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 **Your Commander table, from the first life total to the last match statistic.**
@@ -52,7 +52,7 @@ Use the standard production APK when updating an existing production installatio
 
 ### iPhone and iPad
 
-The web app works in the browser. An [**unsigned 9.1.0 IPA**](https://github.com/marco201091-glitch/21life/releases/download/v9.1.0/21life-v9.1.0-unsigned.ipa) is also available for compatible **TrollStore Lite** installations. It is built on Expo from the production release source, includes iPad support and needs a compatible sideloading setup. It is not an App Store release.
+The web app works in the browser. [**Unsigned IPA builds**](https://github.com/marco201091-glitch/21life/releases) are provided for compatible **TrollStore Lite** installations. They are built on Expo from the production release source, include iPad support and need a compatible sideloading setup. They are not App Store releases.
 
 The website's download page lists Android and Web only.
 
@@ -66,7 +66,13 @@ The website's download page lists Android and Web only.
 
 See the [guide](https://21life.win/guida/) and [FAQ](https://21life.win/supporto/) for more detail.
 
-## What's new in 9.1.0
+## What's new in 9.1.1
+
+- Restored the compact game editor, with player replacements opened on demand and consistent deck/winner selections.
+- Recovery Center displays synchronization progress and actionable errors, and supports retrying stalled requests.
+- Safer synchronization retries preserve operation IDs, prevent duplicate life changes and recover partially acknowledged batches.
+
+### From 9.1.0
 
 - New home at **21life.win**, with production web and backend domains migrated together.
 - English by default, with Italian available.
@@ -76,7 +82,7 @@ See the [guide](https://21life.win/guida/) and [FAQ](https://21life.win/supporto
 - Improved guest management on iPad, including form recovery on errors and safer claim sharing.
 - Updated web/mobile tooling and expanded automated regression checks.
 
-Read the [release notes](docs/releases/9.1.0.md) and [official releases](https://github.com/marco201091-glitch/21life/releases).
+Read the [release notes](docs/releases/9.1.1.md) and [official releases](https://github.com/marco201091-glitch/21life/releases).
 
 ## Domains and compatibility
 
