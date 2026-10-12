@@ -57,3 +57,4 @@ L'avanzamento dei task resta in `PROJECT_CHECKLIST.md`.
 - Causa verificata: due unit test dipendevano da deck pubblici e immagini live; codice importazione invariato rispetto a main. Nessun problema UI individuato.
 - Recupero: risposte pubbliche ridotte Archidekt/Scryfall salvate come fixture, fetch intercettato solo nei test, URL inattesi rifiutati e globals ripristinati. I due test passano senza rete; nuovo controllo CI richiesto prima del merge.
 - Prevenzione: controllare che unit test importazione usino fixture, non servizi esterni; nessun bypass protezioni o retry deploy.
+- Aggiornamento run38226544550: tutti344test verdi, soglia coverage per-file importatore non raggiunta dalle risposte ridotte (functions60.29<61.76, statements48.78<49.59). Aggiunti casi pertinenti top-level commander, bracket HTML frammentato e HTTP403; 346test verdi e ratchet103file passato, soglie invariate. Nessun merge/deploy effettuato.

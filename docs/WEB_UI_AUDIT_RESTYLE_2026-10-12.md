@@ -59,3 +59,4 @@ Il workspace riusa `node_modules` tramite junction: la build locale segnala 27 f
 Il lavoro resta sul branch locale indicato e non è pubblicato.
 
 Pubblicazione autorizzata dal PM: PR #193 verso main. Il primo Quality remoto ha esposto due unit test preesistenti dipendenti da Archidekt live (HTTP403); ora usano fixture pubbliche ridotte Archidekt/Scryfall, senza modificare importer o UI. Nessun merge/deploy prima dei controlli obbligatori verdi.
+I test fixture coprono inoltre commander top-level, bracket HTML frammentato e HTTP403: 346 test passati, 1 skip e soglie coverage per-file di 103 file mantenute.
