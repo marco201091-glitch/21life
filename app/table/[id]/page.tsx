@@ -2599,7 +2599,7 @@ export default function TablePage() {
             <div className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:flex xl:w-auto xl:flex-wrap xl:justify-end">
               {activeTab === 'commanders' ? (
                 <Select value={deckStatsSort} onValueChange={(value) => setDeckStatsSort(value as typeof deckStatsSort)}>
-                  <SelectTrigger className="h-11 w-full min-w-0 bg-card/70 border-border text-foreground xl:min-w-[11rem]">
+                  <SelectTrigger aria-label={t({ it: 'Ordina mazzi', en: 'Sort decks' })} className="h-11 w-full min-w-0 bg-card/70 border-border text-foreground xl:min-w-[11rem]">
                     <SelectValue placeholder={t({ it: 'Ordina per', en: 'Sort by' })} />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
@@ -2610,7 +2610,7 @@ export default function TablePage() {
               ) : null}
               {activeTab === 'commanders' || activeTab === 'meta' ? (
                 <Select value={bracketFilter} onValueChange={setBracketFilter}>
-                  <SelectTrigger className="h-11 w-full min-w-0 bg-card/70 border-border text-foreground xl:min-w-[10rem]">
+                  <SelectTrigger aria-label={t({ it: 'Filtra per bracket', en: 'Filter by bracket' })} className="h-11 w-full min-w-0 bg-card/70 border-border text-foreground xl:min-w-[10rem]">
                     <SelectValue placeholder={t({ it: 'Bracket', en: 'Bracket' })} />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
@@ -2625,7 +2625,7 @@ export default function TablePage() {
               ) : null}
               {activeTab !== 'awards' ? (
                 <Select value={dateFilter} onValueChange={(v) => setDateFilter(v as typeof dateFilter)}>
-                  <SelectTrigger className="h-11 w-full min-w-0 bg-card/70 border-border text-foreground xl:min-w-[10rem]">
+                  <SelectTrigger aria-label={t({ it: 'Periodo partite', en: 'Match period' })} className="h-11 w-full min-w-0 bg-card/70 border-border text-foreground xl:min-w-[10rem]">
                     <Calendar className="mr-2 h-4 w-4 shrink-0" />
                     <SelectValue />
                   </SelectTrigger>

@@ -2757,7 +2757,7 @@ export default function ProfilePage() {
               {MANA_COLOR_ORDER.map((color) => <button key={color} type="button" onClick={() => setDeckColorFilter((current) => current.includes(color) ? current.filter((item) => item !== color) : [...current, color])} className={`grid h-7 w-7 place-items-center rounded-full text-xs font-black ${deckColorFilter.includes(color) ? 'bg-emerald-400 text-emerald-950' : 'bg-secondary text-muted-foreground'}`} title={t(MANA_COLOR_LABELS[color])}>{color}</button>)}
             </div>
             <Select value={deckSort} onValueChange={(value) => setDeckSort(value as typeof deckSort)}>
-              <SelectTrigger className="border-border bg-background/50 text-foreground">
+              <SelectTrigger aria-label={t({ it: 'Ordina mazzi', en: 'Sort decks' })} className="border-border bg-background/50 text-foreground">
                 <SelectValue placeholder={t({ it: 'Ordina per', en: 'Sort by' })} />
               </SelectTrigger>
               <SelectContent>
