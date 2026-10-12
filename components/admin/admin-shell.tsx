@@ -21,11 +21,11 @@ export function AdminShell({ title, description, children }: AdminShellProps) {
       <header className="web-header safe-top sticky top-0 z-10 border-b border-border/50 bg-card/50 backdrop-blur">
         <div className="web-container mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-3 sm:px-4 sm:py-4">
           <div className="flex min-w-0 items-center gap-3">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground">
+              <Button asChild variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground">
+                <Link href="/dashboard" aria-label={t({ it: 'Torna alla home', en: 'Back to home' })}>
                 <ArrowLeft className="h-5 w-5" />
+                </Link>
               </Button>
-            </Link>
             <ManaLogo size="md" showText className="hidden sm:flex" />
           </div>
           <div className="flex items-center gap-2">

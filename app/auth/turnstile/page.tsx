@@ -34,5 +34,5 @@ export default function TurnstileMobilePage() {
     return () => script.remove();
   }, [siteKey]);
 
-  return <main className="flex min-h-screen items-center justify-center bg-background p-4"><div ref={containerRef} className="w-full max-w-sm" /></main>;
+  return <main className="flex min-h-screen items-center justify-center bg-[#101018] p-4 lg:bg-background"><div ref={containerRef} className="w-full max-w-sm" /></main>;
 }

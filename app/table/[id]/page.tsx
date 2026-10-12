@@ -2389,7 +2389,7 @@ export default function TablePage() {
         <div className="web-container max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-              <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard')} className="h-11 w-11 shrink-0 text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="icon" aria-label={t({ it: 'Torna alla home', en: 'Back to home' })} onClick={() => router.push('/dashboard')} className="h-11 w-11 shrink-0 text-muted-foreground hover:text-foreground">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="hidden sm:block">

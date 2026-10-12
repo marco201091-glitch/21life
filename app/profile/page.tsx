@@ -2386,6 +2386,7 @@ export default function ProfilePage() {
               variant="ghost"
               size="icon"
               onClick={() => router.push('/dashboard')}
+              aria-label={t({ it: 'Torna alla home', en: 'Back to home' })}
               className="text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -2822,7 +2823,7 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         ) : (
-          <MotionList className="space-y-3 sm:space-y-4">
+          <MotionList className="web-deck-grid space-y-3 sm:space-y-4">
             {filteredDecks.map((deck) => {
               const performance = deckPerformance.get(deck.id);
               const gamesPlayed = performance?.gamesPlayed ?? 0;
@@ -2837,12 +2838,7 @@ export default function ProfilePage() {
                       borderColor: mastery.color,
                       boxShadow: `0 0 24px ${mastery.color}26`,
                     } : undefined}
-                    role="button"
-                    tabIndex={0}
                     onClick={() => setDetailsDeck(deck)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') setDetailsDeck(deck);
-                    }}
                   >
                     <DeckImage
                       src={deck.commander_image}
@@ -2892,7 +2888,7 @@ export default function ProfilePage() {
                         />
                       </div>
 
-                      <div className="mt-auto flex flex-col gap-3 lg:flex-row lg:items-end">
+                      <div className="web-deck-footer mt-auto flex flex-col gap-3 lg:flex-row lg:items-end">
                         <div className="flex min-w-0 flex-1 items-center gap-4 sm:gap-7">
                           <DeckMasteryBadge gamesPlayed={gamesPlayed} wins={wins} />
                           <div className="min-w-[4.75rem] text-center">

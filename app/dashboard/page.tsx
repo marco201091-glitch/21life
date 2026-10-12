@@ -395,6 +395,7 @@ export default function DashboardPage() {
             <Button
               variant="ghost"
               onClick={signOut}
+              aria-label={t({ it: 'Esci', en: 'Exit' })}
               className="text-muted-foreground hover:text-foreground px-2 sm:px-4"
             >
               <LogOut className="w-4 h-4 sm:mr-2" />
@@ -614,7 +615,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid min-w-0 max-w-full items-start gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+            <div className="dashboard-analytics-grid grid min-w-0 max-w-full items-start gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
               <Card className="min-w-0 max-w-full overflow-hidden border-border/70 bg-card/60">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-foreground">
@@ -683,7 +684,7 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              <div className="min-w-0 max-w-full space-y-5">
+              <div className="dashboard-analytics-side min-w-0 max-w-full space-y-5">
                 <div className="dashboard-mobile-metrics grid grid-cols-2 gap-3">
                   <Card className="border-border/70 bg-card/60">
                     <CardContent className="p-4">

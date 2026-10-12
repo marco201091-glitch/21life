@@ -28,15 +28,17 @@ export function ManaColorBadge({
   title,
   className,
 }: ManaColorBadgeProps) {
+  const { copy: t } = useLanguage();
   const label = MANA_COLOR_LABELS[color] || MANA_COLOR_LABELS.C;
+  const accessibleLabel = title ?? t(label);
   const symbolSize = SYMBOL_SIZES[size];
   const svgUrl = getManaSymbolSvgUrl(color);
 
   return (
     <span
-      title={title}
+      title={accessibleLabel}
       role="img"
-      aria-label={title}
+      aria-label={accessibleLabel}
       className={cn(
         'inline-flex shrink-0 items-center justify-center',
         muted && 'opacity-40 grayscale',
@@ -52,7 +54,7 @@ export function ManaColorBadge({
         height={symbolSize}
         className="block"
       />
-      <span className="sr-only">{label.en}</span>
+      <span className="sr-only">{accessibleLabel}</span>
     </span>
   );
 }
