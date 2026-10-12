@@ -19,8 +19,8 @@ export function LegalDocumentPage({ document }: LegalDocumentPageProps) {
   const contactEmail = getLegalContactEmail();
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="safe-top sticky top-0 z-10 border-b border-border/50 bg-card/50 backdrop-blur">
+    <div className="web-page flex min-h-screen flex-col bg-background">
+      <header className="web-header safe-top sticky top-0 z-10 border-b border-border/50 bg-card/50 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-3 py-3 sm:px-4">
           <div className="flex min-w-0 items-center gap-2">
             <Link href="/auth/login">

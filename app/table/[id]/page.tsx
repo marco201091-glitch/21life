@@ -2384,9 +2384,9 @@ export default function TablePage() {
   if (!group) return null;
 
   return (
-    <div className="min-h-screen">
-      <header className="phyrexian-divider safe-top sticky top-0 z-10 border-b">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+    <div className="web-page min-h-screen">
+      <header className="web-header phyrexian-divider safe-top sticky top-0 z-10 border-b">
+        <div className="web-container max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2 sm:gap-4">
               <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard')} className="h-11 w-11 shrink-0 text-muted-foreground hover:text-foreground">
@@ -2403,7 +2403,7 @@ export default function TablePage() {
                   Playgroup
                 </span>
                 <span className="truncate font-semibold text-foreground">{group.name}</span>
-                {group.description && <span className="hidden text-sm text-muted-foreground md:block">— {group.description}</span>}
+                {group.description && <span className="hidden min-w-0 truncate text-sm text-muted-foreground md:block">— {group.description}</span>}
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1 sm:gap-2">
@@ -2418,7 +2418,7 @@ export default function TablePage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
+      <main className="web-container max-w-7xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
         <PanelWithActions
           variant="strong"
           className="relative mb-5 sm:mb-8"
@@ -2511,7 +2511,7 @@ export default function TablePage() {
           <p className="text-xs uppercase tracking-[0.24em] text-emerald-200">{t({ it: 'Sala operativa', en: 'Command room' })}</p>
           <div className="mt-1 flex min-w-0 items-center gap-2 lg:pr-24">
             <div className="flex min-w-0 items-center gap-2">
-              <h1 className="truncate text-2xl font-bold text-foreground">{group.name}</h1>
+              <h1 className="break-words text-2xl font-bold text-foreground">{group.name}</h1>
               {canManageGroup && (
                 <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-muted-foreground hover:text-foreground" onClick={openEditArena} aria-label={t({ it: 'Modifica playgroup', en: 'Edit playgroup' })}>
                   <Pencil className="h-4 w-4" />

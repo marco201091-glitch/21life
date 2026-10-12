@@ -361,12 +361,12 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen min-w-0 overflow-x-hidden">
-      <header className="safe-top border-b border-border/50 bg-card/50 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-3">
+    <div className="web-page min-h-screen min-w-0 overflow-x-hidden">
+      <header className="web-header safe-top border-b border-border/50 bg-card/50 backdrop-blur sticky top-0 z-10">
+        <div className="web-container max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-3">
           <ManaLogo size="md" showText />
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
+            <span className="max-w-[16rem] truncate text-sm text-muted-foreground hidden sm:block" title={user?.email}>{user?.email}</span>
             {adminMode && (
               <>
               <Link href="/admin/operations">
@@ -404,10 +404,10 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full min-w-0 max-w-7xl px-3 py-5 sm:px-4 sm:py-8">
+      <main className="web-container mx-auto w-full min-w-0 max-w-7xl px-3 py-5 sm:px-4 sm:py-8">
         <PanelWithActions
           variant="strong"
-          className="mb-6 sm:mb-8"
+          className="dashboard-heading mb-6 sm:mb-8"
           actions={(
             <>
               <Button
@@ -432,7 +432,7 @@ export default function DashboardPage() {
           )}
         >
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-xl font-bold text-foreground sm:text-2xl">{t({ it: 'I tuoi playgroup', en: 'Your Playgroups' })}</h2>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl lg:text-3xl">{t({ it: 'I tuoi playgroup', en: 'Your Playgroups' })}</h1>
             {adminMode && (
               <span className="rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-300">
                 {t({ it: 'Vista amministratore', en: 'Admin view' })}
@@ -444,6 +444,8 @@ export default function DashboardPage() {
 
         <PendingArenaInvitations onAccepted={() => void fetchGroups()} />
 
+        <div className="dashboard-overview">
+        <section className="min-w-0" aria-label={t({ it: 'Playgroup', en: 'Playgroups' })}>
         {groups.length === 0 ? (
           <Card className="bg-card/50 border-border">
             <CardContent className="py-12 text-center">
@@ -462,18 +464,18 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         ) : (
-          <MotionList className="grid gap-5 lg:grid-cols-2">
+          <MotionList className="dashboard-groups grid gap-5 lg:grid-cols-2">
             {groups.map((group) => (
               <MotionItem
                 key={group.id}
               >
                 <Card
-                  className="group relative h-full cursor-pointer overflow-hidden border-border/70 bg-card/70 shadow-xl shadow-black/25 transition-all hover:border-emerald-400/60 hover:bg-card/85 hover:shadow-emerald-950/30"
+                  className="dashboard-group group relative h-full cursor-pointer overflow-hidden border-border/70 bg-card/70 shadow-xl shadow-black/25 transition-all hover:border-emerald-400/60 hover:bg-card/85 hover:shadow-emerald-950/30"
                   onClick={() => router.push(`/table/${group.id}`)}
                 >
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/70 to-transparent" />
-                  <div className="pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-emerald-500/10 blur-3xl transition-opacity group-hover:opacity-90" />
-                  <CardHeader className="space-y-4 p-5 sm:p-6">
+                  <div className="dashboard-group-decoration pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/70 to-transparent" />
+                  <div className="dashboard-group-decoration pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-emerald-500/10 blur-3xl transition-opacity group-hover:opacity-90" />
+                  <CardHeader className="dashboard-group-header space-y-4 p-5 sm:p-6">
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0 space-y-2">
                         <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.18em] text-emerald-300/85">
@@ -481,8 +483,8 @@ export default function DashboardPage() {
                           <span className="h-1 w-1 rounded-full bg-emerald-300/70" />
                           <span>{group.group_members?.length || 0} {t({ it: 'giocatori', en: 'players' })}</span>
                         </div>
-                        <CardTitle className="text-2xl font-bold leading-tight text-foreground transition-colors group-hover:text-emerald-200 sm:text-3xl">
-                        {group.name}
+                        <CardTitle className="dashboard-group-title text-2xl font-bold leading-tight text-foreground transition-colors group-hover:text-emerald-200 sm:text-3xl">
+                          <Link href={`/table/${group.id}`} className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={(event) => event.stopPropagation()}>{group.name}</Link>
                         </CardTitle>
                       </div>
                       <Button
@@ -504,8 +506,8 @@ export default function DashboardPage() {
                       </CardDescription>
                     )}
                   </CardHeader>
-                  <CardContent className="space-y-5 px-5 pb-5 sm:px-6 sm:pb-6">
-                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  <CardContent className="dashboard-group-content space-y-5 px-5 pb-5 sm:px-6 sm:pb-6">
+                    <div className="dashboard-group-details grid grid-cols-3 gap-2 sm:gap-3">
                       <div className="min-w-0 rounded-xl border border-border/70 bg-background/35 p-2.5 sm:p-3">
                         <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-[0.12em] text-muted-foreground">
                           <Users className="h-3.5 w-3.5" />
@@ -535,7 +537,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="dashboard-group-footer flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
                       <span className="text-sm text-muted-foreground">
                         {t({ it: 'Apri cronologia, ranking e record battle', en: 'Open history, rankings, and record battle' })}
                       </span>
@@ -557,6 +559,24 @@ export default function DashboardPage() {
             ))}
           </MotionList>
         )}
+        </section>
+        <aside className="dashboard-summary hidden lg:block" aria-label={adminMode ? t({ it: 'Riepilogo globale', en: 'Global overview' }) : t({ it: 'Il tuo riepilogo', en: 'Your overview' })}>
+          <h2 className="text-lg text-foreground">{adminMode ? t({ it: 'Riepilogo globale', en: 'Global overview' }) : t({ it: 'Il tuo riepilogo', en: 'Your overview' })}</h2>
+          {personalAnalytics ? (
+            <dl>
+              {[
+                { label: t({ it: 'Partite', en: 'Games' }), value: personalAnalytics.gamesPlayed },
+                { label: t({ it: 'Win rate', en: 'Win rate' }), value: `${personalAnalytics.winRate}%` },
+                { label: t({ it: 'Mazzi', en: 'Decks' }), value: personalAnalytics.uniqueDecks },
+                { label: t({ it: 'Vittorie', en: 'Wins' }), value: personalAnalytics.wins },
+                { label: t({ it: 'Streak attuale', en: 'Current streak' }), value: `${personalAnalytics.currentWinStreak}W` },
+                { label: t({ it: 'Streak migliore', en: 'Best streak' }), value: `${personalAnalytics.longestWinStreak}W` },
+              ].map(({ label, value }) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+            </dl>
+          ) : <p className="mt-4 text-sm text-muted-foreground">{t({ it: 'Statistiche non disponibili.', en: 'Statistics unavailable.' })}</p>}
+          <Link href="/profile" className="mt-6 inline-flex items-center gap-2 rounded-sm text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{t({ it: 'Apri profilo e mazzi', en: 'Open profile and decks' })}<ArrowRight className="h-4 w-4" /></Link>
+        </aside>
+        </div>
 
         <section className="mt-8 min-w-0 max-w-full sm:mt-10">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -664,7 +684,7 @@ export default function DashboardPage() {
               </Card>
 
               <div className="min-w-0 max-w-full space-y-5">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="dashboard-mobile-metrics grid grid-cols-2 gap-3">
                   <Card className="border-border/70 bg-card/60">
                     <CardContent className="p-4">
                       <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{t({ it: 'Partite', en: 'Games' })}</p>

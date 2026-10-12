@@ -1,5 +1,7 @@
 # Project checklist
 
+- [ ] Restyle web PM2026-10-12: audit UI delle 22 route, allineamento desktop al sito lime/nero, home con playgroup compatti e riepilogo affiancato; header/container, card, bottoni, form e tab condivisi. Branch `style/web-site-alignment` da origin/Dev0eec444 nel workspace isolato esistente `21life-release-docs`; root e modifiche PM preservati. Layout telefono, Expo/APK/IPA, backend e release esclusi. Verifica web statica/runtime e report in corso; nessun deploy richiesto.
+
 Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checklist.
 
 - [x] Login password manager: semantica username/current-password/new-password e disattivazione maiuscola automatica nei campi password web/Android; test Playwright, build web, typecheck/lint e test web/Expo OK.

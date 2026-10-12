@@ -78,14 +78,14 @@ export default function ArchivedDecksPage() {
   if (loading) return <main className="min-h-screen bg-background px-4 py-24 text-foreground"><Loader2 className="mx-auto h-8 w-8 animate-spin" /></main>;
 
   return (
-    <main className="min-h-screen bg-background px-4 py-10 text-foreground">
-      <div className="mx-auto max-w-4xl space-y-6">
+    <main className="web-page min-h-screen bg-background px-4 py-10 text-foreground">
+      <div className="web-container mx-auto max-w-4xl space-y-6">
         <Button asChild variant="ghost"><Link href="/profile"><ArrowLeft className="mr-2 h-4 w-4" />{text('Profilo', 'Profile')}</Link></Button>
-        <header><h1 className="text-3xl font-bold">{text('Mazzi archiviati', 'Archived decks')}</h1><p className="mt-2 text-muted-foreground">{text('Questi mazzi sono nascosti dal profilo; lo storico partite resta intatto.', 'These decks are hidden from your profile; match history remains intact.')}</p></header>
+        <header className="web-section-heading"><h1 className="text-3xl font-bold">{text('Mazzi archiviati', 'Archived decks')}</h1><p className="mt-2 text-muted-foreground">{text('Questi mazzi sono nascosti dal profilo; lo storico partite resta intatto.', 'These decks are hidden from your profile; match history remains intact.')}</p></header>
         {decks.length === 0 ? <Card className="phyrexian-panel"><CardContent className="py-12 text-center text-muted-foreground">{text('Nessun mazzo archiviato.', 'No archived decks.')}</CardContent></Card> : (
           <div className="grid gap-4 sm:grid-cols-2">
             {decks.map((deck) => <Card key={deck.id} className="phyrexian-panel overflow-hidden">
-              <div className="relative h-44"><DeckImage src={deck.commander_image} alt={deck.commander} className="h-full w-full object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" /><div className="absolute inset-x-4 bottom-3"><p className="font-bold">{deck.name}</p><p className="text-sm text-white/75">{deck.commander}</p></div></div>
+              <div className="relative h-44"><DeckImage src={deck.commander_image} alt={deck.commander} className="h-full w-full object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" /><div className="absolute inset-x-4 bottom-3"><p className="break-words font-bold">{deck.name}</p><p className="text-sm text-white/75">{deck.commander}</p></div></div>
               <CardHeader className="pb-2"><CardTitle className="flex items-center justify-between text-base"><span>{deck.source_type || text('Manuale', 'Manual')}</span><ManaColorPills colors={getDeckDisplayColors(deck)} /></CardTitle></CardHeader>
               <CardContent className="flex justify-end pt-0"><Button variant="outline" disabled={restoringId === deck.id} onClick={() => void restore(deck)}><ArchiveRestore className="mr-2 h-4 w-4" />{restoringId === deck.id ? text('Ripristino...', 'Restoring...') : text('Ripristina', 'Restore')}</Button></CardContent>
             </Card>)}

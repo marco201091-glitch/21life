@@ -239,7 +239,7 @@ export function StandaloneCounter() {
   };
 
   if (!state) {
-    return <main className={`min-h-dvh bg-[radial-gradient(circle_at_top,#0a1a0d_0,#09090b_48%)] px-4 py-8 text-white ${preferences.reducedMotion ? '[&_*]:!animate-none [&_*]:!transition-none' : ''} ${preferences.highContrast ? 'contrast-125' : ''} ${preferences.largeText ? 'text-lg' : ''}`}>
+    return <main className={`web-page web-counter-setup min-h-dvh bg-[radial-gradient(circle_at_top,#0a1a0d_0,#09090b_48%)] px-4 py-8 text-white ${preferences.reducedMotion ? '[&_*]:!animate-none [&_*]:!transition-none' : ''} ${preferences.highContrast ? 'contrast-125' : ''} ${preferences.largeText ? 'text-lg' : ''}`}>
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="flex items-center justify-between">
           <Link href="/auth/login" className="inline-flex items-center gap-2 text-sm text-zinc-300"><ArrowLeft className="h-4 w-4" /> Login</Link>
