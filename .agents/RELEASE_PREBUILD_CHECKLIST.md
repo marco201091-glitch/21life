@@ -63,3 +63,4 @@ che ne dipende; non equivale a un risultato positivo.
   quando richiesto dal PM. Non dichiarare «pubblicato» o «completato» a questo punto.
 
 - [ ] Back-merge main/Dev: controllare checklist concorrenti; zero marker di conflitto e zero file unmerged prima di build/deploy.
+- [ ] Unit test importazione: fixture offline per API esterne; HTTP403 esterni non giustificano bypass dei controlli merge.

@@ -50,3 +50,10 @@ L'avanzamento dei task resta in `PROJECT_CHECKLIST.md`.
 - Verifica remota: PR175 MERGED, commit c3d5ae34; nessun build/tag/deploy dipendente avviato dopo il conflitto.
 - Risoluzione revisionata: mantenere tutte le note rebranding e il record incidente comune; nessuna differenza applicativa rispetto ai due candidati testati. Conservare ancestry main, senza subset di schema/test.
 - Prevenzione: verificare i conflitti checklist su back-merge e fermare build/deploy finche markers e file unmerged non sono assenti.
+
+## 2026-10-12 — PR #193, controllo merge web bloccato da Archidekt
+- Sorgente 7fab6cd978bbb33de957ba5a3d9c225fff68b9af, destinazione main. Nessun tentativo di merge/deploy effettuato; PR OPEN/BLOCKED.
+- Quality run 38225800252: 342 test passati, 2 falliti in deck-importers-server.test.ts per HTTP403 Archidekt dal runner GitHub; lint/typecheck, Expo e CodeQL passati.
+- Causa verificata: due unit test dipendevano da deck pubblici e immagini live; codice importazione invariato rispetto a main. Nessun problema UI individuato.
+- Recupero: risposte pubbliche ridotte Archidekt/Scryfall salvate come fixture, fetch intercettato solo nei test, URL inattesi rifiutati e globals ripristinati. I due test passano senza rete; nuovo controllo CI richiesto prima del merge.
+- Prevenzione: controllare che unit test importazione usino fixture, non servizi esterni; nessun bypass protezioni o retry deploy.

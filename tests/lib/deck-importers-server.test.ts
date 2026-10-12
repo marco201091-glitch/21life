@@ -1,5 +1,21 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchDeckFromSource } from '@/lib/deck-importers-server';
+import responses from '../fixtures/archidekt-dfc.json';
+
+// Captured public commander/printing metadata; these unit tests never call live services.
+beforeEach(() => {
+  const fixtures: Record<string, unknown> = responses;
+  vi.stubGlobal('fetch', vi.fn(async (input: string | URL | Request) => {
+    const url = input instanceof Request ? input.url : String(input);
+    if (!(url in fixtures)) throw new Error(`Unexpected fixture request: ${url}`);
+    const payload = fixtures[url];
+    return typeof payload === 'string'
+      ? new Response(payload)
+      : Response.json(payload);
+  }));
+});
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe('fetchFromArchidekt commander options', () => {
   it('assigns distinct images to Eirdu and Isilu transform faces', async () => {

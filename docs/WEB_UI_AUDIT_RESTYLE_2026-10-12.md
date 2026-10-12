@@ -57,3 +57,5 @@ L'audit riguarda UI e stati rappresentativi, non tutte le combinazioni di dati, 
 Il workspace riusa `node_modules` tramite junction: la build locale segnala 27 file di tracing fuori dalla radice, perciò l'output standalone locale non è certificato come pacchetto distribuibile. La verifica runtime usa `next start`. Node locale 24.18.0 è inferiore al minimo 24.21.0 indicato nel package: compilazione e controlli sono riusciti, ma prima del deploy serve l'ambiente release previsto dal progetto. Nessuna configurazione di build modificata per mascherare questi limiti.
 
 Il lavoro resta sul branch locale indicato e non è pubblicato.
+
+Pubblicazione autorizzata dal PM: PR #193 verso main. Il primo Quality remoto ha esposto due unit test preesistenti dipendenti da Archidekt live (HTTP403); ora usano fixture pubbliche ridotte Archidekt/Scryfall, senza modificare importer o UI. Nessun merge/deploy prima dei controlli obbligatori verdi.
