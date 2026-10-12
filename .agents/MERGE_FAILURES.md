@@ -58,3 +58,9 @@ L'avanzamento dei task resta in `PROJECT_CHECKLIST.md`.
 - Recupero: risposte pubbliche ridotte Archidekt/Scryfall salvate come fixture, fetch intercettato solo nei test, URL inattesi rifiutati e globals ripristinati. I due test passano senza rete; nuovo controllo CI richiesto prima del merge.
 - Prevenzione: controllare che unit test importazione usino fixture, non servizi esterni; nessun bypass protezioni o retry deploy.
 - Aggiornamento run38226544550: tutti344test verdi, soglia coverage per-file importatore non raggiunta dalle risposte ridotte (functions60.29<61.76, statements48.78<49.59). Aggiunti casi pertinenti top-level commander, bracket HTML frammentato e HTTP403; 346test verdi e ratchet103file passato, soglie invariate. Nessun merge/deploy effettuato.
+
+## 2026-10-12 — PR193 desktop counter click regression
+- Run38227127337: quality/build passed,25E2Epassed/4skip,3desktop life-feedback failures. PR not merged; no deployment launched.
+- Root cause reproduced locally: desktop transition-property override removed transform/translate/scale animation. Existing active translate-y-px jumps a centered counter button away from pointer before mouseup; its rotated wrapper intercepts clicks. Without override the same real click changes40to41; with override timeout/life40.
+- Recovery: remove only transition-property override, retaining Button default transition-all; phone and gameplay logic unchanged. Verify existing desktop/mobile life-feedback tests on fresh build and remote required checks before merge.
+- Prevention: desktop restyle changes to shared Button must run actual quick-game life-feedback E2E, including normal/system/app reduced motion; setup-only smoke is insufficient.

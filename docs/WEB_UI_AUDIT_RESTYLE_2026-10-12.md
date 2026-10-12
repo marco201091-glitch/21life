@@ -60,3 +60,4 @@ Il lavoro resta sul branch locale indicato e non è pubblicato.
 
 Pubblicazione autorizzata dal PM: PR #193 verso main. Il primo Quality remoto ha esposto due unit test preesistenti dipendenti da Archidekt live (HTTP403); ora usano fixture pubbliche ridotte Archidekt/Scryfall, senza modificare importer o UI. Nessun merge/deploy prima dei controlli obbligatori verdi.
 I test fixture coprono inoltre commander top-level, bracket HTML frammentato e HTTP403: 346 test passati, 1 skip e soglie coverage per-file di 103 file mantenute.
+La CI browser ha rilevato un salto dei pulsanti vita desktop durante pointerdown: la limitazione transition-property impediva la transizione translate/scale esistente. Rimossa quella sola limitazione; riproduzione40fermo prima/41dopo confermata. Verifica richiesta: E2E life-feedback desktop/mobile.
