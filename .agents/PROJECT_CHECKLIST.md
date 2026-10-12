@@ -1,6 +1,6 @@
 # Project checklist
 
-- [ ] Restyle web PM2026-10-12: audit UI delle 22 route, allineamento desktop al sito lime/nero, home con playgroup compatti e riepilogo affiancato; header/container, card, bottoni, form e tab condivisi. Branch `style/web-site-alignment` da origin/Dev0eec444 nel workspace isolato esistente `21life-release-docs`; root e modifiche PM preservati. Layout telefono, Expo/APK/IPA, backend e release esclusi. Verifica web statica/runtime e report in corso; nessun deploy richiesto.
+- [x] Restyle web PM2026-10-12: audit22route, desktop lime/nero, home playgroup/riepilogo affiancati e analytics2col; profilo mazzi2col, header/container/card/bottoni/form/tab uniformati e accessibilità corretta. Branch locale `style/web-site-alignment` da Dev0eec444, candidato applicativo b504b4a; root preservato, zero diff Expo/APK/IPA/backend/versioni/pipeline. Lint/typecheck/buildweb,344test+1skip,46checkPlaywright zerooverflow/errori/axeseriouscritical e5E2Eesistenti verdi; snapshottelefono invariato. Review indipendente senza findings importanti. Report `docs/WEB_UI_AUDIT_RESTYLE_2026-10-12.md`, screenshot/fixture in ignored artifacts/web-restyle. Nessun push/merge/deploy; runtime sintetico, Node24.18 sotto engines24.21 e junctionnode_modules generano warningtracingstandalone locali: documentati, nessun pacchetto release certificato.
 
 Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checklist.
 
