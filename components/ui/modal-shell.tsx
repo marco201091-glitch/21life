@@ -70,16 +70,27 @@ export function AppModal({
 export function ModalOverlay({
   children,
   className,
+  onClose,
 }: {
   children: React.ReactNode;
   className?: string;
+  onClose?: () => void;
 }) {
+  const returnFocus = React.useRef<HTMLElement | null>(
+    typeof document === 'undefined' ? null : document.activeElement as HTMLElement | null,
+  );
   return (
-    <DialogPrimitive.Root open>
+    <DialogPrimitive.Root open onOpenChange={(open) => { if (!open) onClose?.(); }}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80" />
         <DialogPrimitive.Content
           aria-describedby={undefined}
+          onCloseAutoFocus={(event) => {
+            if (returnFocus.current?.isConnected) {
+              event.preventDefault();
+              returnFocus.current.focus();
+            }
+          }}
           className={cn(
             'fixed inset-0 z-50 flex items-start justify-center overflow-y-auto outline-none',
             'px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]',

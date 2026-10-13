@@ -1,6 +1,6 @@
 {
   "cli": {
-    "version": ">= 16.0.0",
+    "version": "24.12.1",
     "appVersionSource": "local"
   },
   "build": {
@@ -9,78 +9,92 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "APP_VARIANT": "dev"
+        "APP_VARIANT": "dev",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       },
       "android": {
         "buildType": "apk"
-      }
+      },
+      "node": "24.21.0"
     },
     "ios-simulator": {
       "distribution": "internal",
       "environment": "preview",
       "env": {
-        "APP_VARIANT": "dev"
+        "APP_VARIANT": "dev",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       },
       "ios": {
         "simulator": true
-      }
+      },
+      "node": "24.21.0"
     },
     "ios-unsigned": {
       "environment": "preview",
       "env": {
-        "APP_VARIANT": "dev"
+        "APP_VARIANT": "dev",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       },
       "ios": {
         "withoutCredentials": true,
         "resourceClass": "m-medium",
         "config": "unsigned-ios.yml"
-      }
+      },
+      "node": "24.21.0"
     },
     "ios-release-unsigned": {
       "environment": "production",
       "env": {
-        "APP_VARIANT": "production"
+        "APP_VARIANT": "production",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "false"
       },
       "ios": {
         "withoutCredentials": true,
         "resourceClass": "m-medium",
         "config": "unsigned-ios.yml"
-      }
+      },
+      "node": "24.21.0"
     },
     "preview": {
       "environment": "preview",
       "distribution": "internal",
       "env": {
-        "APP_VARIANT": "dev"
+        "APP_VARIANT": "dev",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       },
       "android": {
         "buildType": "apk"
       },
       "ios": {
         "resourceClass": "m-medium"
-      }
+      },
+      "node": "24.21.0"
     },
     "production": {
       "environment": "production",
       "env": {
-        "APP_VARIANT": "production"
+        "APP_VARIANT": "production",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "false"
       },
       "android": {
         "buildType": "app-bundle"
       },
       "ios": {
         "resourceClass": "m-medium"
-      }
+      },
+      "node": "24.21.0"
     },
     "production-apk": {
       "environment": "production",
       "distribution": "internal",
       "env": {
-        "APP_VARIANT": "production"
+        "APP_VARIANT": "production",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "false"
       },
       "android": {
         "buildType": "apk"
-      }
+      },
+      "node": "24.21.0"
     }
   },
   "submit": {

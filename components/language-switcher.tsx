@@ -14,22 +14,22 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       <Button
         type="button"
         size="sm"
-        variant={language === 'it' ? 'secondary' : 'ghost'}
-        className="h-9 min-w-9 px-2 text-xs"
-        onClick={() => setLanguage('it')}
-        aria-pressed={language === 'it'}
-      >
-        IT
-      </Button>
-      <Button
-        type="button"
-        size="sm"
         variant={language === 'en' ? 'secondary' : 'ghost'}
         className="h-9 min-w-9 px-2 text-xs"
         onClick={() => setLanguage('en')}
         aria-pressed={language === 'en'}
       >
         EN
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant={language === 'it' ? 'secondary' : 'ghost'}
+        className="h-9 min-w-9 px-2 text-xs"
+        onClick={() => setLanguage('it')}
+        aria-pressed={language === 'it'}
+      >
+        IT
       </Button>
     </div>
   );

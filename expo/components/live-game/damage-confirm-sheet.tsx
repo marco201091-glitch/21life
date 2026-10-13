@@ -94,7 +94,7 @@ export function DamageConfirmSheet({
         styles.damageCard,
         isIPad && styles.damageCardIPad,
         isIPad ? { width: ipadCardDim, height: ipadCardDim } : { width: phoneCardWidth, height: phoneCardHeight },
-        !isIPad && { transform: [{ rotate: `${sourceRotation}deg` }] },
+        { transform: [{ rotate: `${sourceRotation}deg` }] },
       ]}>
         {isIPad ? (
           <DeckImage

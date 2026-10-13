@@ -185,7 +185,7 @@ function archidektCardImageUrl(card: ArchidektCard, commanderName?: string) {
   return buildArchidektCardImageUrl(cardData, faceIndex);
 }
 
-async function fetchArchidektPrintingImage(card: ArchidektCard, commanderName: string): Promise<string | null> {
+async function fetchArchidektPrintingImage(card: ArchidektCard, commanderName: string, signal?: AbortSignal): Promise<string | null> {
   const cardData = card.card;
   const faces = cardData?.oracleCard?.faces || [];
   const faceIndex = resolveArchidektFaceIndex(
@@ -204,7 +204,7 @@ async function fetchArchidektPrintingImage(card: ArchidektCard, commanderName: s
   try {
     const response = await fetch(
       `https://api.scryfall.com/cards/${encodeURIComponent(setCode)}/${encodeURIComponent(collectorNumber)}`,
-      { headers: { Accept: 'application/json', 'User-Agent': '21Life/9.0 (https://app.phyrexianarena.dpdns.org)' } },
+      { signal, headers: { Accept: 'application/json', 'User-Agent': '21Life/9.0 (https://app.phyrexianarena.dpdns.org)' } },
     );
     if (!response.ok) return null;
 
@@ -230,9 +230,10 @@ async function fetchArchidektPrintingImage(card: ArchidektCard, commanderName: s
 async function resolveArchidektCommanderImage(
   card: ArchidektCard | undefined,
   commanderName: string,
+  signal?: AbortSignal,
 ) {
   if (card) {
-    const printingImage = await fetchArchidektPrintingImage(card, commanderName);
+    const printingImage = await fetchArchidektPrintingImage(card, commanderName, signal);
     if (printingImage) return printingImage;
   }
 
@@ -274,9 +275,10 @@ function extractEstimatedBracketFromHtml(html: string): string | null {
   return extractBracketFromText(compactText);
 }
 
-async function fetchEstimatedArchidektBracket(deckId: string): Promise<string | null> {
+async function fetchEstimatedArchidektBracket(deckId: string, signal?: AbortSignal): Promise<string | null> {
   try {
     const response = await fetch(`https://archidekt.com/decks/${deckId}/`, {
+      signal,
       headers: {
         Accept: 'text/html,application/xhtml+xml',
         'User-Agent': ARCHIDEKT_USER_AGENT,
@@ -533,8 +535,10 @@ async function fetchFromMoxfieldFresh(publicId: string): Promise<DeckData> {
   };
 }
 
-async function fetchFromArchidektFresh(deckId: string): Promise<DeckData> {
+async function fetchFromArchidektFresh(deckId: string, signal?: AbortSignal): Promise<DeckData> {
   const response = await fetch(`https://archidekt.com/api/decks/${encodeURIComponent(deckId)}/`, {
+    signal,
+    cache: 'no-store',
     headers: buildArchidektHeaders(),
   });
   if (!response.ok) {
@@ -546,7 +550,7 @@ async function fetchFromArchidektFresh(deckId: string): Promise<DeckData> {
   const storedBracket = normalizeBracket(data.edhBracket);
   const bracketPromise = storedBracket
     ? Promise.resolve(storedBracket)
-    : fetchEstimatedArchidektBracket(deckId);
+    : fetchEstimatedArchidektBracket(deckId, signal);
 
   const commanderCards = cards.filter(isArchidektCommanderCard);
   const leaderCards = commanderCards.filter((card) => !isArchidektBackgroundCard(card));
@@ -580,7 +584,7 @@ async function fetchFromArchidektFresh(deckId: string): Promise<DeckData> {
     const matchingCommanderCard = findArchidektCommanderCardForName(commanderCards, name);
     return {
       name,
-      imageUrl: await resolveArchidektCommanderImage(matchingCommanderCard, name),
+      imageUrl: await resolveArchidektCommanderImage(matchingCommanderCard, name, signal),
       colorIdentity: matchingCommanderCard ? archidektCardColorIdentity(matchingCommanderCard) : [],
     };
   }));
@@ -633,10 +637,10 @@ export async function fetchFromArchidekt(deckId: string): Promise<DeckData> {
 export async function fetchDeckFromSource(
   source: DeckSource,
   deckId: string,
-  options: { fresh?: boolean } = {},
+  options: { fresh?: boolean; signal?: AbortSignal } = {},
 ): Promise<DeckData> {
   if (source === 'moxfield') {
     return options.fresh ? fetchFromMoxfieldFresh(deckId) : fetchFromMoxfield(deckId);
   }
-  return options.fresh ? fetchFromArchidektFresh(deckId) : fetchFromArchidekt(deckId);
+  return options.fresh ? fetchFromArchidektFresh(deckId, options.signal) : fetchFromArchidekt(deckId);
 }

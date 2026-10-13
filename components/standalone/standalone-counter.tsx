@@ -30,7 +30,7 @@ import {
 import { rollTableRandom, type TableRandomKind } from '@/lib/table-randomizer';
 import type { ParticipantKey } from '@/lib/participant-keys';
 import { useLanguage } from '@/components/language-provider';
-import { RecentLifeDelta } from '@/components/ui/recent-life-delta';
+import { LifeReadout } from '@/components/ui/recent-life-delta';
 import { useScreenWakeLock } from '@/hooks/use-screen-wake-lock';
 
 const STORAGE_KEY = 'phyrexian:standalone-counter:v1';
@@ -239,7 +239,7 @@ export function StandaloneCounter() {
   };
 
   if (!state) {
-    return <main className={`min-h-dvh bg-[radial-gradient(circle_at_top,#0a1a0d_0,#09090b_48%)] px-4 py-8 text-white ${preferences.reducedMotion ? '[&_*]:!animate-none [&_*]:!transition-none' : ''} ${preferences.highContrast ? 'contrast-125' : ''} ${preferences.largeText ? 'text-lg' : ''}`}>
+    return <main className={`web-page web-counter-setup min-h-dvh bg-[radial-gradient(circle_at_top,#0a1a0d_0,#09090b_48%)] px-4 py-8 text-white ${preferences.reducedMotion ? '[&_*]:!animate-none [&_*]:!transition-none' : ''} ${preferences.highContrast ? 'contrast-125' : ''} ${preferences.largeText ? 'text-lg' : ''}`}>
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="flex items-center justify-between">
           <Link href="/auth/login" className="inline-flex items-center gap-2 text-sm text-zinc-300"><ArrowLeft className="h-4 w-4" /> Login</Link>
@@ -251,13 +251,13 @@ export function StandaloneCounter() {
           <div className="grid grid-cols-2 gap-2">
             {(['commander', 'classic'] as Format[]).map((value) => <button key={value} onClick={() => setFormat(value)} className={`rounded-2xl border p-4 font-black ${format === value ? 'border-emerald-400 bg-emerald-500/20' : 'border-white/10 bg-white/5'}`}>{value === 'commander' ? 'Commander · 40' : `${copy({ it: 'Magic classico', en: 'Classic Magic' })} · 20`}</button>)}
           </div>
-          <div className="mt-5 flex items-center justify-between"><b>{copy({ it: 'Giocatori', en: 'Players' })}</b><div className="flex items-center gap-3"><Button size="icon" variant="outline" onClick={() => setPlayerCount(Math.max(1, playerCount - 1))}><Minus /></Button><strong className="w-8 text-center text-2xl">{playerCount}</strong><Button size="icon" variant="outline" onClick={() => setPlayerCount(Math.min(6, playerCount + 1))}><Plus /></Button></div></div>
+          <div className="mt-5 flex items-center justify-between"><b>{copy({ it: 'Giocatori', en: 'Players' })}</b><div className="flex items-center gap-3"><Button size="icon" variant="outline" aria-label={copy({ it: "Rimuovi giocatore", en: "Remove player" })} onClick={() => setPlayerCount(Math.max(1, playerCount - 1))}><Minus /></Button><strong className="w-8 text-center text-2xl">{playerCount}</strong><Button size="icon" variant="outline" aria-label={copy({ it: "Aggiungi giocatore", en: "Add player" })} onClick={() => setPlayerCount(Math.min(6, playerCount + 1))}><Plus /></Button></div></div>
           <div className="mt-5 grid gap-3 md:grid-cols-2">
             {setup.slice(0, playerCount).map((player, index) => <div key={index} className="relative rounded-2xl border border-white/10 bg-zinc-950/70 p-4">
-              <label className="text-xs font-black uppercase tracking-wider text-zinc-400">Player {index + 1}</label>
-              <input value={player.name} onChange={(event) => setSetup((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} className="mt-2 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 font-bold outline-none focus:border-emerald-400" />
+              <label htmlFor={`counter-player-${index}`} className="text-xs font-black uppercase tracking-wider text-zinc-400">Player {index + 1}</label>
+              <input id={`counter-player-${index}`} value={player.name} onChange={(event) => setSetup((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} className="mt-2 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 font-bold outline-none focus:border-emerald-400" />
               {format === 'commander' ? <div className="relative mt-2">
-                <input placeholder={copy({ it: 'Cerca comandante…', en: 'Search commander…' })} value={player.commander} onChange={(event) => void searchCommander(index, event.target.value)} className="h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 outline-none focus:border-emerald-400" />
+                <input aria-label={copy({ it: `Comandante giocatore ${index + 1}`, en: `Commander for player ${index + 1}` })} placeholder={copy({ it: 'Cerca comandante…', en: 'Search commander…' })} value={player.commander} onChange={(event) => void searchCommander(index, event.target.value)} className="h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 outline-none focus:border-emerald-400" />
                 {searchIndex === index && searchResults.length ? <div className="absolute inset-x-0 top-12 z-30 max-h-52 overflow-y-auto rounded-xl border border-white/10 bg-zinc-950 shadow-2xl">{searchResults.map((result) => <button key={result.id} onClick={() => { setSetup((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, commander: result.name, image: result.imageUrl } : item)); setSearchResults([]); }} className="flex w-full items-center gap-3 border-b border-white/5 p-2 text-left hover:bg-white/5"><DeckImage src={result.imageUrl} alt={result.name} className="h-12 w-9 rounded object-cover" /><span className="text-sm font-bold">{result.name}</span></button>)}</div> : null}
               </div> : null}
               <div className="mt-3 flex gap-2">{COLORS.map((color) => <button key={color} aria-label={color} onClick={() => setSetup((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, color, image: null } : item))} className={`h-7 flex-1 rounded-full border ${player.color === color && !player.image ? 'border-white ring-2 ring-emerald-400' : 'border-white/10'}`} style={{ backgroundColor: color }} />)}</div>
@@ -265,7 +265,7 @@ export function StandaloneCounter() {
           </div>
           <Button onClick={() => void start()} className="mt-6 h-14 w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-lg font-black">{copy({ it: 'Avvia partita', en: 'Start game' })}</Button>
         </section>
-        {settingsOpen ? <ModalOverlay><ModalCard><div className="space-y-4 p-5"><h2 className="text-xl font-black">{copy({ it: 'Accessibilità', en: 'Accessibility' })}</h2>{([['reducedMotion', copy({ it: 'Riduci animazioni', en: 'Reduce motion' })], ['highContrast', copy({ it: 'Contrasto alto', en: 'High contrast' })], ['largeText', copy({ it: 'Testo grande', en: 'Large text' })]] as const).map(([key, label]) => <div key={key} className="flex items-center gap-3 rounded-2xl border border-white/10 p-3"><div className="flex-1"><b className="block">{label}</b><small className="text-zinc-400">{copy({ it: 'Disattivato di default', en: 'Off by default' })}</small></div><button onClick={() => setPreferences((current) => ({ ...current, [key]: !current[key] }))} className={`h-8 w-14 rounded-full p-1 ${preferences[key] ? 'bg-emerald-600' : 'bg-zinc-700'}`}><span className={`block h-6 w-6 rounded-full bg-white transition ${preferences[key] ? 'translate-x-6' : ''}`} /></button></div>)}<Button className="w-full" onClick={() => setSettingsOpen(false)}>{copy({ it: 'Chiudi', en: 'Close' })}</Button></div></ModalCard></ModalOverlay> : null}
+        {settingsOpen ? <ModalOverlay><ModalCard><div className="space-y-4 p-5"><h2 className="text-xl font-black">{copy({ it: 'Accessibilità', en: 'Accessibility' })}</h2>{([['reducedMotion', copy({ it: 'Riduci animazioni', en: 'Reduce motion' })], ['highContrast', copy({ it: 'Contrasto alto', en: 'High contrast' })], ['largeText', copy({ it: 'Testo grande', en: 'Large text' })]] as const).map(([key, label]) => <div key={key} className="flex items-center gap-3 rounded-2xl border border-white/10 p-3"><div className="flex-1"><b className="block">{label}</b><small className="text-zinc-400">{copy({ it: 'Disattivato di default', en: 'Off by default' })}</small></div><button aria-label={label} aria-pressed={preferences[key]} onClick={() => setPreferences((current) => ({ ...current, [key]: !current[key] }))} className={`h-8 w-14 rounded-full p-1 ${preferences[key] ? 'bg-emerald-600' : 'bg-zinc-700'}`}><span className={`block h-6 w-6 rounded-full bg-white transition ${preferences[key] ? 'translate-x-6' : ''}`} /></button></div>)}<Button className="w-full" onClick={() => setSettingsOpen(false)}>{copy({ it: 'Chiudi', en: 'Close' })}</Button></div></ModalCard></ModalOverlay> : null}
       </div>
     </main>;
   }
@@ -277,7 +277,7 @@ export function StandaloneCounter() {
   const shieldPlayer = state.players.find((player) => player.participantKey === shieldKey) ?? null;
   const counterRows: Array<[PlayerCounter, string]> = [['energy', 'Energia'], ['experience', 'Esperienza'], ['commanderTax', 'Commander Tax']];
 
-  return <main ref={hostRef} className="fixed inset-0 select-none overflow-hidden bg-black text-white">
+  return <main ref={hostRef} data-reduced-motion={preferences.reducedMotion || undefined} className="fixed inset-0 select-none overflow-hidden bg-black text-white">
     {size.width > 0 && assignments.map(({ player, layout }) => {
       const rotation = orientation === 'landscape' ? getLandscapeSeatRotation(layout, size.width) : getSeatRotation(layout.role, state.players.length);
       const sideways = Math.abs(rotation) === 90;
@@ -292,8 +292,7 @@ export function StandaloneCounter() {
           <HoldActionButton variant="ghost" onShort={() => mutate({ type: 'adjust', targetKey: player.participantKey, amount: -1, mode: 'life' })} onLong={() => mutate({ type: 'adjust', targetKey: player.participantKey, amount: -10, mode: 'life' })} className="absolute right-[5%] top-1/2 z-10 grid h-14 w-16 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/55 text-3xl"><Plus /></HoldActionButton>
           <div className="pointer-events-none absolute left-1/2 top-[8%] max-w-[70%] -translate-x-1/2 truncate rounded-full border border-white/15 bg-black/65 px-4 py-1 font-black">{player.displayName}</div>
           <div className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
-            <RecentLifeDelta life={player.life} className="mb-1 text-xl" />
-            <div className="font-black leading-none drop-shadow-xl" style={{ fontSize: Math.max(52, Math.min(110, shortest * .3)) }}>{player.life}</div>
+            <LifeReadout life={player.life} className="font-black leading-none drop-shadow-xl" style={{ fontSize: Math.max(52, Math.min(110, shortest * .3)) }} />
           </div>
           <button onClick={() => setShieldKey(player.participantKey)} className="absolute left-1/2 top-[74%] grid h-12 w-12 -translate-x-1/2 place-items-center rounded-full border border-emerald-200/30 bg-black/65"><Shield /></button>
         </div>

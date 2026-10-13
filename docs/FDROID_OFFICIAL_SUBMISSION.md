@@ -1,5 +1,9 @@
 # F-Droid official submission checklist
 
+## 9.1.2 alignment (2026-10-13)
+
+The 9.1.2 / 90102 candidate aligns with production source and preserves all F-Droid review constraints. See `FDROID_9_1_2_ALIGNMENT.md`. Quality, reference APK publication and the independent GitLab build are separate gates. Until the new reference exists, the official MR remains pinned to the verified 9.0.5 source `f6d23f4db0b539586b6349f91b4a12513c5ff977`; pipeline2914442626 passed all nine jobs. Do not claim 9.1.2 is published or accepted before its gates pass.
+
 ## Branch
 
 Use `fdroid-prep` for official F-Droid work. Use `Dev` for development and
@@ -64,9 +68,9 @@ Draft metadata lives in:
 fdroid/metadata/com.phyrexianarena.app.yml
 ```
 
-Before submitting each release, replace the draft marker with the exact full SHA of the public F-Droid source tag. The official 9.0.4 MR must point to the exact `fdroid-v9.0.4` source commit. F-Droid metadata requires commit hashes rather than branch names.
+Before submitting each release, replace the draft marker with the exact full SHA of the public F-Droid source tag. The official MR must point to the exact full commit of the matching immutable F-Droid tag. F-Droid metadata requires commit hashes rather than branch names.
 
-## Official submission
+## Official submission and historical 9.0.4 evidence
 
 Merge request:
 

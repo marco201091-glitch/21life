@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getAuthCookieOptions } from '@/lib/auth-persistence';
+import { getSupabaseAuthStorageKey } from '@/expo/lib/supabase-auth-storage-key';
 import { getSupabaseServerAnonKey, getSupabaseServerUrl } from '@/lib/supabase/server-env';
 
 export async function updateSession(request: NextRequest) {
@@ -18,6 +19,7 @@ export async function updateSession(request: NextRequest) {
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookieOptions: getAuthCookieOptions(),
     auth: {
+      storageKey: getSupabaseAuthStorageKey(supabaseUrl),
       detectSessionInUrl: false,
     },
     cookies: {

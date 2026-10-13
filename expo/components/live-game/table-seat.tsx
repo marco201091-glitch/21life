@@ -11,11 +11,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  cancelAnimation,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { DeckImage } from '@/components/deck/deck-image';
@@ -28,6 +29,7 @@ import {
 import type { ParticipantKey } from '@/lib/participant-keys';
 import { isIPadViewport } from '@/lib/layout';
 import { useReducedMotion } from '@/lib/reduced-motion';
+import { accumulateLifeDelta, LIFE_DELTA_DURATION, type LifeDeltaBurst, lifeFeedback } from '@/lib/life-feedback';
 
 export type TableSeatLabels = {
   commanderDamage: string;
@@ -99,53 +101,59 @@ export function TableSeat({
   const lifeDeltaTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [recentLifeDelta, setRecentLifeDelta] = useState(0);
 
+  const previousDamagePulse = useRef(damagePulse);
+  const burst = useRef<LifeDeltaBurst | null>(null);
+  const deltaOpacity = useSharedValue(1);
+  const deltaY = useSharedValue(0);
+
   useEffect(() => {
     const change = player.life - previousLife.current;
     previousLife.current = player.life;
-    if (change === 0) return;
-    if (change > 0 && !reducedMotion) {
-      gainFlashOpacity.value = withSequence(
-        withTiming(0.5, { duration: 110 }),
-        withTiming(0, { duration: 520 }),
-      );
-      lifeScale.value = withSequence(
-        withSpring(1.18, { damping: 8, stiffness: 260 }),
-        withSpring(1, { damping: 12, stiffness: 210 }),
-      );
-    }
-    setRecentLifeDelta((current) => current + change);
-    if (lifeDeltaTimer.current) clearTimeout(lifeDeltaTimer.current);
-    lifeDeltaTimer.current = setTimeout(() => {
-      lifeDeltaTimer.current = null;
-      setRecentLifeDelta(0);
-    }, 2_600);
-    return () => {
-      if (lifeDeltaTimer.current) clearTimeout(lifeDeltaTimer.current);
-    };
-  }, [gainFlashOpacity, lifeScale, player.life, reducedMotion]);
-
-  useEffect(() => {
-    if (damagePulse <= 0) return;
+    const pulsed = damagePulse !== previousDamagePulse.current && damagePulse > 0;
+    previousDamagePulse.current = damagePulse;
+    const feedback = lifeFeedback(change);
     if (reducedMotion) {
-      flashOpacity.value = 0;
-      shake.value = 0;
-      lifeScale.value = 1;
-      return;
+      for (const value of [flashOpacity, gainFlashOpacity, shake, lifeScale, deltaOpacity, deltaY]) cancelAnimation(value);
+      flashOpacity.value = gainFlashOpacity.value = shake.value = deltaY.value = 0;
+      lifeScale.value = deltaOpacity.value = 1;
     }
-    flashOpacity.value = withSequence(
-      withTiming(0.58, { duration: 70 }),
-      withTiming(0, { duration: 280 }),
-    );
-    shake.value = withSequence(
-      withTiming(-5, { duration: 40 }),
-      withTiming(5, { duration: 40 }),
-      withTiming(0, { duration: 40 }),
-    );
-    lifeScale.value = withSequence(
-      withSpring(1.1, { damping: 9, stiffness: 300 }),
-      withSpring(1, { damping: 12, stiffness: 220 }),
-    );
-  }, [damagePulse, flashOpacity, lifeScale, reducedMotion, shake]);
+    if (feedback) {
+      burst.current = accumulateLifeDelta(burst.current, change, Date.now());
+      setRecentLifeDelta(burst.current.delta);
+      if (lifeDeltaTimer.current) clearTimeout(lifeDeltaTimer.current);
+      lifeDeltaTimer.current = setTimeout(() => {
+        lifeDeltaTimer.current = null;
+        burst.current = null;
+        setRecentLifeDelta(0);
+      }, LIFE_DELTA_DURATION);
+    }
+    if (reducedMotion || (!feedback && !pulsed)) return;
+    // One response per update: a damage pulse can accompany the same life loss.
+    const gain = feedback?.gain ?? false;
+    cancelAnimation(flashOpacity);
+    cancelAnimation(gainFlashOpacity);
+    flashOpacity.value = gainFlashOpacity.value = 0;
+    const halo = gain ? gainFlashOpacity : flashOpacity;
+    halo.value = withSequence(withTiming(feedback?.opacity ?? .35, { duration: 90 }), withTiming(0, { duration: 480 }));
+    if (feedback) {
+      cancelAnimation(lifeScale);
+      lifeScale.value = 1;
+      lifeScale.value = withSequence(withTiming(feedback.scale, { duration: 130 }), withTiming(1, { duration: 240 }));
+      cancelAnimation(deltaOpacity);
+      cancelAnimation(deltaY);
+      deltaOpacity.value = 0;
+      deltaY.value = 3;
+      deltaOpacity.value = withSequence(withTiming(1, { duration: 120 }), withDelay(1_380, withTiming(0, { duration: 700 })));
+      deltaY.value = withSequence(withTiming(0, { duration: 120 }), withDelay(1_380, withTiming(burst.current && burst.current.delta > 0 ? -10 : 7, { duration: 700 })));
+    }
+    cancelAnimation(shake);
+    shake.value = 0;
+    if (!gain) shake.value = withSequence(withTiming(-2, { duration: 45 }), withTiming(2, { duration: 60 }), withTiming(0, { duration: 65 }));
+  }, [damagePulse, deltaOpacity, deltaY, flashOpacity, gainFlashOpacity, lifeScale, player.life, reducedMotion, shake]);
+
+  useEffect(() => () => {
+    if (lifeDeltaTimer.current) clearTimeout(lifeDeltaTimer.current);
+  }, []);
 
   const cardStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: shake.value }, { translateY: shake.value * 0.3 }],
@@ -153,6 +161,8 @@ export function TableSeat({
   const flashStyle = useAnimatedStyle(() => ({ opacity: flashOpacity.value }));
   const gainFlashStyle = useAnimatedStyle(() => ({ opacity: gainFlashOpacity.value }));
   const lifeStyle = useAnimatedStyle(() => ({ transform: [{ scale: lifeScale.value }] }));
+
+  const deltaStyle = useAnimatedStyle(() => ({ opacity: deltaOpacity.value, transform: [{ translateY: deltaY.value }] }));
 
   const dragGesture = useMemo(() => Gesture.Pan()
     .enabled(!player.isEliminated && Boolean(onDamageDragStart))
@@ -349,30 +359,32 @@ export function TableSeat({
               <Text style={[styles.edgeButtonText, isIPad && styles.edgeButtonTextIPad]}>+</Text>
             </HoldPressable>
 
-            <AnimatedView style={[styles.lifeReadout, lifeStyle]} pointerEvents="none">
+            <AnimatedView style={styles.lifeReadout} pointerEvents="none">
               <View style={styles.playerMetaRow}>
                 <View style={styles.playerNamePill}>
                   <Text style={styles.playerName} numberOfLines={1}>{player.displayName}</Text>
                 </View>
                 {recentLifeDelta !== 0 ? (
-                  <Text style={[
+                  <Animated.Text style={[
+                    deltaStyle,
                     styles.recentLifeDelta,
                     isIPad && styles.recentLifeDeltaIPad,
                     recentLifeDelta < 0 ? styles.recentLifeLoss : styles.recentLifeGain,
                   ]}>
                     {recentLifeDelta > 0 ? '+' : '−'}{Math.abs(recentLifeDelta)}
-                  </Text>
+                  </Animated.Text>
                 ) : null}
               </View>
-              <Text
+              <Animated.Text
                 style={[
+                  lifeStyle,
                   styles.lifeValue,
                   { fontSize: lifeFontSize, lineHeight: lifeFontSize + 4 },
                   isLow && styles.dangerLife,
                 ]}
               >
                 {mainValue}
-              </Text>
+              </Animated.Text>
             </AnimatedView>
 
             <Pressable
@@ -662,7 +674,12 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   recentLifeDelta: {
-    minWidth: 38,
+    position: 'absolute',
+    bottom: '100%',
+    left: '50%',
+    width: 70,
+    marginLeft: -35,
+    marginBottom: 5,
     paddingHorizontal: 6,
     paddingVertical: 2,
     overflow: 'hidden',
@@ -683,7 +700,8 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
   },
   recentLifeDeltaIPad: {
-    minWidth: 50,
+    width: 90,
+    marginLeft: -45,
     paddingHorizontal: 8,
     paddingVertical: 3,
     fontSize: 28,

@@ -11,6 +11,8 @@ export interface RateLimitConfig {
 export const API_RATE_LIMITS = {
   deckImport: { maxRequests: 200, windowSeconds: 10 * 60 },
   archidektUserDecks: { maxRequests: 10, windowSeconds: 60 * 60 },
+  arenaArchidektSync: { maxRequests: 30, windowSeconds: 60 * 60, failClosed: true },
+  arenaArchidektSyncTarget: { maxRequests: 10, windowSeconds: 10 * 60, failClosed: true },
   scryfall: { maxRequests: 120, windowSeconds: 10 * 60 },
   edhrec: { maxRequests: 200, windowSeconds: 10 * 60 },
   profileDeckRefresh: { maxRequests: 200, windowSeconds: 10 * 60 },

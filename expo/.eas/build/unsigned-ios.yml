@@ -28,10 +28,8 @@ build:
           SCHEME="$(basename "$PROJECT_PATH" .xcodeproj)"
           ARCHIVE_PATH="$PWD/ios/build/${SCHEME}Unsigned.xcarchive"
 
-          # The unsigned preview environment has no Sentry upload credentials.
-          # Disabling upload still runs React Native's bundling script; allowing
-          # upload failure would skip it and produce an IPA without main.jsbundle.
-          export SENTRY_DISABLE_AUTO_UPLOAD=true
+          # Preserve the EAS profile policy: Dev skips upload, production requires it.
+          : "${SENTRY_DISABLE_AUTO_UPLOAD:?EAS profile must configure Sentry upload}"
 
           xcodebuild \
             -workspace "ios/${SCHEME}.xcworkspace" \

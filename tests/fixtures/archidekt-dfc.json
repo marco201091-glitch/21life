@@ -1,0 +1,105 @@
+{
+  "https://archidekt.com/api/decks/22733112/": {
+    "name": "DFC commander fixture",
+    "edhBracket": null,
+    "cards": [
+      {
+        "categories": [
+          "Commander"
+        ],
+        "flippedDefault": false,
+        "card": {
+          "uid": "b2d9d5ca-7e15-437a-bdfc-5972b42148fe",
+          "collectorNumber": "13",
+          "edition": {
+            "editioncode": "ecl"
+          },
+          "oracleCard": {
+            "name": "Eirdu, Carrier of Dawn // Isilu, Carrier of Twilight",
+            "colorIdentity": [
+              "White",
+              "Black"
+            ],
+            "layout": "transform",
+            "faces": [
+              {
+                "name": "Eirdu, Carrier of Dawn"
+              },
+              {
+                "name": "Isilu, Carrier of Twilight"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "https://archidekt.com/decks/22733112/": "Estimated Bracket: Core (2)",
+  "https://api.scryfall.com/cards/ecl/13": {
+    "card_faces": [
+      {
+        "name": "Eirdu, Carrier of Dawn",
+        "image_uris": {
+          "art_crop": "https://cards.scryfall.io/art_crop/front/b/2/b2d9d5ca-7e15-437a-bdfc-5972b42148fe.jpg?1783904521"
+        }
+      },
+      {
+        "name": "Isilu, Carrier of Twilight",
+        "image_uris": {
+          "art_crop": "https://cards.scryfall.io/art_crop/back/b/2/b2d9d5ca-7e15-437a-bdfc-5972b42148fe.jpg?1783904521"
+        }
+      }
+    ]
+  },
+  "https://archidekt.com/api/decks/9213662/": {
+    "name": "DFC commander fixture",
+    "edhBracket": null,
+    "cards": [
+      {
+        "categories": [
+          "Commander"
+        ],
+        "flippedDefault": false,
+        "card": {
+          "uid": "52173f36-19d2-48be-a8e8-8cbe946759c0",
+          "collectorNumber": "299",
+          "edition": {
+            "editioncode": "mom"
+          },
+          "oracleCard": {
+            "name": "Urabrask // The Great Work",
+            "colorIdentity": [
+              "Red"
+            ],
+            "layout": "transform",
+            "faces": [
+              {
+                "name": "Urabrask"
+              },
+              {
+                "name": "The Great Work"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "https://archidekt.com/decks/9213662/": "Estimated Bracket: Core (2)",
+  "https://api.scryfall.com/cards/mom/299": {
+    "card_faces": [
+      {
+        "name": "Urabrask",
+        "image_uris": {
+          "art_crop": "https://cards.scryfall.io/art_crop/front/5/2/52173f36-19d2-48be-a8e8-8cbe946759c0.jpg?1783916924"
+        }
+      },
+      {
+        "name": "The Great Work",
+        "image_uris": {
+          "art_crop": "https://cards.scryfall.io/art_crop/back/5/2/52173f36-19d2-48be-a8e8-8cbe946759c0.jpg?1783916924"
+        }
+      }
+    ]
+  }
+}

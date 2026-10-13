@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AppLoader } from '@/components/ui/app-loader';
 import { ManaLogo } from '@/components/ui/mana-logo';
 import { AppProfileButton } from '@/components/navigation/app-profile-button';
+import { DeckPerformancePanel } from '@/components/profile/deck-performance-panel';
 import { DeckCollectionInsights } from '@/components/profile/deck-collection-insights';
 import { DeckMasteryBadge } from '@/components/profile/deck-mastery-badge';
 import { DeckImage } from '@/components/deck-image';
@@ -77,8 +78,7 @@ import {
   type DeckPerformanceInputRow,
   type DeckPerformanceStats,
 } from '@/lib/deck-performance-analytics';
-import { formatGameDuration } from '@/lib/live-game-duration';
-import { getDeckMastery } from '@/lib/deck-mastery';
+import { getDeckMastery, getHighestMasteryDeck } from '@/lib/deck-mastery';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { PasswordRequirements, isPasswordPolicyValid } from '@/components/auth/password-requirements';
 import { isGoogleAuthUser } from '@/lib/oauth-profile';
@@ -101,13 +101,10 @@ import {
   Check,
   Image as ImageIcon,
   Lock,
-  BarChart3,
-  Crosshair,
-  Shield,
   ChevronRight,
-  Skull,
   Link2,
   Star,
+  Archive,
   Download,
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -128,6 +125,7 @@ interface Deck {
   commander_options: ImportedCommanderOption[] | null;
   commander_cmc: number | null;
   is_favorite: boolean;
+  is_archived: boolean;
   created_at: string;
   updated_at: string | null;
   profiles?: {
@@ -136,7 +134,7 @@ interface Deck {
   } | null;
 }
 
-const PROFILE_DECK_COLUMNS = 'id, user_id, group_id, name, commander, commander_image, source_url, source_type, bracket, color_identity, commander_options, commander_cmc, is_favorite, created_at, updated_at';
+const PROFILE_DECK_COLUMNS = 'id, user_id, group_id, name, commander, commander_image, source_url, source_type, bracket, color_identity, commander_options, commander_cmc, is_favorite, is_archived, created_at, updated_at';
 
 interface Profile {
   id: string;
@@ -963,12 +961,24 @@ export default function ProfilePage() {
   }, [adminMode, fetchDeckWinRates, syncMissingCommanderCmc, syncMissingDeckMetadata, user]);
 
   const visibleDecks = useMemo(() => {
+    const activeDecks = decks.filter((deck) => !deck.is_archived);
     if (!adminMode || deckPlayerFilter === 'all') {
-      return decks;
+      return activeDecks;
     }
 
-    return decks.filter((deck) => deck.user_id === deckPlayerFilter);
+    return activeDecks.filter((deck) => deck.user_id === deckPlayerFilter);
   }, [adminMode, deckPlayerFilter, decks]);
+
+  const archivedDecks = useMemo(() => decks.filter((deck) => deck.is_archived && deck.user_id === user?.id), [decks, user?.id]);
+
+  const setDeckArchived = useCallback(async (deck: Deck, archived: boolean) => {
+    if (!user || deck.user_id !== user.id || deck.group_id !== null) return;
+    const { error } = await supabase.from('decks').update({ is_archived: archived })
+      .eq('id', deck.id).eq('user_id', user.id).is('group_id', null);
+    if (error) throw error;
+    setDecks((current) => current.map((entry) => entry.id === deck.id ? { ...entry, is_archived: archived } : entry));
+    toast({ title: t(archived ? { it: 'Mazzo archiviato', en: 'Deck archived' } : { it: 'Mazzo ripristinato', en: 'Deck restored' }) });
+  }, [t, toast, user]);
 
   const filteredDecks = useMemo(() => {
     const normalizedQuery = deckSearchQuery.trim().toLowerCase();
@@ -1010,7 +1020,7 @@ export default function ProfilePage() {
     const performances = visibleDecks.map((deck) => deckPerformance.get(deck.id)).filter((entry): entry is DeckPerformanceStats => Boolean(entry));
     const games = performances.reduce((total, entry) => total + entry.gamesPlayed, 0);
     const wins = performances.reduce((total, entry) => total + entry.wins, 0);
-    const favorite = visibleDecks.find((deck) => deck.is_favorite) || visibleDecks[0];
+    const favorite = getHighestMasteryDeck(visibleDecks, (deck) => deckPerformance.get(deck.id));
     const mostPlayed = [...visibleDecks].sort((a, b) => (deckPerformance.get(b.id)?.gamesPlayed || 0) - (deckPerformance.get(a.id)?.gamesPlayed || 0))[0];
     return { games, wins, winRate: games ? Math.round((wins / games) * 100) : 0, favorite, mostPlayed };
   }, [deckPerformance, visibleDecks]);
@@ -2368,14 +2378,15 @@ export default function ProfilePage() {
   const accountPanelInputClass = 'border-emerald-500/25 bg-emerald-950/35 text-foreground placeholder:text-emerald-300/35 focus-visible:ring-emerald-400/35';
 
   return (
-    <div className="min-h-screen">
-      <header className="phyrexian-divider safe-top sticky top-0 z-10 border-b">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-3 sm:px-4 sm:py-4">
+    <div className="web-page min-h-screen">
+      <header className="web-header phyrexian-divider safe-top sticky top-0 z-10 border-b">
+        <div className="web-container mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-3 sm:px-4 sm:py-4">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => router.push('/dashboard')}
+              aria-label={t({ it: 'Torna alla home', en: 'Back to home' })}
               className="text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -2386,13 +2397,13 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[92rem] px-3 py-5 sm:px-4 sm:py-8">
+      <main className="web-container mx-auto max-w-[92rem] px-3 py-5 sm:px-4 sm:py-8">
         {/* Profile Info */}
         <MotionPanel>
           <Card className="phyrexian-panel-strong mb-8 overflow-hidden">
             <CardContent className="relative pt-6">
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-red-700" />
-              <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-teal-400/10 blur-3xl" />
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-red-700 lg:bg-none lg:bg-primary/50" />
+              <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-teal-400/10 blur-3xl lg:hidden" />
               <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
               <div className="flex shrink-0 flex-col items-center gap-4 sm:w-48 sm:items-stretch sm:border-r sm:border-emerald-400/15 sm:pr-6">
                 <div className="flex justify-center" aria-hidden="true">
@@ -2657,7 +2668,7 @@ export default function ProfilePage() {
         )}
 
         {!adminMode && (
-          <section className="mb-8 overflow-hidden rounded-2xl border border-cyan-400/20 bg-gradient-to-br from-cyan-950/45 via-background to-violet-950/35 p-4 shadow-[0_16px_42px_rgba(6,182,212,0.08)] sm:p-5" aria-label={t({ it: 'La tua scheda giocatore', en: 'Your player card' })}>
+          <section className="web-player-card mb-8 overflow-hidden rounded-2xl border border-cyan-400/20 bg-gradient-to-br from-cyan-950/45 via-background to-violet-950/35 p-4 shadow-[0_16px_42px_rgba(6,182,212,0.08)] sm:p-5" aria-label={t({ it: 'La tua scheda giocatore', en: 'Your player card' })}>
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300/70">{t({ it: 'Scheda giocatore', en: 'Player card' })}</p><h2 className="mt-1 text-xl font-bold text-foreground">{t({ it: 'La tua Command Zone', en: 'Your Command Zone' })}</h2></div>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-300/25 bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-100"><Crown className="h-3.5 w-3.5 text-violet-300" />{personalSnapshot.games ? t({ it: 'Statistiche personali', en: 'Personal stats' }) : t({ it: 'Pronto a giocare', en: 'Ready to play' })}</span>
@@ -2689,6 +2700,7 @@ export default function ProfilePage() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:flex gap-2">
+            {user ? <Button asChild variant="outline" className="border-border text-foreground"><Link href="/profile/archived-decks"><Archive className="mr-2 h-4 w-4" />{t({ it: `Archiviati (${archivedDecks.length})`, en: `Archived (${archivedDecks.length})` })}</Link></Button> : null}
             <Button
               variant="outline"
               onClick={handleRefreshDecks}
@@ -2745,7 +2757,7 @@ export default function ProfilePage() {
               {MANA_COLOR_ORDER.map((color) => <button key={color} type="button" onClick={() => setDeckColorFilter((current) => current.includes(color) ? current.filter((item) => item !== color) : [...current, color])} className={`grid h-7 w-7 place-items-center rounded-full text-xs font-black ${deckColorFilter.includes(color) ? 'bg-emerald-400 text-emerald-950' : 'bg-secondary text-muted-foreground'}`} title={t(MANA_COLOR_LABELS[color])}>{color}</button>)}
             </div>
             <Select value={deckSort} onValueChange={(value) => setDeckSort(value as typeof deckSort)}>
-              <SelectTrigger className="border-border bg-background/50 text-foreground">
+              <SelectTrigger aria-label={t({ it: 'Ordina mazzi', en: 'Sort decks' })} className="border-border bg-background/50 text-foreground">
                 <SelectValue placeholder={t({ it: 'Ordina per', en: 'Sort by' })} />
               </SelectTrigger>
               <SelectContent>
@@ -2811,7 +2823,7 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         ) : (
-          <MotionList className="space-y-3 sm:space-y-4">
+          <MotionList className="web-deck-grid space-y-3 sm:space-y-4">
             {filteredDecks.map((deck) => {
               const performance = deckPerformance.get(deck.id);
               const gamesPlayed = performance?.gamesPlayed ?? 0;
@@ -2826,12 +2838,7 @@ export default function ProfilePage() {
                       borderColor: mastery.color,
                       boxShadow: `0 0 24px ${mastery.color}26`,
                     } : undefined}
-                    role="button"
-                    tabIndex={0}
                     onClick={() => setDetailsDeck(deck)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') setDetailsDeck(deck);
-                    }}
                   >
                     <DeckImage
                       src={deck.commander_image}
@@ -2881,7 +2888,7 @@ export default function ProfilePage() {
                         />
                       </div>
 
-                      <div className="mt-auto flex flex-col gap-3 lg:flex-row lg:items-end">
+                      <div className="web-deck-footer mt-auto flex flex-col gap-3 lg:flex-row lg:items-end">
                         <div className="flex min-w-0 flex-1 items-center gap-4 sm:gap-7">
                           <DeckMasteryBadge gamesPlayed={gamesPlayed} wins={wins} />
                           <div className="min-w-[4.75rem] text-center">
@@ -2907,6 +2914,11 @@ export default function ProfilePage() {
                               })}
                             >
                               <Star className={`h-4 w-4 ${deck.is_favorite ? 'fill-current' : ''}`} />
+                            </Button>
+                          ) : null}
+                          {deck.user_id === user?.id ? (
+                            <Button variant="ghost" size="icon" className="h-11 w-11 text-white/60 hover:text-emerald-300" onClick={() => void setDeckArchived(deck, true).catch((error) => toast({ title: t({ it: 'Errore', en: 'Error' }), description: getSupabaseErrorMessage(error, t({ it: 'Archiviazione non riuscita', en: 'Failed to archive deck' })), variant: 'destructive' }))} title={t({ it: 'Archivia mazzo', en: 'Archive deck' })}>
+                              <Archive className="h-4 w-4" />
                             </Button>
                           ) : null}
                           <Button variant="ghost" size="sm" className="min-h-11 gap-1 px-3 text-emerald-200" onClick={() => setDetailsDeck(deck)}>
@@ -2969,11 +2981,6 @@ export default function ProfilePage() {
         <SheetContent side="right" className="w-full overflow-y-auto border-border bg-card p-0 sm:max-w-xl">
           {detailsDeck ? (() => {
             const performance = deckPerformance.get(detailsDeck.id);
-            const gamesPlayed = performance?.gamesPlayed ?? 0;
-            const wins = performance?.wins ?? 0;
-            const draws = performance?.draws ?? 0;
-            const losses = performance?.losses ?? 0;
-            const winRate = performance?.winRate ?? 0;
             return (
               <>
                 <div className="relative overflow-hidden border-b border-border">
@@ -2989,74 +2996,7 @@ export default function ProfilePage() {
                   </SheetHeader>
                 </div>
                 <div className="space-y-6 p-5">
-                  <section>
-                    <h3 className="mb-3 flex items-center gap-2 font-semibold text-foreground"><BarChart3 className="h-4 w-4 text-emerald-300" />{t({ it: 'Impronta del mazzo', en: 'Deck fingerprint' })}</h3>
-                    <div className="grid gap-3 rounded-2xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 via-background/35 to-cyan-500/5 p-4 sm:grid-cols-[9rem_1fr]">
-                      <div className="flex flex-col items-center justify-center">
-                        <div className="grid h-28 w-28 place-items-center rounded-full" style={{ background: `conic-gradient(#34d399 ${winRate}%, #475569 ${winRate}% ${Math.max(winRate, winRate + (draws / Math.max(gamesPlayed, 1)) * 100)}%, #1e293b 0)` }}>
-                          <div className="grid h-20 w-20 place-items-center rounded-full bg-card text-center shadow-inner">
-                            <strong className="text-2xl text-emerald-300">{winRate}%</strong>
-                            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">win rate</span>
-                          </div>
-                        </div>
-                        <p className="mt-2 text-xs text-muted-foreground">{gamesPlayed} {t({ it: 'partite', en: 'games' })}</p>
-                      </div>
-                      <div className="space-y-3 self-center">
-                        {[
-                          [t({ it: 'Vittorie', en: 'Wins' }), wins, 'bg-emerald-400'],
-                          [t({ it: 'Patte', en: 'Draws' }), draws, 'bg-cyan-400'],
-                          [t({ it: 'Sconfitte', en: 'Losses' }), losses, 'bg-slate-500'],
-                        ].map(([label, value, color]) => (
-                          <div key={String(label)}>
-                            <div className="mb-1 flex justify-between text-xs"><span className="text-muted-foreground">{label}</span><span className="font-semibold text-foreground">{value}</span></div>
-                            <div className="h-2 overflow-hidden rounded-full bg-secondary"><div className={`h-full rounded-full ${color}`} style={{ width: `${(Number(value) / Math.max(gamesPlayed, 1)) * 100}%` }} /></div>
-                          </div>
-                        ))}
-                        <div className="grid grid-cols-2 gap-2 pt-1 text-center">
-                          <div className="rounded-lg bg-background/45 p-2"><p className="text-[10px] uppercase text-muted-foreground">{t({ it: 'Podî', en: 'Podiums' })}</p><p className="font-bold text-foreground">{wins + (performance?.secondPlaces ?? 0)}</p></div>
-                          <div className="rounded-lg bg-background/45 p-2"><p className="text-[10px] uppercase text-muted-foreground">{t({ it: 'Vittoria tipica', en: 'Typical win' })}</p><p className="font-bold text-foreground">{performance?.medianWinningDurationSeconds != null ? formatGameDuration(performance.medianWinningDurationSeconds) : '—'}</p></div>
-                        </div>
-                      </div>
-                    </div>
-                  </section>
-
-                  <section>
-                    <h3 className="mb-3 flex items-center gap-2 font-semibold text-foreground"><Crosshair className="h-4 w-4 text-rose-300" />{t({ it: 'Performance realtime', en: 'Realtime performance' })}</h3>
-                    {performance?.trackedGames ? (
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          [t({ it: 'Danni inflitti', en: 'Damage dealt' }), performance.totalDamageDealt, Swords],
-                          ['KO', performance.eliminations, Crosshair],
-                          [t({ it: 'Danno commander', en: 'Commander damage' }), performance.commanderDamageDealt, Shield],
-                          [t({ it: 'Infect inflitto', en: 'Infect dealt' }), performance.infectDealt, Skull],
-                        ].map(([label, value, MetricIcon]) => {
-                          const Icon = MetricIcon as typeof Swords;
-                          return (
-                            <div key={String(label)} className="flex items-center gap-3 rounded-xl border border-border/70 bg-background/25 p-3">
-                              <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                              <div><p className="text-xs text-muted-foreground">{label as string}</p><p className="font-bold text-foreground">{value as number}</p></div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="rounded-xl border border-border/70 bg-background/25 p-4 text-sm text-muted-foreground">
-                        {t({ it: 'Nessuna partita realtime tracciata con questo mazzo.', en: 'No realtime-tracked games with this deck yet.' })}
-                      </p>
-                    )}
-                  </section>
-
-                  {performance?.gamesPlayed ? (
-                    <div className="rounded-xl border border-border/60 bg-background/20 p-3">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{t({ it: 'Copertura tracking', en: 'Tracking coverage' })}</span>
-                        <span>{performance.trackedGames}/{performance.gamesPlayed} · {performance.trackingCoverage}%</span>
-                      </div>
-                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary">
-                        <div className="h-full rounded-full bg-emerald-500" style={{ width: `${performance.trackingCoverage}%` }} />
-                      </div>
-                    </div>
-                  ) : null}
+                  <DeckPerformancePanel performance={performance} />
                 </div>
               </>
             );

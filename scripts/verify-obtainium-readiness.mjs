@@ -36,7 +36,7 @@ const legalSite = read('lib/legal-site.ts');
 if (!legalSite.includes("LEGAL_CONTROLLER_NAME = 'Marco Andreani'")) {
   failures.push('GDPR controller is missing');
 }
-if (!legalSite.includes("OFFICIAL_SUPPORT_EMAIL = 'support@phyrexianarena.dpdns.org'")) {
+if (!legalSite.includes("OFFICIAL_SUPPORT_EMAIL = 'support@21life.win'")) {
   failures.push('official support email is missing');
 }
 if (!legalSite.includes('unofficial Fan Content permitted under the Fan Content Policy')) {

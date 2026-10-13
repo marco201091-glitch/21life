@@ -15,8 +15,9 @@
     "*.{ts,tsx,js,mjs,cjs}"
   ],
   "ignoreBinaries": [
-    "expo",
     "netstat",
-    "findstr"
+    "findstr",
+    "expo",
+    "maestro"
   ]
 }

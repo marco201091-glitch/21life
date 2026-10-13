@@ -17,15 +17,15 @@ export function AdminShell({ title, description, children }: AdminShellProps) {
   const { copy: t } = useLanguage();
 
   return (
-    <div className="min-h-screen">
-      <header className="safe-top sticky top-0 z-10 border-b border-border/50 bg-card/50 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-3 sm:px-4 sm:py-4">
+    <div className="web-page min-h-screen min-w-0">
+      <header className="web-header safe-top sticky top-0 z-10 border-b border-border/50 bg-card/50 backdrop-blur">
+        <div className="web-container mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-3 sm:px-4 sm:py-4">
           <div className="flex min-w-0 items-center gap-3">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground">
+              <Button asChild variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground">
+                <Link href="/dashboard" aria-label={t({ it: 'Torna alla home', en: 'Back to home' })}>
                 <ArrowLeft className="h-5 w-5" />
+                </Link>
               </Button>
-            </Link>
             <ManaLogo size="md" showText className="hidden sm:flex" />
           </div>
           <div className="flex items-center gap-2">
@@ -37,8 +37,8 @@ export function AdminShell({ title, description, children }: AdminShellProps) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-3 py-5 sm:px-4 sm:py-8">
-        <div className="mb-6 sm:mb-8">
+      <main className="web-container mx-auto max-w-7xl px-3 py-5 sm:px-4 sm:py-8">
+        <div className="web-section-heading mb-6 sm:mb-8">
           <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{title}</h1>
           {description ? (
             <p className="mt-2 text-sm text-muted-foreground sm:text-base">{description}</p>

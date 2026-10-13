@@ -54,7 +54,7 @@ jobs:
 
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          node-version: 24.18.0
+          node-version-file: .node-version
           cache: npm
           cache-dependency-path: expo/package-lock.json
 
@@ -90,11 +90,15 @@ jobs:
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           if (-not $env:RELEASE_KEYSTORE_BASE64) { throw "Missing release keystore secret" }
           if (-not $env:SENTRY_AUTH_TOKEN -or -not $env:SENTRY_ORG -or -not $env:SENTRY_MOBILE_PROJECT -or -not $env:SENTRY_DSN) {
             throw "Missing Sentry release configuration"
           }
-          $turnstile = Invoke-RestMethod -Uri "https://app.phyrexianarena.dpdns.org/api/auth/turnstile/config" -TimeoutSec 15
+          $env:PRODUCTION_DOMAIN_GENERATION = '21life'
+          $domains = node scripts/build-domains.mjs production | ConvertFrom-Json
+          $turnstile = Invoke-RestMethod -Uri "$($domains.api)/api/auth/turnstile/config" -TimeoutSec 15
           if (-not $turnstile.siteKey) { throw "Production Turnstile site key is unavailable" }
           $keystorePath = Join-Path $env:RUNNER_TEMP "phyrexian-arena-release.jks"
           [IO.File]::WriteAllBytes($keystorePath, [Convert]::FromBase64String($env:RELEASE_KEYSTORE_BASE64))
@@ -109,12 +113,12 @@ jobs:
           ) | Set-Content -LiteralPath $signingPath
 
           @(
-            "EXPO_PUBLIC_SUPABASE_URL=https://phyrexianarena.dpdns.org"
+            "EXPO_PUBLIC_SUPABASE_URL=$($domains.supabase)"
             "EXPO_PUBLIC_SUPABASE_ANON_KEY=$env:PRODUCTION_SUPABASE_ANON_KEY"
-            "EXPO_PUBLIC_API_BASE_URL=https://app.phyrexianarena.dpdns.org"
-            "EXPO_PUBLIC_SITE_URL=https://app.phyrexianarena.dpdns.org"
+            "EXPO_PUBLIC_API_BASE_URL=$($domains.api)"
+            "EXPO_PUBLIC_SITE_URL=$($domains.api)"
             "EXPO_PUBLIC_TURNSTILE_SITE_KEY=$($turnstile.siteKey)"
-            "EXPO_PUBLIC_SUPPORT_EMAIL=support@phyrexianarena.dpdns.org"
+            "EXPO_PUBLIC_SUPPORT_EMAIL=support@21life.win"
             "EXPO_PUBLIC_SENTRY_ENABLED=true"
             "EXPO_PUBLIC_SENTRY_DSN=$env:SENTRY_DSN"
           ) | Set-Content -LiteralPath "expo/.env.production.local"
@@ -141,39 +145,12 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Publish GitHub release for Obtainium
+      - name: Publish and verify GitHub release assets
         if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ github.ref_name }}
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
-        run: |
-          $apk = "artifacts/apk/21life-v$env:RELEASE_VERSION.apk"
-          $checksum = "$apk.sha256"
-          $webSbom = "artifacts/apk/web-sbom-$env:RELEASE_VERSION.json"
-          $androidSbom = "artifacts/apk/android-sbom-$env:RELEASE_VERSION.json"
-          $trailer = @(
-            "",
-            "Install or update with Obtainium from this repository's GitHub Releases.",
-            "",
-            "The attached checksum can be used to verify the APK before installation."
-          )
-
-          # Curated notes live next to the code; see docs/releases/README.md.
-          # Falling back to generated notes is deliberate: a release must never
-          # ship another version's changelog.
-          $notesFile = "docs/releases/$env:RELEASE_VERSION.md"
-          if (Test-Path $notesFile) {
-            $body = @((Get-Content -Raw $notesFile).TrimEnd()) + $trailer
-            $body | Set-Content -LiteralPath "$env:RUNNER_TEMP/release-notes.md" -Encoding utf8
-            $notesArgs = @("--notes-file", "$env:RUNNER_TEMP/release-notes.md")
-          } else {
-            Write-Host "No ${notesFile}: falling back to generated release notes."
-            $notesArgs = @("--generate-notes")
-          }
-
-          gh release create $env:GITHUB_REF_NAME $apk $checksum $webSbom $androidSbom `
-            --repo $env:GITHUB_REPOSITORY `
-            --title "21Life $env:GITHUB_REF_NAME" `
-            @notesArgs `
-            --verify-tag
+        run: node scripts/release/publish-github-release.mjs

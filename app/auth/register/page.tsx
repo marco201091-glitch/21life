@@ -143,7 +143,7 @@ function RegisterForm() {
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(handleRegister)} className="space-y-4" noValidate>
+          <form method="post" onSubmit={handleSubmit(handleRegister)} className="space-y-4" noValidate>
             <div className="space-y-2">
               <label htmlFor="username" className="text-sm font-medium text-foreground">
                 {t({ it: 'Nome utente', en: 'Username' })}

@@ -44,3 +44,31 @@ L'avanzamento dei task resta in `PROJECT_CHECKLIST.md`.
 - Correzione applicata e prova del recupero:
 - Controllo preventivo aggiunto alla checklist:
 
+
+## 2026-10-08 — ritorno hotfix main nel candidato Dev
+- Merge locale origin/main c3d5ae34 nella feature chore/21life-domain b632fff: git merge exit1, conflitto soltanto PROJECT_CHECKLIST.md per note aggiunte alla stessa posizione.
+- Verifica remota: PR175 MERGED, commit c3d5ae34; nessun build/tag/deploy dipendente avviato dopo il conflitto.
+- Risoluzione revisionata: mantenere tutte le note rebranding e il record incidente comune; nessuna differenza applicativa rispetto ai due candidati testati. Conservare ancestry main, senza subset di schema/test.
+- Prevenzione: verificare i conflitti checklist su back-merge e fermare build/deploy finche markers e file unmerged non sono assenti.
+
+## 2026-10-12 — PR #193, controllo merge web bloccato da Archidekt
+- Sorgente 7fab6cd978bbb33de957ba5a3d9c225fff68b9af, destinazione main. Nessun tentativo di merge/deploy effettuato; PR OPEN/BLOCKED.
+- Quality run 38225800252: 342 test passati, 2 falliti in deck-importers-server.test.ts per HTTP403 Archidekt dal runner GitHub; lint/typecheck, Expo e CodeQL passati.
+- Causa verificata: due unit test dipendevano da deck pubblici e immagini live; codice importazione invariato rispetto a main. Nessun problema UI individuato.
+- Recupero: risposte pubbliche ridotte Archidekt/Scryfall salvate come fixture, fetch intercettato solo nei test, URL inattesi rifiutati e globals ripristinati. I due test passano senza rete; nuovo controllo CI richiesto prima del merge.
+- Prevenzione: controllare che unit test importazione usino fixture, non servizi esterni; nessun bypass protezioni o retry deploy.
+- Aggiornamento run38226544550: tutti344test verdi, soglia coverage per-file importatore non raggiunta dalle risposte ridotte (functions60.29<61.76, statements48.78<49.59). Aggiunti casi pertinenti top-level commander, bracket HTML frammentato e HTTP403; 346test verdi e ratchet103file passato, soglie invariate. Nessun merge/deploy effettuato.
+
+## 2026-10-12 — PR193 desktop counter click regression
+- Run38227127337: quality/build passed,25E2Epassed/4skip,3desktop life-feedback failures. PR not merged; no deployment launched.
+- Root cause reproduced locally: desktop transition-property override removed transform/translate/scale animation. Existing active translate-y-px jumps a centered counter button away from pointer before mouseup; its rotated wrapper intercepts clicks. Without override the same real click changes40to41; with override timeout/life40.
+- Recovery: remove only transition-property override, retaining Button default transition-all; phone and gameplay logic unchanged. Verify existing desktop/mobile life-feedback tests on fresh build and remote required checks before merge.
+- Prevention: desktop restyle changes to shared Button must run actual quick-game life-feedback E2E, including normal/system/app reduced motion; setup-only smoke is insufficient.
+
+## 2026-10-13 � allineamento F-Droid 9.1.2
+- Merge locale origin/main23b23fe nel candidato dafdroid-prepbfe6af2 exit1: conflitti versione/flavor/ledger. Nessun merge remoto o build dipendente avviato.
+- Risoluzione: albero main testato, riapplicate solo differenze F-Droid documentate. Nessun bypass scanner o protezioni. Verificare zero unmerged, versione e gates prima build/tag.
+
+## 2026-10-13 — gate F-Droid PR194
+- Quality38409246980 Expo failed su doctor:ci: 7patchSDK pubblicate dopo main23b23fe (@expo/ui,expo,crypto,router,screen-orientation,sharing,splash-screen). 314test/coverage verdi; PR194 OPEN, nessunmerge/tag/buildrelease. Nessunbypass: aggiornare solo patch raccomandate e verificare nuovo grafo/audit/source/autolinking prima merge.
+- Prevenzione: doctor:ci sul candidato prima push e preservare il gate strict anche per F-Droid.

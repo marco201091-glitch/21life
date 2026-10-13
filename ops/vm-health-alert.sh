@@ -22,7 +22,7 @@ OFFSITE_BACKUP_MARKER=${OFFSITE_BACKUP_MARKER:-/var/backups/phyrexianarena/offsi
 BACKUP_MAX_AGE_HOURS=${BACKUP_MAX_AGE_HOURS:-30}
 STATE_FILE=/run/phyrexian-health-alert.state
 HEALTH_ENV=/etc/phyrexian-health-alert.env
-MAIL_FROM=${MAIL_FROM:-21Life <noreply@phyrexianarena.dpdns.org>}
+MAIL_FROM=${MAIL_FROM:-21Life <noreply@21life.win>}
 
 if [[ -r "$HEALTH_ENV" ]]; then
   set -a
@@ -72,7 +72,7 @@ fi
 
 for endpoint in \
   https://app.phyrexianarena.dpdns.org/api/health \
-  https://dev.phyrexianarena.dpdns.org/api/ready
+  https://dev.21life.win/api/ready
 do
   status=$(curl --silent --show-error --output /dev/null --max-time 8 --write-out '%{http_code}' "$endpoint" || true)
   status=${status:-000}

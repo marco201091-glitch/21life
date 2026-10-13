@@ -22,10 +22,10 @@ import { AppNotificationListener } from '@/components/app-notification-listener'
 import { ArchidektAutoSync } from '@/components/archidekt-auto-sync';
 import { ManaLogo } from '@/components/ui/mana-logo';
 import { Cinzel_700Bold, useFonts } from '@expo-google-fonts/cinzel';
+
 import NetInfo from '@react-native-community/netinfo';
 
-// Preserve native reachability and use our backend for the HTTP fallback,
-// configured before any listener starts instead of NetInfo's Google default.
+// Configure before listeners: preserve native reachability and use our backend.
 NetInfo.configure({
   reachabilityUrl: `${getApiBaseUrl()}/api/ready`,
   reachabilityTest: async (response) => response.status === 200,

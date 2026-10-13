@@ -1,0 +1,55 @@
+appId: com.phyrexianarena.app.dev
+env:
+  METRO_URL: ${MAESTRO_METRO_URL}
+---
+- launchApp:
+    clearState: true
+- runFlow:
+    when:
+      true: ${METRO_URL != ""}
+    commands:
+      - openLink: ${METRO_URL}
+- tapOn:
+    id: login-identifier
+- inputText:
+    text: ${MAESTRO_E2E_USERNAME}
+    label: Disposable staging login
+- tapOn:
+    id: login-password
+- inputText:
+    text: ${MAESTRO_E2E_PASSWORD}
+    label: Disposable staging password
+- hideKeyboard
+- tapOn:
+    id: login-submit
+- extendedWaitUntil:
+    visible: "Profile|Profilo"
+    timeout: 20000
+- tapOn: "Profile|Profilo"
+- scrollUntilVisible:
+    element:
+      text: "More deck actions|Altre azioni mazzo"
+    direction: DOWN
+- assertVisible: "IMP synthetic deck 1"
+- tapOn: "More deck actions|Altre azioni mazzo"
+- tapOn: "Archive deck|Archivia mazzo"
+- extendedWaitUntil:
+    notVisible: "IMP synthetic deck 1"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      text: "Archived decks.*|Mazzi archiviati.*"
+    direction: UP
+- tapOn: "Archived decks.*|Mazzi archiviati.*"
+- assertVisible: "IMP synthetic deck 1"
+- tapOn: "More deck actions|Altre azioni mazzo"
+- tapOn: "Restore deck|Ripristina mazzo"
+- extendedWaitUntil:
+    notVisible: "IMP synthetic deck 1"
+    timeout: 15000
+- tapOn: "Profile|Profilo"
+- scrollUntilVisible:
+    element:
+      text: "IMP synthetic deck 1"
+    direction: DOWN
+- assertVisible: "IMP synthetic deck 1"
