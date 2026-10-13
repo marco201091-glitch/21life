@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getDeckMastery, getDeckMasteryLabel } from '@/lib/deck-mastery';
+import { getDeckMastery, getDeckMasteryLabel, getHighestMasteryDeck } from '@/lib/deck-mastery';
 
 describe('deck mastery v7 compatibility', () => {
   it('derives score from existing v6 match totals without stored state', () => {
@@ -23,5 +23,14 @@ describe('deck mastery v7 compatibility', () => {
     expect(getDeckMastery(-1, -2).points).toBe(0);
     expect(getDeckMasteryLabel('diamond', 'it')).toBe('Diamante');
     expect(getDeckMasteryLabel('diamond', 'en')).toBe('Diamond');
+  });
+});
+
+
+describe('profile favorite selection', () => {
+  it('uses mastery score instead of stars, ordering or raw match count', () => {
+    const decks = [{ id: 'starred', is_favorite: true }, { id: 'most-played' }, { id: 'highest-mastery' }];
+    const stats = new Map([['starred', { gamesPlayed: 2, wins: 1 }], ['most-played', { gamesPlayed: 10, wins: 0 }], ['highest-mastery', { gamesPlayed: 5, wins: 4 }]]);
+    expect(getHighestMasteryDeck(decks, deck => stats.get(deck.id))).toBe(decks[2]);
   });
 });

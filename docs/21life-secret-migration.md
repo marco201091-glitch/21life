@@ -1,0 +1,41 @@
+# Secret e variabili nella migrazione 21Life
+
+Inventario read-only del 2026-10-08. Nessun valore segreto incluso.
+
+## Aggiornamenti al completamento della migrazione
+
+- Env locali web/Expo: URL sito/API/backend, email mittente/supporto, domini staging/produzione e configurazione build. Conservare vecchi endpoint per client installati.
+- Dokploy Dev e successivamente produzione: env runtime, buildArgs e buildSecrets; registrare snapshot prima della modifica e verificare la configurazione pubblica del build risultante.
+- GitHub: secret e variabili repository/environment, non soltanto nomi hardcoded nei workflow. Supabase anon keys non cambiano per la sola rinomina del dominio se il backend rimane lo stesso.
+- VM: Auth site URL/redirect, SMTP, backup, monitor e notifiche. Dev usa email applicative Resend custom; SMTP Auth attuale è un servizio di test, non va scambiato per posta di produzione.
+- Expo/EAS, Google OAuth, Sentry e F-Droid/GitLab: verificare configurazioni esterne prima di dichiarare eliminati tutti i riferimenti correnti.
+- Nessuna rotazione di firma Android, service role, JWT o password DB per la sola rinomina del brand. Nessuna revoca del token Cloudflare precedente richiesto dal PM come backup.
+
+## Evidenze e classificazione
+
+| Area | Evidenza | Azione |
+|---|---|---|
+| GitHub repository | 12 secret: firma Android, backup GPG, Sentry, Supabase Dev/prod | Conservare i secret usati; verificare la passphrase backup anche nel percorso di recupero manuale |
+| GitHub Preview/Production | Nessun secret o variabile environment | Nessuna pulizia richiesta |
+| GitHub vars | STAGING_SUPABASE_URL e chiave pubblica GPG | URL da cambiare soltanto quando è pronto il nuovo endpoint; GPG conservata |
+| Dokploy Dev email | RESEND_FROM_EMAIL e NEXT_PUBLIC_SUPPORT_EMAIL aggiornati a noreply/support@21life.win | Salvati e verificati; effettivi al prossimo deploy |
+| Resend | 21life.win verified; vecchio dominio ancora verified | Nuovo dominio pronto per invio; preservare il precedente durante transizione |
+| Local VERCEL_OIDC_TOKEN | Zero riferimenti nel codice tracciato; hosting attuale Dokploy | Candidato obsoleto locale, rimuovere dopo snapshot/fine migrazione |
+| Local XAI_API_KEY, SOURCE_DB_URL, TEST_USER_* | Zero riferimenti nei sorgenti operativi tracciati | Verificare eventuali strumenti/manuali esterni, poi rimuovere solo configurazione inutilizzata; nessuna revoca automatica presso provider |
+| Local SUPABASE_ACCESS_TOKEN | Non consumato dal codice; self-hosting via SSH | Candidato non necessario per operazioni correnti; verificare eventuale uso CLI manuale |
+| GOOGLE_CLIENT_ID/SECRET, GITLAB_TOKEN, SELFHOSTED_PRODUCTION_* | Nessun match statico diretto o nomi composti dinamicamente | Non classificare come obsoleti: integrazioni/operazioni esterne e runner generico |
+| Vecchio e nuovo token Cloudflare | Attivi con scope differenti; vecchio conservato dal PM | Usare il nuovo per migrazione; preservare backup precedente |
+
+## Stato verificato 2026-10-08
+
+- Cloudflare Global API key autenticata: routing enabled/ready, support@21life.win inoltrato a marco201091@gmail.com già verificata. Nessun test di consegna email eseguito.
+- Supabase Dev: supabase-dev.21life.win TLS valido, Auth health e REST HTTP200 anche tramite alias precedente. Site URL e callback Google aggiornati; redirect Supabase e pagina login Google HTTP200 verificati, login interattivo non eseguito.
+- URL Dev/mail aggiornati in Dokploy runtime/buildArgs, env locali e GitHub STAGING_SUPABASE_URL. Stesse chiavi e firma; session storage preservato tra hostname backend. Configurazione Dokploy efficace al prossimo deploy.
+- VERCEL_OIDC_TOKEN rimosso dalla configurazione locale dopo backup: hosting Vercel ritirato, zero consumatori operativi. Altri candidati non revocati: assenza di riferimenti non dimostra inutilizzo esterno.
+- Monitor VM: host Dev e mittente21Life<noreply@21life.win> aggiornati con backup; chiave Resend confrontata con quella verificata, sintassi shell valida. Nessun messaggio di prova inviato.
+- Expo/EAS accesso Admin verificato tramite token già disponibile: env development/preview aggiornati a dev.21life.win e supabase-dev.21life.win, readback riuscito; support@21life.win aggiornato anche in produzione, i suoi URL restano fino alla promozione. Development aveva zero variabili: anon key Dev e Turnstile aggiunte. Identificativi progetto/app e credenziali firma preservati.
+- Incidente login produzione riprodotto: il login demo mutava il singleton admin, causando RPC negati e risposta429 mascherata da credenziali errate. Mitigazione applicata senza cambiare DB: demo disabilitata e solo web riavviato; login API200. Fix isolato main PR175 c3d5ae34, rientrato con ancestry nel candidato Dev; prova build demo→due login normali200 nello stesso processo. Riabilitare demo dopo distribuzione del fix e collaudo.
+- CI iniziale PR174 bloccata da sharp/source-map-js/shell-quote: lock aggiornati ai fix. Audit produzione web zero; Expo zero critical,21high nel perimetro tooling già approvato, scadenza19-10 invariata. Policy ristretta rimuovendo una dipendenza transitiva risolta; nessuna nuova eccezione.
+- Main/produzione, nuovo binario mobile, associazioni Android/iOS e ritiro alias legacy restano fasi separate. Nessun merge/deploy applicativo eseguito al momento di questo record.
+
+La sola assenza di un riferimento testuale non prova che un secret sia eliminabile. La rimozione finale richiede prova del consumatore ritirato, snapshot dei valori recuperabili e verifica dei flussi che restano attivi.

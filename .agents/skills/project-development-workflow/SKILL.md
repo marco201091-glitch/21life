@@ -31,6 +31,13 @@ description: Apply the PM-led, specification-driven workflow for 21Life. Use for
 - Do not monitor GitHub, Dokploy, store, or other remote builds unless the PM explicitly asks. The PM will report failures for diagnosis.
 - After launch, respond only `Build <target> in corso`, using a clear target such as `github`, `dokploy-production`, or `dokploy-dev`. This is the exception to the normal `fatto` response.
 
+## Self-hosted Supabase
+
+- Supabase runs in Dokploy on the project's VM. `.env.local` has separate `SELFHOSTED_DEV_*` and `SELFHOSTED_PRODUCTION_*` SSH settings, including host, user, key path, Compose project and database role. Never treat missing local Docker/Podman as a blocker for remote database work.
+- Apply a reviewed migration from the repository root with `node scripts/selfhosted-db.mjs apply <dev|production> <migration.sql>`. Choose the target explicitly; production schema changes require explicit PM authorization.
+- This runner connects over SSH, executes the migration inside the selected remote Compose `db` container as one SQL transaction, and records its SHA-256 in `app_private.schema_migrations`. It does not modify Supabase CLI migration history. After applying, run a read-only verification query over the same SSH target.
+- `npx supabase status` only checks local Supabase containers. The repository's `scripts/blocked-linked-supabase-command.mjs` intentionally rejects linked/local QA commands; use the SSH runner for this self-hosted setup.
+
 ## Current code map
 
 - `app/`: Next.js 16 App Router pages, layouts, and API routes for the web application.
@@ -42,11 +49,10 @@ description: Apply the PM-led, specification-driven workflow for 21Life. Use for
   - `expo/components/`: mobile UI and feature components.
   - `expo/lib/`: mobile domain, API, authentication, and platform services.
   - `expo/plugins/`: native Expo configuration plugins.
-  - `expo/fdroid-build-env.json`: public production client configuration pinned for identical F-Droid/reference bundles.
   - `expo/tests/`: mobile test suites.
+- Archidekt arena sync: `app/api/arena-archidekt-sync/route.ts` owns authentication/membership/opt-in; `lib/archidekt-sync-server.ts` owns fresh bounded imports; private atomic SQL helpers save target decks. Expo wizard consumes explicit results through `expo/lib/arena-archidekt-sync.ts`; legacy queue remains for older clients. See `docs/ARCHIDEKT_ARENA_SYNC.md`.
 - `supabase/`: self-hosted backend configuration, migrations, and Edge Functions.
 - `scripts/`: build, verification, release, and operations automation.
-  - `prepare-fdroid-env.mjs`, `verify-fdroid-autolinking.mjs`, `scan-fdroid-source.py`: deterministic F-Droid environment and source-only build gates.
 - `ops/`: VM services and deployment-retention automation.
 - `.github/workflows/`: CI and signed Obtainium release automation.
 - `fastlane/metadata/android/`: canonical public store listing metadata.

@@ -23,12 +23,14 @@ function LoginForm() {
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const router = useRouter();
   const { copy: t } = useLanguage();
 
   useEffect(() => {
     setRememberMe(getRememberMePreference());
+    setReady(true);
   }, []);
 
   const searchParams = useSearchParams();
@@ -125,13 +127,14 @@ function LoginForm() {
           </div>
         </CardHeader>
         <CardContent className="relative px-5 pb-7 sm:px-6 sm:pb-8">
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form method="post" onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="loginIdentifier" className="text-sm font-medium text-foreground">
                 {t({ it: 'Email o username', en: 'Email or username' })}
               </label>
               <Input
                 id="loginIdentifier"
+                disabled={!ready}
                 name="username"
                 type="text"
                 autoComplete="username"
@@ -157,6 +160,7 @@ function LoginForm() {
               </div>
               <Input
                 id="password"
+                disabled={!ready}
                 name="password"
                 type="password"
                 autoComplete="current-password"
@@ -184,7 +188,7 @@ function LoginForm() {
             <Button
               type="submit"
               className="h-11 w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 font-semibold text-white shadow-[0_10px_28px_rgba(5,150,105,0.2)] hover:from-emerald-500 hover:to-teal-600"
-              disabled={loading}
+              disabled={!ready || loading}
             >
               {loading
                 ? t({ it: 'Accesso...', en: 'Signing in...' })
@@ -203,12 +207,12 @@ function LoginForm() {
               </div>
 
               <GoogleSignInButton
-                disabled={loading}
+                disabled={!ready || loading}
                 onClick={handleGoogleLogin}
                 label={{ it: 'Continua con Google', en: 'Continue with Google' }}
               />
 
-              <DemoLoginButton disabled={loading} redirectPath={redirectPath} />
+              <DemoLoginButton disabled={!ready || loading} redirectPath={redirectPath} />
               <Button asChild variant="outline" className="mt-3 w-full border-cyan-400/30 text-cyan-100">
                 <Link href="/counter">{t({ it: 'Partita veloce', en: 'Quick game' })}</Link>
               </Button>

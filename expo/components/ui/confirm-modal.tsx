@@ -15,6 +15,8 @@ type ConfirmAction = {
 
 type ConfirmModalProps = {
   visible: boolean;
+  /** Reuse the enclosing native modal for nested confirmation flows. */
+  embedded?: boolean;
   title: string;
   message?: string;
   actions: ConfirmAction[];
@@ -25,6 +27,7 @@ type ConfirmModalProps = {
 
 export function ConfirmModal({
   visible,
+  embedded = false,
   title,
   message,
   actions,
@@ -36,27 +39,22 @@ export function ConfirmModal({
   const resolvedTone = tone ?? (actions.some((action) => action.variant === 'destructive') ? 'danger' : 'default');
   const stackActions = actions.length > 2 || (isPhoneViewport(width) && width < 400);
 
-  return (
-    <Modal
-      visible={visible}
-      onClose={onClose}
-      presentation="dialog"
-      maxWidth={480}
-      footer={(
-        <View style={[styles.actions, stackActions && styles.actionsStacked]}>
-        {actions.map((action, index) => (
-          <Button
-            key={`${action.label}-${index}`}
-            label={action.label}
-            variant={action.variant ?? (index === actions.length - 1 ? 'primary' : 'ghost')}
-            onPress={action.onPress}
-            disabled={action.disabled}
-            style={styles.actionButton}
-          />
-        ))}
-        </View>
-      )}
-    >
+  const footer = (
+    <View style={[styles.actions, stackActions && styles.actionsStacked]}>
+      {actions.map((action, index) => (
+        <Button
+          key={`${action.label}-${index}`}
+          label={action.label}
+          variant={action.variant ?? (index === actions.length - 1 ? 'primary' : 'ghost')}
+          onPress={action.onPress}
+          disabled={action.disabled}
+          style={styles.actionButton}
+        />
+      ))}
+    </View>
+  );
+  const content = (
+    <>
       <ModalHeader
         title={title}
         icon={icon ?? (resolvedTone === 'danger' ? 'warning-outline' : 'help-circle-outline')}
@@ -68,6 +66,11 @@ export function ConfirmModal({
           <Text style={styles.message}>{message}</Text>
         </View>
       ) : null}
+    </>
+  );
+  return embedded ? <>{content}{footer}</> : (
+    <Modal visible={visible} onClose={onClose} presentation="dialog" maxWidth={480} footer={footer}>
+      {content}
     </Modal>
   );
 }

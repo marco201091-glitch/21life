@@ -21,6 +21,7 @@ import { ManaLogo } from '@/components/ui/mana-logo';
 import { AppProfileButton } from '@/components/navigation/app-profile-button';
 import { DeckImage } from '@/components/deck-image';
 import { LiveGameRecapView } from '@/components/live-game/live-game-recap';
+import { ArenaDeckSummary } from '@/components/arena/arena-deck-summary';
 import { ArenaInviteQrDialog } from '@/components/arena/arena-invite-qr-dialog';
 import { PreviousSeasonsPanel } from '@/components/arena/previous-seasons-panel';
 import { useLanguage } from '@/components/language-provider';
@@ -37,6 +38,7 @@ import { FormattedMarkdown } from '@/components/ui/formatted-markdown';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { OccasionalDeckForm } from '@/components/arena/occasional-deck-form';
 import { GuestCommanderPicker } from '@/components/arena/guest-commander-picker';
 import { DirectArenaInvite } from '@/components/arena/direct-arena-invite';
 import { MatchParticipantRow, toDeckOption } from '@/components/arena/match-participant-row';
@@ -251,6 +253,8 @@ async function fetchArenaMemberDecks(groupId: string, memberIds: string[]) {
         .from('decks')
         .select(ARENA_DECK_PICKER_COLUMNS)
         .eq('user_id', memberId)
+        .is('group_id', null)
+        .or('source_type.is.null,source_type.neq.occasional')
         .order('is_favorite', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(ARENA_MEMBER_DECK_LIMIT);
@@ -464,6 +468,9 @@ export default function TablePage() {
   const [detailsRecapLoading, setDetailsRecapLoading] = useState(false);
   const [showInviteQr, setShowInviteQr] = useState(false);
   const [selectedParticipantKeys, setSelectedParticipantKeys] = useState<ParticipantKey[]>([]);
+  const [occasionalCreationBusy, setOccasionalCreationBusy] = useState<Record<string, boolean>>({});
+  const anyOccasionalCreationBusy = Object.values(occasionalCreationBusy).some(Boolean);
+  const [occasionalChoices, setOccasionalChoices] = useState<Deck[]>([]);
   const [participantDecks, setParticipantDecks] = useState<Record<string, string>>({});
   const [participantDeckSearches, setParticipantDeckSearches] = useState<Record<string, string>>({});
   const [hiddenParticipantDeckLists, setHiddenParticipantDeckLists] = useState<Record<string, boolean>>({});
@@ -1271,7 +1278,7 @@ export default function TablePage() {
     if (!parsed) return [] as Array<Deck | ArenaGuestDeck>;
 
     if (parsed.type === 'user') {
-      return decks.filter((deck) => deck.user_id === parsed.id);
+      return decks.filter((deck) => deck.user_id === parsed.id && deck.source_type !== 'occasional');
     }
 
     const guest = guests.find((entry) => entry.id === parsed.id);
@@ -1303,7 +1310,7 @@ export default function TablePage() {
     if (!parsed) return null;
 
     if (parsed.type === 'user') {
-      return decks.find((deck) => deck.id === deckId) || null;
+      return [...decks, ...occasionalChoices].find((deck) => deck.id === deckId && deck.user_id === parsed.id) || null;
     }
 
     const guest = guests.find((entry) => entry.id === parsed.id);
@@ -1327,12 +1334,13 @@ export default function TablePage() {
     if (!deckId) return null;
     const parsed = parseParticipantKey(participantKey);
     if (!parsed) return null;
-    if (parsed.type === 'user') return decks.find((deck) => deck.id === deckId) || null;
+    if (parsed.type === 'user') return [...decks, ...occasionalChoices].find((deck) => deck.id === deckId && deck.user_id === parsed.id) || null;
     const guest = guests.find((entry) => entry.id === parsed.id);
     return guest?.arena_guest_decks?.find((deck) => deck.id === deckId) || null;
   };
 
   const toggleParticipantSelection = (participantKey: ParticipantKey) => {
+    if (anyOccasionalCreationBusy) return;
     setSelectedParticipantKeys((prev) => {
       const selected = prev.includes(participantKey);
       if (selected) {
@@ -1778,6 +1786,7 @@ export default function TablePage() {
   };
 
   const handleCreateMatch = async () => {
+    if (anyOccasionalCreationBusy) return;
     if (selectedParticipantKeys.length < 2) {
       toast({ title: t({ it: 'Errore', en: 'Error' }), description: t({ it: 'Seleziona almeno 2 giocatori', en: 'Select at least 2 players' }), variant: 'destructive' });
       return;
@@ -2244,6 +2253,9 @@ export default function TablePage() {
   };
 
   const openEditMatch = (match: Match) => {
+    setOccasionalChoices(match.match_participants.flatMap((p) =>
+      p.deck_id && p.user_id && p.decks?.source_type === 'occasional'
+        ? [{ ...p.decks, id: p.deck_id, user_id: p.user_id, group_id: groupId, is_favorite: false, source_url: null, created_at: '' } as Deck] : []));
     setEditingMatch(match);
     setEditMatchWinnerKey(resolveWinnerParticipantKey(match) || '');
     setEditMatchIsDraw(Boolean(match.is_draw));
@@ -2275,6 +2287,7 @@ export default function TablePage() {
   };
 
   const handleSaveEditMatch = async () => {
+    if (anyOccasionalCreationBusy) return;
     if (!editingMatch) return;
     if (!editMatchIsDraw && !editMatchWinnerKey) {
       toast({ title: t({ it: 'Errore', en: 'Error' }), description: t({ it: 'Seleziona un vincitore o segna come patta', en: 'Select a winner or mark as draw' }), variant: 'destructive' });
@@ -2371,12 +2384,12 @@ export default function TablePage() {
   if (!group) return null;
 
   return (
-    <div className="min-h-screen">
-      <header className="phyrexian-divider safe-top sticky top-0 z-10 border-b">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+    <div className="web-page min-h-screen">
+      <header className="web-header phyrexian-divider safe-top sticky top-0 z-10 border-b">
+        <div className="web-container max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-              <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard')} className="h-11 w-11 shrink-0 text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="icon" aria-label={t({ it: 'Torna alla home', en: 'Back to home' })} onClick={() => router.push('/dashboard')} className="h-11 w-11 shrink-0 text-muted-foreground hover:text-foreground">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="hidden sm:block">
@@ -2390,7 +2403,7 @@ export default function TablePage() {
                   Playgroup
                 </span>
                 <span className="truncate font-semibold text-foreground">{group.name}</span>
-                {group.description && <span className="hidden text-sm text-muted-foreground md:block">— {group.description}</span>}
+                {group.description && <span className="hidden min-w-0 truncate text-sm text-muted-foreground md:block">— {group.description}</span>}
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1 sm:gap-2">
@@ -2405,7 +2418,7 @@ export default function TablePage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
+      <main className="web-container max-w-7xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
         <PanelWithActions
           variant="strong"
           className="relative mb-5 sm:mb-8"
@@ -2498,7 +2511,7 @@ export default function TablePage() {
           <p className="text-xs uppercase tracking-[0.24em] text-emerald-200">{t({ it: 'Sala operativa', en: 'Command room' })}</p>
           <div className="mt-1 flex min-w-0 items-center gap-2 lg:pr-24">
             <div className="flex min-w-0 items-center gap-2">
-              <h1 className="truncate text-2xl font-bold text-foreground">{group.name}</h1>
+              <h1 className="break-words text-2xl font-bold text-foreground">{group.name}</h1>
               {canManageGroup && (
                 <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-muted-foreground hover:text-foreground" onClick={openEditArena} aria-label={t({ it: 'Modifica playgroup', en: 'Edit playgroup' })}>
                   <Pencil className="h-4 w-4" />
@@ -2586,7 +2599,7 @@ export default function TablePage() {
             <div className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:flex xl:w-auto xl:flex-wrap xl:justify-end">
               {activeTab === 'commanders' ? (
                 <Select value={deckStatsSort} onValueChange={(value) => setDeckStatsSort(value as typeof deckStatsSort)}>
-                  <SelectTrigger className="h-11 w-full min-w-0 bg-card/70 border-border text-foreground xl:min-w-[11rem]">
+                  <SelectTrigger aria-label={t({ it: 'Ordina mazzi', en: 'Sort decks' })} className="h-11 w-full min-w-0 bg-card/70 border-border text-foreground xl:min-w-[11rem]">
                     <SelectValue placeholder={t({ it: 'Ordina per', en: 'Sort by' })} />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
@@ -2597,7 +2610,7 @@ export default function TablePage() {
               ) : null}
               {activeTab === 'commanders' || activeTab === 'meta' ? (
                 <Select value={bracketFilter} onValueChange={setBracketFilter}>
-                  <SelectTrigger className="h-11 w-full min-w-0 bg-card/70 border-border text-foreground xl:min-w-[10rem]">
+                  <SelectTrigger aria-label={t({ it: 'Filtra per bracket', en: 'Filter by bracket' })} className="h-11 w-full min-w-0 bg-card/70 border-border text-foreground xl:min-w-[10rem]">
                     <SelectValue placeholder={t({ it: 'Bracket', en: 'Bracket' })} />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
@@ -2612,7 +2625,7 @@ export default function TablePage() {
               ) : null}
               {activeTab !== 'awards' ? (
                 <Select value={dateFilter} onValueChange={(v) => setDateFilter(v as typeof dateFilter)}>
-                  <SelectTrigger className="h-11 w-full min-w-0 bg-card/70 border-border text-foreground xl:min-w-[10rem]">
+                  <SelectTrigger aria-label={t({ it: 'Periodo partite', en: 'Match period' })} className="h-11 w-full min-w-0 bg-card/70 border-border text-foreground xl:min-w-[10rem]">
                     <Calendar className="mr-2 h-4 w-4 shrink-0" />
                     <SelectValue />
                   </SelectTrigger>
@@ -3194,65 +3207,7 @@ export default function TablePage() {
               </Card>
             ) : (
               <div className="space-y-6">
-                <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  <Card className="bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border-emerald-500/30">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-2 text-emerald-400 mb-2">
-                        <Trophy className="w-5 h-5" />
-                        <span className="text-sm font-medium">{t({ it: 'Miglior mazzo', en: 'Best Deck' })}</span>
-                      </div>
-                      <p className="text-xl font-bold text-foreground truncate">{visibleDeckStats[0]?.name || '-'}</p>
-                      <p className="text-xs text-muted-foreground">{visibleDeckStats[0]?.ownerDisplayName || '-'}</p>
-                      {visibleDeckStats[0]?.bracket && (
-                        <p className="text-xs text-emerald-300">
-                          {t({ it: 'Bracket', en: 'Bracket' })} {visibleDeckStats[0].bracket}
-                        </p>
-                      )}
-                      <p className="text-sm text-muted-foreground">{visibleDeckStats[0]?.winRate ?? 0}% {t({ it: 'win rate', en: 'win rate' })}</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-card/50 border-border">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                        <Swords className="w-5 h-5" />
-                        <span className="text-sm font-medium">{t({ it: 'Mazzi unici', en: 'Unique Decks' })}</span>
-                      </div>
-                      <p className="text-2xl font-bold text-foreground">{deckStats.length}</p>
-                      <p className="text-sm text-muted-foreground">{t({ it: 'mazzi tracciati', en: 'tracked decks' })}</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-card/50 border-border">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                        <Target className="w-5 h-5" />
-                        <span className="text-sm font-medium">{t({ it: 'Piu giocato', en: 'Most Played' })}</span>
-                      </div>
-                      <p className="text-xl font-bold text-foreground truncate">
-                        {[...visibleDeckStats].sort((a, b) => b.gamesPlayed - a.gamesPlayed)[0]?.name || '-'}
-                      </p>
-                      {[...visibleDeckStats].sort((a, b) => b.gamesPlayed - a.gamesPlayed)[0]?.bracket && (
-                        <p className="text-xs text-emerald-300">
-                          {t({ it: 'Bracket', en: 'Bracket' })} {[...visibleDeckStats].sort((a, b) => b.gamesPlayed - a.gamesPlayed)[0].bracket}
-                        </p>
-                      )}
-                      <p className="text-sm text-muted-foreground">
-                        {[...visibleDeckStats].sort((a, b) => b.gamesPlayed - a.gamesPlayed)[0]?.gamesPlayed || 0} {t({ it: 'partite', en: 'games' })}
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-card/50 border-border">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                        <TrendingUp className="w-5 h-5" />
-                        <span className="text-sm font-medium">{t({ it: 'Win rate medio', en: 'Avg Win Rate' })}</span>
-                      </div>
-                      <p className="text-2xl font-bold text-foreground">
-                        {visibleDeckStats.length > 0 ? Math.round(visibleDeckStats.reduce((a, b) => a + b.winRate, 0) / visibleDeckStats.length) : 0}%
-                      </p>
-                      <p className="text-sm text-muted-foreground">{t({ it: 'su tutti i mazzi', en: 'across all decks' })}</p>
-                    </CardContent>
-                  </Card>
-                </div>
+                <ArenaDeckSummary visibleDeckStats={visibleDeckStats} totalDecks={deckStats.length} />
 
                 <Card className="bg-card/50 border-border">
                   <CardHeader>
@@ -3486,8 +3441,8 @@ export default function TablePage() {
                       const selectedDeck = getSelectedParticipantDeck(participantKey);
 
                       return (
+                        <div key={participantKey}>
                         <MatchParticipantRow
-                          key={participantKey}
                           participantKey={participantKey}
                           displayName={getProfileDisplayName(member)}
                           deckCount={deckOptions.length}
@@ -3500,9 +3455,14 @@ export default function TablePage() {
                           onToggle={() => toggleParticipantSelection(participantKey)}
                           onSearchChange={(value) => setParticipantDeckSearches((prev) => ({ ...prev, [participantKey]: value }))}
                           onToggleDeckList={() => setHiddenParticipantDeckLists((prev) => ({ ...prev, [participantKey]: !prev[participantKey] }))}
-                          onSelectDeck={(deckId) => setParticipantDecks((prev) => ({ ...prev, [participantKey]: deckId }))}
+                          onSelectDeck={(deckId) => { if (!anyOccasionalCreationBusy) setParticipantDecks((prev) => ({ ...prev, [participantKey]: deckId })); }}
 
                         />
+                        {selectedParticipantKeys.includes(participantKey) && <OccasionalDeckForm key={`${participantKey}:${participantDecks[participantKey] || ''}`} groupId={groupId} userId={member.id} disabled={anyOccasionalCreationBusy} onBusyChange={busy => setOccasionalCreationBusy(current => ({ ...current, [participantKey]: busy }))} onCreated={(deck) => {
+                          setOccasionalChoices(current => [...current.filter(item => item.id !== deck.id), deck as Deck]);
+                          setParticipantDecks(current => ({ ...current, [participantKey]: deck.id }));
+                        }} />}
+                        </div>
                       );
                     })}
                   </div>
@@ -3557,7 +3517,7 @@ export default function TablePage() {
                               onToggle={() => toggleParticipantSelection(participantKey)}
                               onSearchChange={(value) => setParticipantDeckSearches((prev) => ({ ...prev, [participantKey]: value }))}
                               onToggleDeckList={() => setHiddenParticipantDeckLists((prev) => ({ ...prev, [participantKey]: !prev[participantKey] }))}
-                              onSelectDeck={(deckId) => setParticipantDecks((prev) => ({ ...prev, [participantKey]: deckId }))}
+                              onSelectDeck={(deckId) => { if (!anyOccasionalCreationBusy) setParticipantDecks((prev) => ({ ...prev, [participantKey]: deckId })); }}
     
                             />
                           );
@@ -3648,8 +3608,8 @@ export default function TablePage() {
             </CardContent>
             <div className="shrink-0 border-t border-border/70 bg-card px-6 py-4">
               <div className="flex gap-3">
-                <Button type="button" variant="outline" onClick={resetMatchForm} className="flex-1 border-border text-foreground">{t({ it: 'Annulla', en: 'Cancel' })}</Button>
-                <Button onClick={handleCreateMatch} disabled={savingMatch} className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-700">
+                <Button type="button" variant="outline" onClick={resetMatchForm} disabled={anyOccasionalCreationBusy} className="flex-1 border-border text-foreground">{t({ it: 'Annulla', en: 'Cancel' })}</Button>
+                <Button onClick={handleCreateMatch} disabled={savingMatch || anyOccasionalCreationBusy} className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-700">
                   {savingMatch ? t({ it: 'Registrazione...', en: 'Recording...' }) : t({ it: 'Registra partita', en: 'Record Battle' })}
                 </Button>
               </div>
@@ -4131,6 +4091,7 @@ export default function TablePage() {
                               <label className="text-xs font-medium text-muted-foreground">{t({ it: 'Giocatore', en: 'Player' })}</label>
                               <Select
                                 value={participantKey}
+                                disabled={anyOccasionalCreationBusy}
                                 onValueChange={(value) => {
                                   const nextKey = value as ParticipantKey;
                                   const previousKey = editMatchPlayerKeys[p.id] || getParticipantKey(p);
@@ -4153,6 +4114,11 @@ export default function TablePage() {
                             </div>
                           ) : null}
 
+                          {parsedPlayer?.type === 'user' && <OccasionalDeckForm key={`${participantKey}:${editMatchPlayerDecks[p.id] || ''}`} groupId={groupId} userId={parsedPlayer.id} disabled={anyOccasionalCreationBusy} onBusyChange={busy => setOccasionalCreationBusy(current => ({ ...current, [p.id]: busy }))} onCreated={(deck) => {
+                            setOccasionalChoices(current => [...current.filter(item => item.id !== deck.id), deck as Deck]);
+                            setEditMatchPlayerDecks(current => ({ ...current, [p.id]: deck.id }));
+                          }} />}
+
                           {deckOptions.length > 0 ? (
                             deckListHidden ? (
                               <div className="rounded-lg border border-border/70 bg-background/35 px-3 py-2 text-xs text-muted-foreground">
@@ -4165,7 +4131,8 @@ export default function TablePage() {
                                 <div className="grid grid-cols-1 gap-3 sm:grid-flow-col sm:auto-cols-[minmax(290px,320px)] sm:overflow-x-auto sm:pb-3">
                                   <button
                                     type="button"
-                                    onClick={() => setEditMatchPlayerDecks((prev) => ({ ...prev, [p.id]: '' }))}
+                                    disabled={anyOccasionalCreationBusy}
+                                    onClick={() => { if (!anyOccasionalCreationBusy) setEditMatchPlayerDecks((prev) => ({ ...prev, [p.id]: '' })); }}
                                     className={`h-28 rounded-lg border p-3 text-left text-xs transition-colors ${
                                       !editMatchPlayerDecks[p.id] ? 'border-emerald-500 bg-emerald-500/10' : 'border-border bg-background/25 hover:border-emerald-500/50'
                                     }`}
@@ -4178,7 +4145,8 @@ export default function TablePage() {
                                     <button
                                       key={deck.id}
                                       type="button"
-                                      onClick={() => setEditMatchPlayerDecks((prev) => ({ ...prev, [p.id]: deck.id }))}
+                                      disabled={anyOccasionalCreationBusy}
+                                      onClick={() => { if (!anyOccasionalCreationBusy) setEditMatchPlayerDecks((prev) => ({ ...prev, [p.id]: deck.id })); }}
                                       className={`min-h-[7.5rem] rounded-lg border p-3 text-left transition-colors ${
                                         editMatchPlayerDecks[p.id] === deck.id
                                           ? 'border-emerald-500 bg-emerald-500/10'
@@ -4300,7 +4268,9 @@ export default function TablePage() {
                 <Button
                   type="button"
                   variant="outline"
+                  disabled={anyOccasionalCreationBusy}
                   onClick={() => {
+                    if (anyOccasionalCreationBusy) return;
                     setEditingMatch(null);
                     setEditMatchDeckSearches({});
                     setHiddenEditMatchDeckLists({});
@@ -4311,7 +4281,7 @@ export default function TablePage() {
                 </Button>
                 <Button
                   onClick={handleSaveEditMatch}
-                  disabled={savingEditMatch || (!editMatchIsDraw && !editMatchWinnerKey)}
+                  disabled={savingEditMatch || anyOccasionalCreationBusy || (!editMatchIsDraw && !editMatchWinnerKey)}
                   className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-700"
                 >
                   {savingEditMatch ? t({ it: 'Salvataggio...', en: 'Saving...' }) : t({ it: 'Salva modifiche', en: 'Save Changes' })}

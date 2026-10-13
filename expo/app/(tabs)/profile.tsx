@@ -34,7 +34,7 @@ import { useProfileDecks } from '@/hooks/use-profile-decks';
 import { useScreenInsets } from '@/hooks/use-screen-insets';
 import type { CommanderMetadataOption } from '@/lib/deck-metadata';
 import { getDeckDisplayColors } from '@/lib/deck-metadata';
-import { getDeckMastery } from '@/lib/deck-mastery';
+import { getDeckMastery, getHighestMasteryDeck } from '@/lib/deck-mastery';
 import { MANA_COLOR_ORDER } from '@/lib/mana-colors';
 import { getProfileDisplayName } from '@/lib/profile-display';
 import { getSupabaseErrorMessage } from '@/lib/supabase-errors';
@@ -142,7 +142,7 @@ export default function ProfileScreen() {
     const entries = Object.values(performance);
     const games = entries.reduce((sum, item) => sum + item.gamesPlayed, 0);
     const wins = entries.reduce((sum, item) => sum + item.wins, 0);
-    const favorite = decks.find((deck) => deck.is_favorite) || decks[0];
+    const favorite = getHighestMasteryDeck(decks, (deck) => performance[deck.id]);
     return { games, winRate: games ? Math.round((wins / games) * 100) : 0, favorite };
   }, [decks, performance]);
 

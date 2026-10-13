@@ -19,7 +19,7 @@ export function getTurnstileSiteKey() {
 }
 
 export function getSupportEmail() {
-  return process.env.EXPO_PUBLIC_SUPPORT_EMAIL ?? 'support@phyrexianarena.dpdns.org';
+  return process.env.EXPO_PUBLIC_SUPPORT_EMAIL ?? 'support@21life.win';
 }
 
 export function isFdroidBuild() {

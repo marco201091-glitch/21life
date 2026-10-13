@@ -62,3 +62,6 @@ che ne dipende; non equivale a un risultato positivo.
 - [ ] Confermare accettazione/avvio. Monitorare fino alla conclusione soltanto
   quando richiesto dal PM. Non dichiarare «pubblicato» o «completato» a questo punto.
 
+- [ ] Back-merge main/Dev: controllare checklist concorrenti; zero marker di conflitto e zero file unmerged prima di build/deploy.
+- [ ] Unit test importazione: fixture offline per API esterne; HTTP403 esterni non giustificano bypass dei controlli merge.
+- [ ] Shared web Button style changes: run desktop/mobile life-feedback E2E with normal/system/app reduced motion before promotion.

@@ -9,6 +9,13 @@ import {
 } from '@/lib/oauth-return-origin';
 
 describe('oauth-return-origin', () => {
+  it('accepts the new 21Life origins alongside installed-client origins', () => {
+    for (const origin of ['https://app.21life.win', 'https://dev.21life.win', 'https://test.21life.win', 'https://app.phyrexianarena.dpdns.org', 'https://dev.phyrexianarena.dpdns.org']) {
+      expect(getSafeOAuthReturnOrigin(`${origin}/auth/callback`)).toBe(origin);
+    }
+    expect(getSafeOAuthReturnOrigin('https://dev.21life.win.attacker.example')).toBeNull();
+    expect(getSafeOAuthReturnOrigin('http://dev.21life.win')).toBeNull();
+  });
   it('accepts only the self-hosted application origins and localhost', () => {
     for (const origin of [
       PRODUCTION_SITE_ORIGIN,

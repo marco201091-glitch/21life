@@ -33,15 +33,20 @@ node "%~dp0update-mobile-version.mjs" "%VERSION%"
 if errorlevel 1 goto :fail
 
 set "APP_VARIANT=dev"
+set "SENTRY_DISABLE_AUTO_UPLOAD=true"
 node "%~dp0verify-expo-build-env.mjs" dev
 if errorlevel 1 goto :fail
 
 echo [2/6] Stop Gradle
-if exist "%EXPO_DIR%\android\gradlew.bat" call "%EXPO_DIR%\android\gradlew.bat" --stop
+if exist "%EXPO_DIR%\android\gradlew.bat" (
+    call "%EXPO_DIR%\android\gradlew.bat" --stop
+    if errorlevel 1 goto :fail
+)
 
 echo [3/6] Clean native cache
 if exist "%EXPO_DIR%\node_modules\react-native-reanimated\android\.cxx" (
     rmdir /s /q "%EXPO_DIR%\node_modules\react-native-reanimated\android\.cxx"
+    if errorlevel 1 goto :fail
 )
 
 echo [4/6] Generate Android dev project
@@ -56,7 +61,7 @@ popd
 
 echo [6/6] Build release APK
 pushd "%EXPO_DIR%\android"
-call "%EXPO_DIR%\android\gradlew.bat" assembleRelease -PreactNativeArchitectures=arm64-v8a --console=plain
+call "%EXPO_DIR%\android\gradlew.bat" :app:assembleRelease -PreactNativeArchitectures=arm64-v8a,x86_64 --console=plain
 if errorlevel 1 (
     popd
     goto :fail

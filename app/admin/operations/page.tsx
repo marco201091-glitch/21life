@@ -16,8 +16,12 @@ type Operations = {
   backend: { version: string; commit: string };
   database: { ok: boolean; latencyMs: number };
   expectedLatestMigration: string;
+  migrationRegistry: {
+    registryAvailable: boolean;
+    migrations: Array<{ version: string; name: string; status: string; appliedAt?: string }>;
+  };
   runtimeConfiguration: { minimum_supported_version?: string; recommended_version?: string; feature_flags?: Record<string, boolean> } | null;
-  clientAdoption30d: { appVersions: Record<string, number>; webVisits: number; queryLimited: boolean };
+  clientAdoption30d: { appVersions: Record<string, number>; webVisits: number; queryLimited: boolean; available: boolean };
   notificationDeliveries24h: { counts: Record<string, number>; available: boolean };
   liveGameSync14d: { available: boolean; sessions: number; successfulSyncs: number; failedSyncs: number; failureRate: number; recoveredSessions: number; sessionsWithQueue: number; maxQueueDepth: number; versionConflicts: number; slowestSyncMs: number; queryLimited: boolean };
   backupLastSuccessAt: string | null;
@@ -156,6 +160,9 @@ export default function AdminOperationsPage() {
               <CardTitle className="text-base">{t({ it: 'Chi usa l’app · ultimi 30 giorni', en: 'Who uses the app · last 30 days' })}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {!data.clientAdoption30d.available ? (
+                <p className="text-sm text-muted-foreground">{t({ it: 'Non disponibili.', en: 'Not available.' })}</p>
+              ) : <>
               <div>
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t({ it: 'Accessi da app, per versione', en: 'App visits, by version' })}
@@ -194,6 +201,7 @@ export default function AdminOperationsPage() {
                   {t({ it: 'Dati parziali: raggiunto il limite di lettura.', en: 'Partial data: read limit reached.' })}
                 </p>
               )}
+              </>}
             </CardContent>
           </Card>
 
@@ -279,6 +287,44 @@ export default function AdminOperationsPage() {
                     {t({ it: 'Dati parziali: raggiunto il limite di lettura.', en: 'Partial data: read limit reached.' })}
                   </p>
                 )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t({ it: 'Registro migrazioni', en: 'Migration registry' })}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!data.migrationRegistry.registryAvailable ? (
+              <p className="text-sm text-muted-foreground">{t({ it: 'Registro non disponibile.', en: 'Registry unavailable.' })}</p>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {t({
+                    it: `${data.migrationRegistry.migrations.filter((migration) => migration.status === 'verified').length} verificate; ${data.migrationRegistry.migrations.filter((migration) => migration.status === 'checksum_mismatch').length} con checksum diverso; ${data.migrationRegistry.migrations.filter((migration) => migration.status === 'applied_not_in_checkout').length} non presenti nel checkout.`,
+                    en: `${data.migrationRegistry.migrations.filter((migration) => migration.status === 'verified').length} verified; ${data.migrationRegistry.migrations.filter((migration) => migration.status === 'checksum_mismatch').length} with checksum mismatch; ${data.migrationRegistry.migrations.filter((migration) => migration.status === 'applied_not_in_checkout').length} absent from checkout.`,
+                  })}
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t({
+                    it: `${data.migrationRegistry.migrations.filter((migration) => migration.status === 'unverified_legacy').length} senza record verificabile: le migrazioni storiche possono essere già applicate.`,
+                    en: `${data.migrationRegistry.migrations.filter((migration) => migration.status === 'unverified_legacy').length} without a verifiable record: historical migrations may already be applied.`,
+                  })}
+                </p>
+                <ul className="mt-4 max-h-64 space-y-2 overflow-auto text-xs">
+                  {data.migrationRegistry.migrations.slice(-8).reverse().map((migration) => (
+                    <li key={migration.version} className="flex flex-wrap items-baseline justify-between gap-2 border-t border-border/60 pt-2">
+                      <span className="font-mono">{migration.name}</span>
+                      <span className={migration.status === 'checksum_mismatch' ? 'text-destructive' : 'text-muted-foreground'}>
+                        {migration.status === 'verified' ? t({ it: 'checksum verificato', en: 'checksum verified' })
+                          : migration.status === 'checksum_mismatch' ? t({ it: 'checksum diverso', en: 'checksum mismatch' })
+                            : migration.status === 'applied_not_in_checkout' ? t({ it: 'applicata fuori checkout', en: 'applied outside checkout' })
+                              : t({ it: 'non verificata (storico)', en: 'unverified (legacy)' })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </>
             )}
           </CardContent>

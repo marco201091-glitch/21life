@@ -46,7 +46,7 @@ done
 
 for endpoint in \
   https://app.phyrexianarena.dpdns.org/api/ready \
-  https://dev.phyrexianarena.dpdns.org/api/ready
+  https://dev.21life.win/api/ready
 do
   status=$(curl --silent --show-error --output /dev/null --max-time 8 --write-out '%{http_code}' "$endpoint" || true)
   status=${status:-000}

@@ -15,7 +15,7 @@ function run(config, check) {
   try {
     mkdirSync(resolve(dir, 'scripts'));
     mkdirSync(resolve(dir, 'expo'));
-    for (const name of ['prepare-fdroid-env.mjs', 'verify-expo-build-env.mjs']) {
+    for (const name of ['prepare-fdroid-env.mjs', 'verify-expo-build-env.mjs', 'build-domains.mjs']) {
       copyFileSync(resolve(root, 'scripts', name), resolve(dir, 'scripts', name));
     }
     writeFileSync(resolve(dir, 'expo/fdroid-build-env.json'), JSON.stringify(config));

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { applyIpRateLimit } from '@/app/api/_lib/with-rate-limit';
 import { DEMO_ACCOUNT_EMAIL, isDemoModeEnabled } from '@/lib/demo';
-import { getSupabaseAdminClient } from '@/lib/supabase-admin';
+import { getSupabaseServerConfig } from '@/lib/supabase/server-env';
 
 export const runtime = 'nodejs';
 
@@ -20,12 +21,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Demo login is not configured.' }, { status: 500 });
   }
 
-  const adminClient = getSupabaseAdminClient();
-  if (!adminClient) {
-    return NextResponse.json({ error: 'Demo login is not configured.' }, { status: 500 });
-  }
+  const { url, anonKey } = getSupabaseServerConfig();
+  // Signing in replaces a client's auth session. Never use the shared admin
+  // client here: it must keep its service-role credentials for subsequent RPCs.
+  const demoClient = createClient(url, anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
+  });
 
-  const { data, error } = await adminClient.auth.signInWithPassword({
+  const { data, error } = await demoClient.auth.signInWithPassword({
     email: demoEmail,
     password: demoPassword,
   });

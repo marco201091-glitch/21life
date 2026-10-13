@@ -73,3 +73,6 @@ claude.md
 .env*
 docs/CLAUDE_IPA_BUILD_GUIDE.md
 backups/
+
+# Vitest 5 artifacts
+.vitest/

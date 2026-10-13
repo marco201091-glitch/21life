@@ -1,0 +1,620 @@
+{
+  "lib/access-log-query.ts": {
+    "lines": 55.38,
+    "branches": 55.29,
+    "functions": 72.72,
+    "statements": 56.16
+  },
+  "lib/access-log.ts": {
+    "lines": 100,
+    "branches": 94.73,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/account-export.ts": {
+    "lines": 96.87,
+    "branches": 83.33,
+    "functions": 97.36,
+    "statements": 96.1
+  },
+  "lib/admin.ts": {
+    "lines": 38.46,
+    "branches": 53.33,
+    "functions": 50,
+    "statements": 31.25
+  },
+  "lib/api-rate-limit.ts": {
+    "lines": 2.7,
+    "branches": 0,
+    "functions": 0,
+    "statements": 2.7
+  },
+  "lib/archidekt-commander-images.ts": {
+    "lines": 76.92,
+    "branches": 50,
+    "functions": 100,
+    "statements": 80
+  },
+  "lib/archidekt-sync-server.ts": {
+    "lines": 100,
+    "branches": 84.37,
+    "functions": 100,
+    "statements": 91.37
+  },
+  "lib/arena-analytics-bundle.ts": {
+    "lines": 87.27,
+    "branches": 63.41,
+    "functions": 82.75,
+    "statements": 86.88
+  },
+  "lib/arena-catalog-realtime.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/arena-color-analytics.ts": {
+    "lines": 86.36,
+    "branches": 56.71,
+    "functions": 81.25,
+    "statements": 79.22
+  },
+  "lib/arena-day-fetch.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/arena-invite-qr.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/arena-match-fetch.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/arena-matches.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/arena-membership.ts": {
+    "lines": 100,
+    "branches": 93.75,
+    "functions": 100,
+    "statements": 92.3
+  },
+  "lib/arena-participants.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/arena-seasons.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/arena-session-export.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/arena-session.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/arena-share.ts": {
+    "lines": 100,
+    "branches": 50,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/arena-stats-fetch.ts": {
+    "lines": 100,
+    "branches": 72.95,
+    "functions": 100,
+    "statements": 93.42
+  },
+  "lib/async-utils.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/auth-email-links.ts": {
+    "lines": 91.42,
+    "branches": 83.33,
+    "functions": 100,
+    "statements": 91.66
+  },
+  "lib/auth-email-templates.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/auth-persistence.ts": {
+    "lines": 20,
+    "branches": 0,
+    "functions": 0,
+    "statements": 15.38
+  },
+  "lib/auth-route-policy.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/auth-site-url.ts": {
+    "lines": 100,
+    "branches": 76.92,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/auth-validation.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/authenticated-fetch.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/canonical-host.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/commander-cmc-client.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/commander-cmc.ts": {
+    "lines": 89.65,
+    "branches": 78.78,
+    "functions": 100,
+    "statements": 82.35
+  },
+  "lib/commander-partners.ts": {
+    "lines": 42.1,
+    "branches": 40.32,
+    "functions": 16.66,
+    "statements": 39.58
+  },
+  "lib/commander-search-aliases.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/deck-collection-analytics.ts": {
+    "lines": 90.62,
+    "branches": 74.46,
+    "functions": 86.95,
+    "statements": 89.7
+  },
+  "lib/deck-color-sync.ts": {
+    "lines": 1.28,
+    "branches": 0,
+    "functions": 0,
+    "statements": 1.12
+  },
+  "lib/deck-commander-cmc.ts": {
+    "lines": 77.41,
+    "branches": 73.07,
+    "functions": 92.3,
+    "statements": 70.27
+  },
+  "lib/deck-image-cache-policy.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/deck-image-url.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/deck-importers-server.ts": {
+    "lines": 50.92,
+    "branches": 28.3,
+    "functions": 61.76,
+    "statements": 49.59
+  },
+  "lib/deck-importers.ts": {
+    "lines": 87.5,
+    "branches": 68.88,
+    "functions": 100,
+    "statements": 85
+  },
+  "lib/deck-mastery.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/deck-metadata.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/deck-performance-analytics.ts": {
+    "lines": 98.11,
+    "branches": 70.14,
+    "functions": 91.17,
+    "statements": 93.58
+  },
+  "lib/deck-ranking-visibility.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/demo-commander-images.ts": {
+    "lines": 0,
+    "branches": 100,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/demo-seed.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/demo.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/edhrec.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/global-analytics-query.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/google-auth.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/idle-work.ts": {
+    "lines": 80,
+    "branches": 71.42,
+    "functions": 100,
+    "statements": 80
+  },
+  "lib/join-arena.ts": {
+    "lines": 16.66,
+    "branches": 0,
+    "functions": 50,
+    "statements": 12.5
+  },
+  "lib/leave-arena-confirm.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/legal-documents.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/legal-site.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/live-game-deck-search.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/live-game-duration.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/live-game-history.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/live-game-offline.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/live-game-recap-share.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/live-game-recap.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/live-game-retention.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/live-game-roulette.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/live-game-service.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/live-game-setup.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/live-game-sync-policy.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/live-game-table-layout.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/live-game-telemetry.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/live-game.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/mana-colors.ts": {
+    "lines": 92.3,
+    "branches": 54.16,
+    "functions": 80,
+    "statements": 80.55
+  },
+  "lib/match-datetime.ts": {
+    "lines": 81.81,
+    "branches": 73.68,
+    "functions": 100,
+    "statements": 83.33
+  },
+  "lib/migration-status.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/moxfield-http.ts": {
+    "lines": 7.14,
+    "branches": 25,
+    "functions": 0,
+    "statements": 7.14
+  },
+  "lib/notification-copy.ts": {
+    "lines": 100,
+    "branches": 70,
+    "functions": 100,
+    "statements": 88.88
+  },
+  "lib/oauth-profile.ts": {
+    "lines": 20.68,
+    "branches": 21.87,
+    "functions": 60,
+    "statements": 23.07
+  },
+  "lib/oauth-return-origin.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/participant-keys.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/personal-analytics-query.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/personal-analytics.ts": {
+    "lines": 97.87,
+    "branches": 84.09,
+    "functions": 93.33,
+    "statements": 94.69
+  },
+  "lib/player-awards.ts": {
+    "lines": 100,
+    "branches": 77.27,
+    "functions": 94.73,
+    "statements": 86.36
+  },
+  "lib/profile-display.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/public-arena-analytics.ts": {
+    "lines": 100,
+    "branches": 50,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/push-notifications-server.ts": {
+    "lines": 6.12,
+    "branches": 9.8,
+    "functions": 6.25,
+    "statements": 6.55
+  },
+  "lib/register-user.ts": {
+    "lines": 28.57,
+    "branches": 12.5,
+    "functions": 50,
+    "statements": 28.57
+  },
+  "lib/resend-email.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/reserved-usernames.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/rich-text.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/safe-redirect.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/scryfall.ts": {
+    "lines": 89.76,
+    "branches": 75.2,
+    "functions": 96.29,
+    "statements": 87.8
+  },
+  "lib/supabase-admin.ts": {
+    "lines": 12.5,
+    "branches": 0,
+    "functions": 0,
+    "statements": 12.5
+  },
+  "lib/supabase-auth-recovery.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/supabase-errors.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/supabase.ts": {
+    "lines": 30.76,
+    "branches": 0,
+    "functions": 0,
+    "statements": 30.76
+  },
+  "lib/table-randomizer.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/turnstile-server.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/utils.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/version-policy.ts": {
+    "lines": 100,
+    "branches": 85.71,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/win-rate.ts": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "lib/supabase/middleware.ts": {
+    "lines": 0,
+    "branches": 0,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/supabase/server-env.ts": {
+    "lines": 85.71,
+    "branches": 70,
+    "functions": 100,
+    "statements": 85.71
+  },
+  "lib/supabase/server.ts": {
+    "lines": 0,
+    "branches": 100,
+    "functions": 0,
+    "statements": 0
+  },
+  "lib/validation/auth.ts": {
+    "lines": 0,
+    "branches": 100,
+    "functions": 100,
+    "statements": 0
+  }
+}

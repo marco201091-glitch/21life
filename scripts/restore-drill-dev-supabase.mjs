@@ -1,7 +1,6 @@
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { readBackupPackage } from './backup-package.mjs';
 
 function loadEnv(path) {
   try {
@@ -15,13 +14,7 @@ function loadEnv(path) {
 }
 
 loadEnv(process.env.DOKPLOY_ENV_FILE || '.env.local');
-const backupPath = resolve(process.argv[2] || '');
-if (!process.argv[2] || !backupPath.endsWith('.dump')) {
-  throw new Error('Usage: node scripts/restore-drill-dev-supabase.mjs <backup.dump>');
-}
-const bytes = readFileSync(backupPath);
-const expected = readFileSync(`${backupPath}.sha256`, 'utf8').trim().split(/\s+/)[0];
-if (createHash('sha256').update(bytes).digest('hex') !== expected) throw new Error('Backup checksum mismatch.');
+const { bytes } = readBackupPackage(process.argv[2]);
 
 const host = process.env.SELFHOSTED_DEV_VM_HOST;
 const user = process.env.SELFHOSTED_DEV_VM_USER;
