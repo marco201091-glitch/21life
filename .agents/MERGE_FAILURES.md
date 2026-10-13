@@ -65,10 +65,15 @@ L'avanzamento dei task resta in `PROJECT_CHECKLIST.md`.
 - Recovery: remove only transition-property override, retaining Button default transition-all; phone and gameplay logic unchanged. Verify existing desktop/mobile life-feedback tests on fresh build and remote required checks before merge.
 - Prevention: desktop restyle changes to shared Button must run actual quick-game life-feedback E2E, including normal/system/app reduced motion; setup-only smoke is insufficient.
 
-## 2026-10-13 � allineamento F-Droid 9.1.2
+## 2026-10-13  -  allineamento F-Droid 9.1.2
 - Merge locale origin/main23b23fe nel candidato dafdroid-prepbfe6af2 exit1: conflitti versione/flavor/ledger. Nessun merge remoto o build dipendente avviato.
 - Risoluzione: albero main testato, riapplicate solo differenze F-Droid documentate. Nessun bypass scanner o protezioni. Verificare zero unmerged, versione e gates prima build/tag.
 
 ## 2026-10-13 — gate F-Droid PR194
 - Quality38409246980 Expo failed su doctor:ci: 7patchSDK pubblicate dopo main23b23fe (@expo/ui,expo,crypto,router,screen-orientation,sharing,splash-screen). 314test/coverage verdi; PR194 OPEN, nessunmerge/tag/buildrelease. Nessunbypass: aggiornare solo patch raccomandate e verificare nuovo grafo/audit/source/autolinking prima merge.
 - Prevenzione: doctor:ci sul candidato prima push e preservare il gate strict anche per F-Droid.
+
+## 2026-10-13 — reference F-Droid checkout tag
+- Run38412681575 failed prima build nel nuovo checkgitcat-file tag. PR194 MERGED436fe32 e tagremoto annotatodaaac5be->436fe32 verificati; nessunAPK pubblicato.
+- Causa verificata logactionscheckout: fetch +436fe32:refs/tags/fdroid-v9.1.2 sovrascrive solo il tag locale con ref lightweight. Tagremoto immutato. Recupero: rifetch del tag annotato remoto prima verifica e dispatch orchestrazione separata con checkout tagimmutabile; stessoSHA436fe32 obbligatorio, nessunmovimento del tag.
+- Prevenzione: test riproduce checkoutlightweight; verificare tagremoto/fetch annotato/ancestry/HEAD; separareSHAorchestrazione daSHAsorgenti nei rerun.
