@@ -68,3 +68,7 @@ L'avanzamento dei task resta in `PROJECT_CHECKLIST.md`.
 ## 2026-10-13 — allineamento F-Droid 9.1.2
 - Merge locale origin/main23b23fe nel candidato dafdroid-prepbfe6af2 exit1: conflitti versione/flavor/ledger. Nessun merge remoto o build dipendente avviato.
 - Risoluzione: albero main testato, riapplicate solo differenze F-Droid documentate. Nessun bypass scanner o protezioni. Verificare zero unmerged, versione e gates prima build/tag.
+
+## 2026-10-13 â€” gate F-Droid PR194
+- Quality38409246980 Expo failed su doctor:ci: 7patchSDK pubblicate dopo main23b23fe (@expo/ui,expo,crypto,router,screen-orientation,sharing,splash-screen). 314test/coverage verdi; PR194 OPEN, nessunmerge/tag/buildrelease. Nessunbypass: aggiornare solo patch raccomandate e verificare nuovo grafo/audit/source/autolinking prima merge.
+- Prevenzione: doctor:ci sul candidato prima push e preservare il gate strict anche per F-Droid.

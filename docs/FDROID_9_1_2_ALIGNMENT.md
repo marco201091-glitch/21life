@@ -24,3 +24,7 @@ Publication order: pass candidate CI; merge and verify remote final SHA/tree/ver
 Validation evidence and remaining actions are recorded in PROJECT_CHECKLIST.md. No main/Dev deployment or database change is part of this alignment.
 
 Reference tooling updated to Node24.21.0/npm12.0.2 to match current Debian Forky packages (https://packages.debian.org/forky/nodejs and https://packages.debian.org/forky/npm). Only F-Droid manifests allow npm12; standard branch requirements are unchanged. Source package versions remain locked. Future Debian drift requires a new matched reference and independent reproducibility verification.
+
+CI doctor rejected seven upstream SDK patch drifts after the production snapshot. Updated seven direct dependencies: @expo/ui57.0.23, expo57.0.28, expo-crypto57.0.4, expo-router57.0.26, expo-screen-orientation57.0.3, expo-sharing57.0.23 and expo-splash-screen57.0.10. Domain logic remains unchanged. The existing advisory policy retains the same two IDs, vulnerable leaf versions and expiry; only the exact Expo/CLI ancestor versions are updated to the verified new lock, and the unused Sentry exception is removed. No new advisory or extended exemption was accepted.
+
+The SDK patch update also resolves normal lockfile transitives, including Expo autolinking57.0.15 and modules-core57.0.22. Repeated clean prebuild confirms all22Expo Android projects still build from source on the new lock; no aarProjects are permitted.
