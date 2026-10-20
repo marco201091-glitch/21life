@@ -6,7 +6,7 @@ import {
 } from '@/lib/deck-importers';
 
 const ARCHIDEKT_USER_AGENT = process.env.ARCHIDEKT_USER_AGENT
-  || '21Life/9.0 (https://app.phyrexianarena.dpdns.org)';
+  || '21Life/9.1 (https://app.21life.win)';
 import {
   buildMoxfieldApiUrls,
   buildMoxfieldHeaders,
@@ -204,7 +204,7 @@ async function fetchArchidektPrintingImage(card: ArchidektCard, commanderName: s
   try {
     const response = await fetch(
       `https://api.scryfall.com/cards/${encodeURIComponent(setCode)}/${encodeURIComponent(collectorNumber)}`,
-      { signal, headers: { Accept: 'application/json', 'User-Agent': '21Life/9.0 (https://app.phyrexianarena.dpdns.org)' } },
+      { signal, headers: { Accept: 'application/json', 'User-Agent': '21Life/9.1 (https://app.21life.win)' } },
     );
     if (!response.ok) return null;
 

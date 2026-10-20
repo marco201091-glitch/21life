@@ -37,7 +37,7 @@
 
 ### Task 2: Preparare domini e servizi
 
-**Files:** lib/canonical-host.ts, lib/legal-site.ts, expo/lib/env.ts, docs/SUPABASE_OPERATIONS.md, ops/vm-health-alert.sh, scripts/vm-health-alert.sh, env locali e remoti.
+**Files:** lib/canonical-host.ts, lib/legal-site.ts, expo/lib/env.ts, docs/SUPABASE_OPERATIONS.md, ops/vm-health-alert.sh, ops/vm-health-alert.sh, env locali e remoti.
 
 - [ ] Registrare/ottenere controllo dominio; creare host app/dev/test/backend necessari secondo inventario effettivo, TLS e routing Dokploy.
 - [x] Aggiornare configurazioni Dev, Supabase Auth site URL/redirect, Google OAuth, Turnstile, email Resend e DNS SPF/DKIM/DMARC. Supabase Dev pubblico nuovo e legacy verificati; env Dokploy efficaci al prossimo deploy.

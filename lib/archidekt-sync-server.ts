@@ -22,7 +22,7 @@ export async function fetchArchidektSyncDecks(username: string) {
       url.searchParams.set('page', String(page));
       const response = await fetch(url.toString(), {
         cache: 'no-store', signal: controller.signal,
-        headers: { Accept: 'application/json', 'User-Agent': '21Life/9.0 (https://app.phyrexianarena.dpdns.org)' },
+        headers: { Accept: 'application/json', 'User-Agent': '21Life/9.1 (https://app.21life.win)' },
       });
       if (!response.ok) throw new Error(`Archidekt profile request failed (${response.status}).`);
       const payload = await response.json();
