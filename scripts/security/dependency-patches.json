@@ -1,0 +1,22 @@
+[
+  {
+    "package": "braces",
+    "version": "3.0.3",
+    "file": "lib/parse.js",
+    "before": "      stack.push(block);",
+    "after": "      if (stack.length >= 129) {\n        throw new RangeError('Brace nesting limit exceeded (128)');\n      }\n      stack.push(block);",
+    "advisory": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+    "originalSha256": "e572166565f15fa6ad9865ae49d678218e32aabfd1b3720f6d0d43d39800d310",
+    "patchedSha256": "e0b1c4689ee7929605414deca24ffb3de10243efaa002d180f6172aa750718b5"
+  },
+  {
+    "package": "node-forge",
+    "version": "1.4.0",
+    "file": "lib/rsa.js",
+    "before": "obj.value.length !== 2)",
+    "after": "obj.value.length !== 2 ||\n            obj.value[0].value.length !==\n              (('parameters' in capture) ? 2 : 1))",
+    "advisory": "https://github.com/advisories/GHSA-86w9-cpqp-85rv",
+    "originalSha256": "fd4740238145ec26470eb3f06a627c72039538ce1307dbdce40521f94dfd0a50",
+    "patchedSha256": "c9b1e3799e230528b6d6815c1f6cd3c6058b9d45975264b55d995abb976589af"
+  }
+]

@@ -7,6 +7,6 @@ describe('push delivery classification', () => {
     expect(classifyExpoPushResult({ status: 'error', details: { error: 'DeviceNotRegistered' } }))
       .toEqual({ status: 'permanent_error', providerCode: 'DeviceNotRegistered' });
     expect(classifyExpoPushResult({ status: 'error', details: { error: 'MessageTooBig' } }))
-      .toEqual({ status: 'retryable_error', providerCode: 'MessageTooBig' });
+      .toEqual({ status: 'permanent_error', providerCode: 'MessageTooBig' });
   });
 });

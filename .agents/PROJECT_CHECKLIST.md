@@ -208,3 +208,7 @@ Le note precedenti descrivono le fasi storiche; questa sezione indica lo stato c
   Verifica locale: quality web ed Expo completate exit0 (lint, typecheck, coverage ratchet, test, security/operations/knip). Revisione indipendente senza problemi; test mastery web9/9, Expo4/4. Correzione pronta per PR Dev; versione resta9.1.0.
 
 - [ ] Guests iPad9.1.0: corretto manager/modulo/alert su un singolo host nativo; form preservato su errori, condivisione claim con catch, label accessibili. quality Expo293test/lint/typecheck/coverage101/asset/knip verdi; regressioni15mirate, review indipendente senza problemi. Verifica reale Dev con fixture sintetiche e bundle iOS in corso, nessuna produzione/collaudo fisico.
+
+- [ ] PM2026-10-21 Dev9.1.3: worktree21life-dev-913/feat/dev-9.1.3 daoriginDev0eec444; patchtecnicheadvisory (nessunaderoga), registrazionepush/stato/logout, configurazioneFCM, coda/receipt/eventotransazionale, migrazioneDev e versioni/test. CredenzialiFirebaseEAS nonnote; primariopreservato.
+
+- [ ] Dev9.1.3 implementazione pronta per verifica finale: patchtecnicheadvisory conhash/postinstall/auditfailclosed e828testupstreamforge; registrazionepush/stato/logout+revocaserver, queue/receipt/eventotransazionale. Migrazioni20261021145111+20261021150824 applicateDev/testROLLBACKPASS; versioni9.1.3/90103. FirebaseEAS/secretGitHub/worker/testfisico pendenti; nessunmain/prod/deploy. Report docs/RELEASE_9.1.3_DEV.md.

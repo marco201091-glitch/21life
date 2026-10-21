@@ -1,6 +1,10 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type AppNotificationType = 'arena_invite' | 'arena_member_joined' | 'match_completed' | 'season_completed';
+export type AppNotificationType =
+  | "arena_invite"
+  | "arena_member_joined"
+  | "match_completed"
+  | "season_completed";
 
 type NotificationPreferenceRow = {
   user_id: string;
@@ -13,16 +17,26 @@ type NotificationPreferenceRow = {
 
 type NotificationInput = {
   type: AppNotificationType;
-  content: Record<'it' | 'en', { title: string; body: string }>;
+  content: Record<"it" | "en", { title: string; body: string }>;
   data?: Record<string, string>;
   dedupeKey?: string;
 };
 
-export function classifyExpoPushResult(result: { status?: string; details?: { error?: string } } | undefined) {
-  if (result?.status === 'ok') return { status: 'sent' as const, providerCode: null };
-  const providerCode = result?.details?.error ?? 'UnknownProviderError';
+export function classifyExpoPushResult(
+  result: { status?: string; details?: { error?: string } } | undefined,
+) {
+  if (result?.status === "ok")
+    return { status: "sent" as const, providerCode: null };
+  const providerCode = result?.details?.error ?? "UnknownProviderError";
   return {
-    status: providerCode === 'DeviceNotRegistered' ? 'permanent_error' as const : 'retryable_error' as const,
+    status: [
+      "DeviceNotRegistered",
+      "MessageTooBig",
+      "InvalidCredentials",
+      "MismatchSenderId",
+    ].includes(providerCode)
+      ? ("permanent_error" as const)
+      : ("retryable_error" as const),
     providerCode,
   };
 }
@@ -39,14 +53,21 @@ export async function notifyUsers(
   // Missing preference rows mean opt-in. If an older V8 schema does not have
   // the table yet, preserve the previous behavior instead of dropping alerts.
   const preferenceResult = await admin
-    .from('notification_preferences')
-    .select('user_id, arena_invite, arena_member_joined, match_completed, season_completed, push_enabled')
-    .in('user_id', recipients);
+    .from("notification_preferences")
+    .select(
+      "user_id, arena_invite, arena_member_joined, match_completed, season_completed, push_enabled",
+    )
+    .in("user_id", recipients);
   const preferences = preferenceResult.error
     ? new Map<string, NotificationPreferenceRow>()
-    : new Map(((preferenceResult.data ?? []) as NotificationPreferenceRow[])
-        .map((row) => [row.user_id, row]));
-  const inboxRecipients = recipients.filter((userId) => preferences.get(userId)?.[notification.type] !== false);
+    : new Map(
+        ((preferenceResult.data ?? []) as NotificationPreferenceRow[]).map(
+          (row) => [row.user_id, row],
+        ),
+      );
+  const inboxRecipients = recipients.filter(
+    (userId) => preferences.get(userId)?.[notification.type] !== false,
+  );
   if (!inboxRecipients.length) return;
 
   const localizedData = {
@@ -62,87 +83,32 @@ export async function notifyUsers(
     title: notification.content.it.title,
     body: notification.content.it.body,
     data: localizedData,
-    dedupe_key: notification.dedupeKey ? `${notification.dedupeKey}:${userId}` : null,
+    dedupe_key: notification.dedupeKey
+      ? `${notification.dedupeKey}:${userId}`
+      : null,
   }));
   let pushRecipients = inboxRecipients;
   if (options.persist !== false) {
     const inserted = notification.dedupeKey
       ? await admin
-          .from('app_notifications')
-          .upsert(rows, { onConflict: 'dedupe_key', ignoreDuplicates: true })
-          .select('user_id')
-      : await admin.from('app_notifications').insert(rows);
+          .from("app_notifications")
+          .upsert(rows, { onConflict: "dedupe_key", ignoreDuplicates: true })
+          .select("user_id")
+      : await admin.from("app_notifications").insert(rows);
     if (inserted.error) {
-      console.error('[notifications] inbox insert failed', { code: inserted.error.code });
+      console.error("[notifications] inbox insert failed", {
+        code: inserted.error.code,
+      });
       return;
     }
     if (notification.dedupeKey) {
-      pushRecipients = ((inserted.data ?? []) as Array<{ user_id: string }>)
-        .map((row) => row.user_id);
+      pushRecipients = (
+        (inserted.data ?? []) as Array<{ user_id: string }>
+      ).map((row) => row.user_id);
       if (!pushRecipients.length) return;
     }
   }
 
-  pushRecipients = pushRecipients.filter((userId) => preferences.get(userId)?.push_enabled !== false);
-  if (!pushRecipients.length) return;
-
-  const localizedTokenResult = await admin
-    .from('push_tokens')
-    .select('id, user_id, expo_push_token, locale')
-    .in('user_id', pushRecipients);
-  const tokenResult = localizedTokenResult.error
-    ? await admin.from('push_tokens').select('id, user_id, expo_push_token').in('user_id', pushRecipients)
-    : localizedTokenResult;
-  const tokens = (tokenResult.data ?? []) as Array<{ id: string; user_id: string; expo_push_token: string; locale?: string }>;
-  if (tokenResult.error || !tokens.length) return;
-
-  const messages = tokens.map((token) => {
-    const language = token.locale === 'en' ? 'en' : 'it';
-    const content = notification.content[language];
-    return {
-      to: token.expo_push_token,
-      sound: 'default',
-      title: content.title,
-      body: content.body,
-      data: { type: notification.type, ...(notification.data ?? {}) },
-    };
-  });
-  const deliveryStartedAt = Date.now();
-  const response = await fetch('https://exp.host/--/api/v2/push/send', {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Accept-Encoding': 'gzip, deflate',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(messages),
-  }).catch(() => null);
-  const latencyMs = Date.now() - deliveryStartedAt;
-  if (!response?.ok) {
-    await admin.from('notification_delivery_attempts').insert(tokens.map((token) => ({
-      user_id: token.user_id,
-      provider: 'expo',
-      status: 'retryable_error',
-      provider_code: response ? `HTTP_${response.status}` : 'NETWORK_ERROR',
-      latency_ms: latencyMs,
-    }))).then(() => undefined);
-    return;
-  }
-  const payload = await response.json().catch(() => null) as {
-    data?: Array<{ status?: string; details?: { error?: string } }>;
-  } | null;
-  await admin.from('notification_delivery_attempts').insert(tokens.map((token, index) => {
-    const classified = classifyExpoPushResult(payload?.data?.[index]);
-    return {
-      user_id: token.user_id,
-      provider: 'expo',
-      status: classified.status,
-      provider_code: classified.providerCode,
-      latency_ms: latencyMs,
-    };
-  })).then(() => undefined);
-  const invalidIds = tokens
-    .filter((_token, index) => payload?.data?.[index]?.details?.error === 'DeviceNotRegistered')
-    .map((token) => token.id);
-  if (invalidIds.length) await admin.from('push_tokens').delete().in('id', invalidIds);
+  // The inbox INSERT trigger queues existing devices transactionally, including
+  // notifications generated by SQL triggers. The worker owns all delivery retries.
 }
