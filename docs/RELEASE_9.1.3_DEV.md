@@ -62,3 +62,9 @@ Le unit sono predisposte, non installate né avviate. Senza worker la coda non v
 ## Gate residui
 
 Accessi/configurazione Firebase/EAS, secret client GitHub, attivazione worker dopo deploy Dev e test fisico. APK nativa non compilabile utilmente senza questi prerequisiti. F-Droid conserva soltanto le notifiche interne; non comprende un nuovo trasporto alternativo a Google. Nessuna attestazione di consegna fisica eseguita.
+
+## Verifica del candidato
+
+Sul commit applicativo d35a7b4, Node24.22.0 (archivio ufficiale verificato con SHASUMS256): quality web e Expo PASS;358test web+1skip,324Expo,47script; lint/typecheck/coverage/security/manifest/knip PASS. Build web Next PASS; export bundle Android Dev PASS (non APK). Installazione Expo npm ci pulita applica le patch e verifica gli hash. Audit wrapper root e --expo PASS con finding mitigati ancora visibili. Migrazioni indicizzate Git confrontate byte-per-byte e SHA con registro Dev. Review indipendenti sicurezza/push: corretti problemi sparse-checkout, esiti incerti, logout web e race POST/DELETE; grant diretti rimossi e verificati con regressione DB.
+
+Non eseguiti: build APK con Firebase, test di consegna fisica, deploy web/worker, merge in Dev/main, tag e pubblicazione. Il candidato resta una PR di preparazione verso Dev finché sono soddisfatti i gate esterni.
