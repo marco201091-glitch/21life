@@ -9,6 +9,7 @@ web-build/
 .qa-ios-*-config.json
 google-services.dev.json
 google-services.json
+.secrets/
 *.jks
 *.p8
 *.p12
