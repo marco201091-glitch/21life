@@ -47,7 +47,7 @@ GOOGLE_SERVICES_FILE_DEV: percorso assoluto del google-services.json per com.phy
 GOOGLE_SERVICES_FILE: percorso assoluto del file per com.phyrexianarena.app.
 GitHub release standard: secret GOOGLE_SERVICES_JSON_BASE64, decodificato in RUNNER_TEMP. La chiave privata FCM v1 va su EAS per lo stesso progetto Firebase/EAS, mai nell'APK o in variabili EXPO_PUBLIC. Verificare certificato reale della firma Obtainium nelle eventuali restrizioni API.
 
-Verificati soli nomi dei secret GitHub: configurazione Google assente. Nessun file Firebase trovato nel repository locale, nessun browser connesso disponibile per controllare le console. Progetto EAS esistente7106d709-b1a4-4fb5-a978-3465793a2015; accesso/proprietà/credenziale FCM restano da verificare. Non sono stati creati progetti o credenziali.
+Verificati soli nomi dei secret GitHub: configurazione Google assente. Nessun file Firebase trovato nel repository locale. L'accesso al progetto EAS esistente `7106d709-b1a4-4fb5-a978-3465793a2015` è confermato; il progetto Firebase e la relativa credenziale FCM v1 devono ancora essere creati/collegati. Non sono stati creati progetti o credenziali.
 
 ## Attivazione worker (necessaria prima di considerare operative le push)
 
