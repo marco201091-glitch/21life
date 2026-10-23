@@ -52,6 +52,8 @@ if exist "%EXPO_DIR%\node_modules\react-native-reanimated\android\.cxx" (
 echo [4/6] Generate Android dev project
 rem Expo SDK 57 autolinking resolves package.json via the real project path.
 pushd "%EXPO_DIR%"
+node "%ROOT_DIR%\scripts\verify-push-build.mjs" dev
+if errorlevel 1 exit /b 1
 call npx expo prebuild --platform android --clean
 if errorlevel 1 (
     popd

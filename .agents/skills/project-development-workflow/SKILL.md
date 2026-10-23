@@ -51,6 +51,7 @@ description: Apply the PM-led, specification-driven workflow for 21Life. Use for
   - `expo/plugins/`: native Expo configuration plugins.
   - `expo/tests/`: mobile test suites.
 - Archidekt arena sync: `app/api/arena-archidekt-sync/route.ts` owns authentication/membership/opt-in; `lib/archidekt-sync-server.ts` owns fresh bounded imports; private atomic SQL helpers save target decks. Expo wizard consumes explicit results through `expo/lib/arena-archidekt-sync.ts`; legacy queue remains for older clients. See `docs/ARCHIDEKT_ARENA_SYNC.md`.
+- Push delivery 9.1.3: `expo/lib/push-device.ts` owns native registration and logout; `lib/push-delivery-worker.ts` processes transactional `push_delivery_queue` via service-only claims; `app/api/internal/push-delivery/route.ts` requires worker secret; `ops/systemd/21life-push-delivery@.*` schedules the caller. Session revocation RPCs prevent delayed registration after logout. See `docs/RELEASE_9.1.3_DEV.md`.
 - `supabase/`: self-hosted backend configuration, migrations, and Edge Functions.
 - `scripts/`: build, verification, release, and operations automation.
 - `ops/`: VM services and deployment-retention automation.

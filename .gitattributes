@@ -25,3 +25,7 @@ supabase/migrations/20261005140052_recommend_v9_0_5_runtime_update.sql text eol=
 supabase/migrations/20261010105147_occasional_decks.sql -text whitespace=cr-at-eol
 # Keep the prerequisite's bytes identical to both remote migration registries.
 supabase/migrations/20260729070641_v7_favorite_decks_first_in_arena_pickers.sql -text whitespace=cr-at-eol
+
+# Preserve bytes recorded by the Dev migration runner for 9.1.3.
+supabase/migrations/20261021145111_reliable_push_delivery.sql -text whitespace=cr-at-eol
+supabase/migrations/20261021150824_push_session_revocation.sql -text whitespace=cr-at-eol

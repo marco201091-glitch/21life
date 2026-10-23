@@ -19,5 +19,9 @@
     "findstr",
     "expo",
     "maestro"
+  ],
+  "ignoreDependencies": [
+    "braces",
+    "node-forge"
   ]
 }

@@ -1,3 +1,4 @@
+import { verifyDependencyPatches } from './dependency-patches.mjs';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -8,8 +9,8 @@ const severityRank = { info: 0, low: 1, moderate: 2, high: 3, critical: 4 };
 const policy = JSON.parse(readFileSync(new URL('./dependency-audit-policy.json', import.meta.url), 'utf8'));
 if (!Number.isFinite(Date.parse(policy.expiresAt))) throw new Error('Audit exception policy has invalid expiry.');
 
-function acceptedToolingAdvisories(payload, { project, lockfile, now = new Date() } = {}) {
-  if (project !== policy.project || !Number.isFinite(Number(now)) || Number(now) >= Date.parse(policy.expiresAt)) return [];
+function acceptedToolingAdvisories(payload, { project, lockfile, now = new Date(), installedDir } = {}) {
+  if (project !== policy.project || !Number.isFinite(Number(now)) || (Number(now) >= Date.parse(policy.expiresAt) && !(installedDir && verifyDependencyPatches(installedDir)))) return [];
   const entries = Object.entries(payload.vulnerabilities ?? {}).filter(([, v]) => severityRank[v.severity] >= severityRank.high);
   if (!entries.length || payload.metadata.vulnerabilities.critical > 0 || entries.length !== payload.metadata.vulnerabilities.high) return [];
   const reachable = new Set(entries.map(([name]) => name));
@@ -64,8 +65,9 @@ export function summarizeAudit(payload, options = {}) {
   ), 'info');
 
   const acceptedAdvisories = acceptedToolingAdvisories(payload, options);
+  const mitigated = acceptedAdvisories.length > 0 && !!options.installedDir && verifyDependencyPatches(options.installedDir);
   return {
-    ...(acceptedAdvisories.length ? { acceptedAdvisories, exceptionExpiresAt: policy.expiresAt } : {}),
+    ...(acceptedAdvisories.length ? (mitigated ? { mitigatedAdvisories: acceptedAdvisories, mitigation: 'SHA-256 verified source patches' } : { acceptedAdvisories, exceptionExpiresAt: policy.expiresAt }) : {}),
     counts,
     highestSeverity: highest,
     vulnerablePackages: entries.length,
@@ -99,7 +101,7 @@ export function executeAudit(projectDir, run = spawnSync, options = {}) {
     const reason = result.error?.message || result.stderr?.trim() || ('npm audit exited ' + result.status);
     // npm exits nonzero for moderate findings by default; those remain reportable, not blocking.
     const advisoryExit = result.status === 1
-      && ((summary.counts.moderate ?? 0) + (summary.counts.low ?? 0) > 0 || summary.acceptedAdvisories?.length > 0)
+      && ((summary.counts.moderate ?? 0) + (summary.counts.low ?? 0) > 0 || (summary.acceptedAdvisories?.length > 0 || summary.mitigatedAdvisories?.length > 0))
       && !summary.blocking;
     if (result.error || !advisoryExit) {
       throw new Error('npm audit failed before its security threshold: ' + reason);
@@ -117,7 +119,7 @@ export function runDependencyAudits({ rootDir, outputDir, run = spawnSync }) {
     ['expo', resolve(rootDir, 'expo')],
   ]) {
     reports[name] = executeAudit(projectPath, run, name === 'expo' ? {
-      project: 'expo', lockfile: JSON.parse(readFileSync(resolve(projectPath, 'package-lock.json'), 'utf8')),
+      project: 'expo', installedDir: projectPath, lockfile: JSON.parse(readFileSync(resolve(projectPath, 'package-lock.json'), 'utf8')),
     } : {});
     writeFileSync(resolve(outputDir, name + '.json'), JSON.stringify(reports[name].payload, null, 2) + '\n');
   }
@@ -136,7 +138,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     let summary;
     if (expoOnly) {
       mkdirSync(outputDir, { recursive: true });
-      const report = executeAudit(rootDir, spawnSync, { project: 'expo', lockfile: JSON.parse(readFileSync(resolve(rootDir, 'package-lock.json'), 'utf8')) });
+      const report = executeAudit(rootDir, spawnSync, { project: 'expo', installedDir: rootDir, lockfile: JSON.parse(readFileSync(resolve(rootDir, 'package-lock.json'), 'utf8')) });
       writeFileSync(resolve(outputDir, 'expo.json'), JSON.stringify(report.payload, null, 2) + '\n');
       summary = { expo: report.summary };
       writeFileSync(resolve(outputDir, 'expo-summary.json'), JSON.stringify({ generatedAt: new Date().toISOString(), summary }, null, 2) + '\n');
