@@ -62,6 +62,7 @@ import {
   applyDependencyPatches,
 } from "../../scripts/dependency-patches.mjs";
 test("patches fail closed on tampered installed bytes and are idempotent", () => {
+  mkdirSync(resolve("artifacts"), { recursive: true });
   const root = mkdtempSync(resolve("artifacts", "patch-test-"));
   const packages = {};
   for (const patch of patches) {
