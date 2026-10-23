@@ -70,7 +70,11 @@ jobs:
       - run: npm run quality
       - run: npm run build
       - run: npm run verify:build-budget
-      - run: npx playwright install --with-deps chromium
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npx playwright install chromium
       - name: Run browser E2E
         id: browser-e2e
         run: npm run test:e2e
