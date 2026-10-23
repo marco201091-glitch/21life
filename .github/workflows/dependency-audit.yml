@@ -16,7 +16,6 @@ concurrency:
 
 jobs:
   audit:
-    if: github.event_name != 'pull_request' || matrix.branch == 'Dev'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -29,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
-          ref: ${{ matrix.branch }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || matrix.branch }}
           path: audited
       - name: Load audit tooling from the workflow revision
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
