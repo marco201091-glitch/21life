@@ -36,7 +36,7 @@ module.exports = ({ config: input } = {}) => {
   const iosAssociatedDomains = [...legacyIosAssociatedDomains, `applinks:${newHost}`];
   const basePlugins = (base.plugins ?? []).filter((plugin) => {
     const name = Array.isArray(plugin) ? plugin[0] : plugin;
-    return name !== 'expo-splash-screen' && name !== './plugins/with-release-signing';
+    return name !== 'expo-notifications' && name !== 'expo-splash-screen' && name !== './plugins/with-release-signing';
   });
 
   return {
@@ -56,6 +56,7 @@ module.exports = ({ config: input } = {}) => {
       }],
       'expo-status-bar',
       'expo-web-browser',
+      ...(!isFdroidVariant ? [['expo-notifications', {defaultChannel:'default'}], './plugins/with-push-configuration'] : []),
       ...(!isFdroidVariant ? [[
         '@sentry/react-native/expo', {
           organization: process.env.SENTRY_ORG,
@@ -70,6 +71,7 @@ module.exports = ({ config: input } = {}) => {
     ],
     android: {
       ...base.android,
+      googleServicesFile: isFdroidVariant ? undefined : (isDevVariant ? process.env.GOOGLE_SERVICES_FILE_DEV : process.env.GOOGLE_SERVICES_FILE),
       package: isDevVariant ? 'com.phyrexianarena.app.dev' : base.android.package,
       intentFilters: androidIntentFilters,
     },

@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { executeAudit, summarizeAudit } from '../../scripts/dependency-audit.mjs';
@@ -75,3 +77,9 @@ test('a high dependency cannot hide an unreviewed moderate root', () => {
   const o=approvedOptions();o.lockfile.packages['node_modules/micromatch']={version:'4.0.8'};
   assert.equal(summarizeAudit(a,o).blocking,true);
 });
+
+ test('patched installed source is required after exception expiry', {skip: !existsSync(fileURLToPath(new URL('../../expo/node_modules',import.meta.url)))}, () => {
+ const o={...approvedOptions(),now:new Date('2026-10-21T12:00:00Z'),installedDir:fileURLToPath(new URL('../../expo/',import.meta.url))};
+ assert.equal(summarizeAudit(approvedReport(),o).blocking,false);
+ assert.equal(summarizeAudit(approvedReport(),{...o,installedDir:'missing'}).blocking,true);
+ });

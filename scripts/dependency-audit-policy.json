@@ -15,7 +15,7 @@
   "packages": {
     "@expo/cli": {
       "nodes": {
-        "node_modules/expo/node_modules/@expo/cli": "57.0.28"
+        "node_modules/expo/node_modules/@expo/cli": "57.0.32"
       },
       "via": [
         "@expo/code-signing-certificates",
@@ -95,7 +95,7 @@
     },
     "expo": {
       "nodes": {
-        "node_modules/expo": "57.0.27"
+        "node_modules/expo": "57.0.31"
       },
       "via": [
         "@expo/cli",
