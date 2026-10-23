@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   audit:
+    if: github.event_name != 'pull_request' || matrix.branch == 'Dev'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
