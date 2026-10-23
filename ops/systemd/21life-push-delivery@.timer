@@ -1,0 +1,10 @@
+[Unit]
+Description=Process 21Life push deliveries (%i)
+
+[Timer]
+OnBootSec=1min
+OnUnitInactiveSec=1min
+Unit=21life-push-delivery@%i.service
+
+[Install]
+WantedBy=timers.target

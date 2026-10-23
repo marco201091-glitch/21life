@@ -1,0 +1,20 @@
+BEGIN;
+DO $$ DECLARE actor uuid; sess uuid:=gen_random_uuid(); sess2 uuid:=gen_random_uuid(); token text:='ExponentPushToken[session_regression_'||replace(gen_random_uuid()::text,'-','')||']'; result boolean;
+BEGIN
+ SELECT id INTO actor FROM public.profiles LIMIT 1;
+ IF actor IS NULL THEN RAISE EXCEPTION 'Need Dev profile fixture'; END IF;
+ SELECT public.register_push_device(actor,sess,token,'android','it') INTO result;
+ IF NOT result THEN RAISE EXCEPTION 'Initial registration rejected'; END IF;
+ PERFORM public.revoke_push_device(actor,sess,token,true);
+ SELECT public.register_push_device(actor,sess,token,'android','it') INTO result;
+ IF result OR EXISTS(SELECT 1 FROM public.push_tokens WHERE expo_push_token=token) THEN RAISE EXCEPTION 'Late POST resurrected revoked session'; END IF;
+ SELECT public.register_push_device(actor,sess2,token,'android','it') INTO result;
+ IF NOT result THEN RAISE EXCEPTION 'New login cannot register'; END IF;
+ PERFORM public.revoke_push_device(actor,sess2,token,false);
+ SELECT public.register_push_device(actor,sess2,token,'android','en') INTO result;
+ IF NOT result THEN RAISE EXCEPTION 'Cancellation revoked active session'; END IF;
+ IF has_function_privilege('authenticated','public.register_push_device(uuid,uuid,text,text,text)','EXECUTE') OR has_function_privilege('authenticated','public.revoke_push_device(uuid,uuid,text,boolean)','EXECUTE') THEN RAISE EXCEPTION 'Privileged RPC exposed'; END IF;
+ IF has_table_privilege('authenticated','public.push_tokens','INSERT') OR has_table_privilege('authenticated','public.push_tokens','UPDATE') THEN RAISE EXCEPTION 'Direct token write bypass'; END IF;
+ RAISE NOTICE 'PASS late POST after logout, new login, cancellation and RPC access';
+END $$;
+ROLLBACK;

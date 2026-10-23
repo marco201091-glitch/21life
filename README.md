@@ -2,7 +2,7 @@
 
 # 21Life
 
-[![Android 9.1.2](https://img.shields.io/badge/Android-v9.1.2-7c3aed?style=flat-square)](https://21life.win/download/)
+[![Android 9.1.2](https://img.shields.io/badge/Android-v9.1.3-7c3aed?style=flat-square)](https://21life.win/download/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 **Your Commander table, from the first life total to the last match statistic.**
