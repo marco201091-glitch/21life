@@ -12,7 +12,7 @@
   "packages": {
     "@expo/cli": {
       "nodes": {
-        "node_modules/expo/node_modules/@expo/cli": "57.0.32"
+        "node_modules/expo/node_modules/@expo/cli": "58.1.15"
       },
       "via": [
         "@expo/code-signing-certificates",
@@ -21,7 +21,7 @@
     },
     "@expo/code-signing-certificates": {
       "nodes": {
-        "node_modules/@expo/code-signing-certificates": "0.0.6"
+        "node_modules/@expo/code-signing-certificates": "0.0.7"
       },
       "via": [
         "node-forge"
@@ -29,7 +29,7 @@
     },
     "@sentry/react-native": {
       "nodes": {
-        "node_modules/@sentry/react-native": "7.11.0"
+        "node_modules/@sentry/react-native": "8.28.0"
       },
       "via": [
         "expo"
@@ -37,7 +37,7 @@
     },
     "expo": {
       "nodes": {
-        "node_modules/expo": "57.0.31"
+        "node_modules/expo": "58.0.19"
       },
       "via": [
         "@expo/cli"

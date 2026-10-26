@@ -14,7 +14,7 @@ type TabIconProps = {
 };
 
 function TabIcon({ name, focusedName, color, focused }: TabIconProps) {
-  return <Ionicons name={focused ? focusedName : name} size={22} color={color} />;
+  return <Ionicons name={focused ? focusedName : name} size={22} color={color == null || typeof color === 'number' ? colors.foreground : color} />;
 }
 
 export default function TabsLayout() {

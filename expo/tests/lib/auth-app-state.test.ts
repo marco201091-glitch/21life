@@ -19,6 +19,15 @@ describe('Supabase auth app-state refresh', () => {
     expect(auth.stopAutoRefresh).toHaveBeenCalledTimes(2);
   });
 
+  it('keeps refresh paused when the native initial state is unavailable', () => {
+    const auth = authController();
+    syncAuthRefreshForAppState(auth, null);
+    syncAuthRefreshForAppState(auth, undefined);
+
+    expect(auth.startAutoRefresh).not.toHaveBeenCalled();
+    expect(auth.stopAutoRefresh).toHaveBeenCalledTimes(2);
+  });
+
   it('syncs immediately, follows transitions, and cleans up on unmount', () => {
     const auth = authController();
     let listener: ((state: 'active' | 'background') => void) | undefined;

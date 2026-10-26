@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type ViewInstance } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,7 +19,7 @@ export function LiveGameRecapView({
   labels: { timeline: string; highlights: string; empty: string };
 }) {
   const { language } = useLanguage();
-  const recapRef = useRef<View>(null);
+  const recapRef = useRef<ViewInstance>(null);
   const [sharing, setSharing] = useState(false);
   const recap = buildLiveGameRecap(record);
   const duration = recap.durationSeconds == null ? '—' : `${Math.floor(recap.durationSeconds / 60)}:${String(recap.durationSeconds % 60).padStart(2, '0')}`;

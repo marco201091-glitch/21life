@@ -6,7 +6,7 @@ type AuthRefreshController = {
 };
 
 type AppStateController = {
-  currentState: AppStateStatus;
+  currentState: string | null | undefined;
   addEventListener: (
     type: 'change',
     listener: (state: AppStateStatus) => void,
@@ -15,7 +15,7 @@ type AppStateController = {
 
 export function syncAuthRefreshForAppState(
   auth: AuthRefreshController,
-  state: AppStateStatus,
+  state: string | null | undefined,
 ) {
   if (state === 'active') {
     auth.startAutoRefresh();

@@ -55,10 +55,10 @@ const approvedOptions = () => ({
   project: 'expo',
   now: new Date('2026-10-05T12:00:00Z'),
   lockfile: { packages: {
-    'node_modules/expo/node_modules/@expo/cli': { version: '57.0.32' },
-    'node_modules/@expo/code-signing-certificates': { version: '0.0.6' },
-    'node_modules/@sentry/react-native': { version: '7.11.0' },
-    'node_modules/expo': { version: '57.0.31' },
+    'node_modules/expo/node_modules/@expo/cli': { version: '58.1.15' },
+    'node_modules/@expo/code-signing-certificates': { version: '0.0.7' },
+    'node_modules/@sentry/react-native': { version: '8.28.0' },
+    'node_modules/expo': { version: '58.0.19' },
     'node_modules/node-forge': { version: '1.4.0' },
   } },
 });
