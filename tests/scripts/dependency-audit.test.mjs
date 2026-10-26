@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { executeAudit, summarizeAudit } from '../../scripts/dependency-audit.mjs';
@@ -42,25 +42,41 @@ test('infrastructure errors are distinguishable from clean reports', () => {
 });
 
 const approvedReport = () => ({
-  metadata: { vulnerabilities: { high: 1, critical: 0 } },
-  vulnerabilities: { braces: { severity: 'high', nodes: ['node_modules/braces'], via: [{ url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm', name: 'braces', severity: 'high' }] } },
+  metadata: { vulnerabilities: { low: 0, moderate: 0, high: 5, critical: 0 } },
+  vulnerabilities: {
+    '@expo/cli': { severity: 'high', nodes: ['node_modules/expo/node_modules/@expo/cli'], via: ['@expo/code-signing-certificates', 'node-forge'] },
+    '@expo/code-signing-certificates': { severity: 'high', nodes: ['node_modules/@expo/code-signing-certificates'], via: ['node-forge'] },
+    '@sentry/react-native': { severity: 'high', nodes: ['node_modules/@sentry/react-native'], via: ['expo'] },
+    expo: { severity: 'high', nodes: ['node_modules/expo'], via: ['@expo/cli'] },
+    'node-forge': { severity: 'high', nodes: ['node_modules/node-forge'], via: [{ url: 'https://github.com/advisories/GHSA-86w9-cpqp-85rv', name: 'node-forge', severity: 'high' }] },
+  },
 });
-const approvedOptions = () => ({ project: 'expo', now: new Date('2026-10-05T12:00:00Z'), lockfile: { packages: { 'node_modules/braces': {version:'3.0.3'} } } });
+const approvedOptions = () => ({
+  project: 'expo',
+  now: new Date('2026-10-05T12:00:00Z'),
+  lockfile: { packages: {
+    'node_modules/expo/node_modules/@expo/cli': { version: '57.0.32' },
+    'node_modules/@expo/code-signing-certificates': { version: '0.0.6' },
+    'node_modules/@sentry/react-native': { version: '7.11.0' },
+    'node_modules/expo': { version: '57.0.31' },
+    'node_modules/node-forge': { version: '1.4.0' },
+  } },
+});
 test('approved Expo tooling finding remains visible but passes before expiry', () => {
   const s = summarizeAudit(approvedReport(), approvedOptions());
-  assert.equal(s.blocking, false); assert.equal(s.counts.high, 1); assert.equal(s.highestSeverity, 'high');
-  assert.deepEqual(s.acceptedAdvisories, ['https://github.com/advisories/GHSA-vfj7-8cjw-p6xm']);
+  assert.equal(s.blocking, false); assert.equal(s.counts.high, 5); assert.equal(s.highestSeverity, 'high');
+  assert.deepEqual(s.acceptedAdvisories, ['https://github.com/advisories/GHSA-86w9-cpqp-85rv']);
 });
 test('exception fails closed at expiry and outside Expo', () => {
-  for(const options of [{...approvedOptions(),now:new Date('2026-10-18T22:00:00Z')},{...approvedOptions(),project:'web'}]) assert.equal(summarizeAudit(approvedReport(),options).blocking,true);
+  for(const options of [{...approvedOptions(),now:new Date('2026-11-08T23:00:00Z')},{...approvedOptions(),project:'web'}]) assert.equal(summarizeAudit(approvedReport(),options).blocking,true);
 });
 test('exception fails closed on changed version, path, advisory, or severity', () => {
   const mutations = [
-    (a,o)=>{o.lockfile.packages['node_modules/braces'].version='3.0.4';},
-    (a)=>{a.vulnerabilities.braces.nodes=['node_modules/unreviewed/node_modules/braces'];},
-    (a)=>{a.vulnerabilities.braces.via[0].url='https://github.com/advisories/GHSA-other';},
-    (a)=>{a.vulnerabilities.braces.severity='critical';a.metadata.vulnerabilities.critical=1;},
-    (a)=>{a.vulnerabilities.braces.via.push('unreviewed');},
+    (a,o)=>{o.lockfile.packages['node_modules/node-forge'].version='1.4.1';},
+    (a)=>{a.vulnerabilities['node-forge'].nodes=['node_modules/unreviewed/node_modules/node-forge'];},
+    (a)=>{a.vulnerabilities['node-forge'].via[0].url='https://github.com/advisories/GHSA-other';},
+    (a)=>{a.vulnerabilities['node-forge'].severity='critical';a.metadata.vulnerabilities.critical=1;},
+    (a)=>{a.vulnerabilities['node-forge'].via.push('unreviewed');},
   ];for(const mutate of mutations){const a=approvedReport(),o=approvedOptions();mutate(a,o);assert.equal(summarizeAudit(a,o).blocking,true);}
 });
 test('approved high-only npm exit remains distinct from infrastructure failure', () => {
@@ -71,15 +87,32 @@ test('approved high-only npm exit remains distinct from infrastructure failure',
 
 test('a high dependency cannot hide an unreviewed moderate root', () => {
   const a=approvedReport();a.metadata.vulnerabilities.moderate=1;
-  a.vulnerabilities.micromatch={severity:'high',nodes:['node_modules/micromatch'],via:['braces']};
-  a.vulnerabilities.braces.severity='moderate';a.vulnerabilities.braces.nodes=['node_modules/unreviewed/node_modules/braces'];
-  a.vulnerabilities.braces.via.push({url:'https://github.com/advisories/GHSA-other',severity:'moderate'});
-  const o=approvedOptions();o.lockfile.packages['node_modules/micromatch']={version:'4.0.8'};
+  a.vulnerabilities['@expo/cli'].via.push('braces');
+  a.vulnerabilities.braces={severity:'moderate',nodes:['node_modules/braces'],via:[{url:'https://github.com/advisories/GHSA-other',severity:'moderate'}]};
+  const o=approvedOptions();
   assert.equal(summarizeAudit(a,o).blocking,true);
 });
 
- test('patched installed source is required after exception expiry', {skip: !existsSync(fileURLToPath(new URL('../../expo/node_modules',import.meta.url)))}, () => {
- const o={...approvedOptions(),now:new Date('2026-10-21T12:00:00Z'),installedDir:fileURLToPath(new URL('../../expo/',import.meta.url))};
+test('verified Expo tooling patches mitigate only the reviewed node-forge graph and keep it visible', () => {
+  const summary = summarizeAudit(approvedReport(), {
+    ...approvedOptions(),
+    now: new Date('2026-10-26T12:00:00Z'),
+    installedDir: resolve(process.cwd(), 'expo'),
+  });
+  assert.equal(summary.blocking, false);
+  assert.equal(summary.counts.high, 5);
+  assert.equal(summary.acceptedAdvisories, undefined);
+  assert.deepEqual(summary.mitigatedAdvisories, ['https://github.com/advisories/GHSA-86w9-cpqp-85rv']);
+});
+
+test('Expo tooling patch acceptance fails closed after its review date', () => {
+  const summary = summarizeAudit(approvedReport(), { ...approvedOptions(), now: new Date('2026-11-10T12:00:00Z') });
+  assert.equal(summary.blocking, true);
+  assert.equal(summary.acceptedAdvisories, undefined);
+});
+
+test('patched installed source is required after exception expiry', {skip: !existsSync(resolve(process.cwd(), 'expo', 'node_modules'))}, () => {
+ const o={...approvedOptions(),now:new Date('2026-11-10T12:00:00Z'),installedDir:resolve(process.cwd(), 'expo')};
  assert.equal(summarizeAudit(approvedReport(),o).blocking,false);
  assert.equal(summarizeAudit(approvedReport(),{...o,installedDir:'missing'}).blocking,true);
  });
