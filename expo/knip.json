@@ -12,6 +12,7 @@
     "**/*.{js,mjs,ts,tsx}"
   ],
   "ignoreDependencies": [
+    "@typescript-eslint/parser",
     "@expo/config-plugins",
     "expo-asset",
     "expo-splash-screen"

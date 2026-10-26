@@ -5,8 +5,8 @@ import {
   Text,
   TextInput,
   View,
-  type NativeSyntheticEvent,
-  type TextInputSelectionChangeEventData,
+  type TextInputInstance,
+  type TextInputSelectionChangeEvent,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { FormattedMarkdown } from '@/components/ui/formatted-markdown';
@@ -39,7 +39,7 @@ export function RichTextInput({
   onFocus,
 }: RichTextInputProps) {
   const { copy } = useLanguage();
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
   const [selection, setSelection] = useState<TextSelection>({ start: value.length, end: value.length });
   const [focused, setFocused] = useState(false);
   const [toolbarOpen, setToolbarOpen] = useState(false);
@@ -74,7 +74,7 @@ export function RichTextInput({
     });
   }, [onChangeText, selection, value]);
 
-  const handleSelectionChange = (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
+  const handleSelectionChange = (event: TextInputSelectionChangeEvent) => {
     setSelection({
       start: event.nativeEvent.selection.start,
       end: event.nativeEvent.selection.end,

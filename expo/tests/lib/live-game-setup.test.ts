@@ -1,4 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@react-native-async-storage/async-storage', () => ({
+  default: { getItem: vi.fn(async () => null), setItem: vi.fn(async () => undefined) },
+}));
 import { clearLiveGameSeats, createDefaultLiveGameSetup, parseLiveGameSetup } from '@/lib/live-game-setup';
 
 describe('live game setup', () => {

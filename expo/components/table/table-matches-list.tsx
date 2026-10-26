@@ -109,7 +109,7 @@ export function TableMatchesList({
           onPress={onLoadMore}
           style={styles.loadMore}
         />
-      ) : null}
+      ) : undefined}
     />
   );
 }
