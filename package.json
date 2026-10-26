@@ -97,7 +97,7 @@
     "server-only": "^0.0.1",
     "sharp": "^0.35.4",
     "tailwind-merge": "^3.7.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
