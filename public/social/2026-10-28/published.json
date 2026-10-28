@@ -1,0 +1,35 @@
+{
+  "account": "21life.win",
+  "stories": [
+    {
+      "id": "18081105071379687",
+      "file": "player-awards.jpg"
+    },
+    {
+      "id": "18109682881944288",
+      "file": "set-up-your-pod.jpg"
+    },
+    {
+      "id": "18156093733458970",
+      "file": "save-the-finish.jpg"
+    }
+  ],
+  "feed": [
+    {
+      "file": "01-awards.png",
+      "id": "18124809538925314",
+      "caption": "Player awards make the stories around your playgroup easy to revisit. Free and open source at 21life.win. #MTG #Commander #EDH",
+      "permalink": "https://www.instagram.com/p/"
+    },
+    {
+      "file": "02-four-player-setup.png",
+      "id": "17901761706607363",
+      "caption": "Four players, four decks, one table. Set up the pod in 21Life, then keep the game details together while you play. Free and open source: 21life.win. #MTG #Commander #EDH"
+    },
+    {
+      "file": "03-game-result.png",
+      "id": "18126196940514807",
+      "caption": "Who took the game, and how did it end? Log the winner and the win condition so the next rematch starts with the full story. Free and open source: 21life.win. #MTG #Commander #EDH"
+    }
+  ]
+}
