@@ -33,7 +33,7 @@ if (!license.includes('MIT License') || !license.includes('blackistoostrong')) {
 }
 
 const legalSite = read('lib/legal-site.ts');
-if (!legalSite.includes("LEGAL_CONTROLLER_NAME = 'Marco Andreani'")) {
+if (!legalSite.includes("LEGAL_CONTROLLER_NAME = 'M.A.'")) {
   failures.push('GDPR controller is missing');
 }
 if (!legalSite.includes("OFFICIAL_SUPPORT_EMAIL = 'support@21life.win'")) {
