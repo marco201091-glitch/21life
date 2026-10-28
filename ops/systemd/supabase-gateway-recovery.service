@@ -1,0 +1,12 @@
+[Unit]
+Description=Recover Supabase gateways after Swarm network startup failures
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/scripts/supabase-gateway-recovery.sh
+TimeoutStartSec=250
+
+[Install]
+WantedBy=multi-user.target

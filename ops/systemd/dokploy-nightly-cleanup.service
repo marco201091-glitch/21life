@@ -7,8 +7,7 @@ Wants=network-online.target
 Type=oneshot
 EnvironmentFile=/etc/dokploy-cleanup.env
 ExecStart=/usr/bin/node /usr/local/sbin/cleanup-dokploy-deployments.mjs --apply
-ExecStart=/usr/bin/docker image prune -f
-ExecStart=/usr/bin/docker builder prune -af
+ExecStart=/opt/scripts/vm-docker-cleanup.sh
 Nice=10
 IOSchedulingClass=idle
 
