@@ -1,5 +1,7 @@
 # Project checklist
 
+- [ ] Web/legal PM 2026-10-28: replace controller label with `M.A.` in web/Expo legal text and update disclosure date; publish Instagram link on 21life.win. Legal copy requires production web deployment; no other full-name references found in docs.
+
 - [x] Restyle web PM2026-10-12: audit22route, desktop lime/nero, home playgroup/riepilogo affiancati e analytics2col; profilo mazzi2col, header/container/card/bottoni/form/tab uniformati e accessibilità corretta. Branch locale `style/web-site-alignment` da Dev0eec444, candidato applicativo b504b4a; root preservato, zero diff Expo/APK/IPA/backend/versioni/pipeline. Lint/typecheck/buildweb,344test+1skip,46checkPlaywright zerooverflow/errori/axeseriouscritical e5E2Eesistenti verdi; snapshottelefono invariato. Review indipendente senza findings importanti. Report `docs/WEB_UI_AUDIT_RESTYLE_2026-10-12.md`, screenshot/fixture in ignored artifacts/web-restyle. Nessun push/merge/deploy; runtime sintetico, Node24.18 sotto engines24.21 e junctionnode_modules generano warningtracingstandalone locali: documentati, nessun pacchetto release certificato.
 
 Preferenza permanente PM: comunicare SEMPRE nella modalità OK / Fatto + checklist.
