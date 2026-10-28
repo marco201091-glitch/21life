@@ -31,5 +31,25 @@
       "id": "18126196940514807",
       "caption": "Who took the game, and how did it end? Log the winner and the win condition so the next rematch starts with the full story. Free and open source: 21life.win. #MTG #Commander #EDH"
     }
+  ],
+  "reels": [
+    {
+      "id": "18075673292741687",
+      "permalink": "https://www.instagram.com/reel/DfCXRTPRI8V/",
+      "file": "four-player-setup.mp4",
+      "cover": "four-player-setup-cover.jpg"
+    },
+    {
+      "id": "18153743101552068",
+      "permalink": "https://www.instagram.com/reel/DfCXXYUT_Sx/",
+      "file": "winner-and-win-condition.mp4",
+      "cover": "winner-and-win-condition-cover.jpg"
+    },
+    {
+      "id": "18114445414877051",
+      "permalink": "https://www.instagram.com/reel/DfCXdh4NdNb/",
+      "file": "playgroup-awards.mp4",
+      "cover": "playgroup-awards-cover.jpg"
+    }
   ]
 }
