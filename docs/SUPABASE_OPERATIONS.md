@@ -69,14 +69,10 @@ Before upgrading:
 Kong can remain explicitly pinned during this validation. Envoy should be
 adopted only after Dokploy routing no longer depends on Kong-specific behavior.
 
-The production compose pins every service to an exact image tag
-(`kong/kong:3.9.1`, `supabase/postgres:17.6.1.136`, `supabase/storage-api:v1.60.4`,
-…), and the weekly `/opt/scripts/supabase-update.sh` only re-pulls those same
-pinned tags. The gateway therefore cannot switch to Envoy on its own: adopting
-it requires an explicit tag change in addition to the validation above. That
-script also force-recreates the whole production stack every Sunday at 01:00
-UTC, which is a planned weekly restart and shows up as a short uptime on the
-containers — not an incident.
+The production compose pins service image tags. The weekly
+`/opt/scripts/supabase-update.sh` checks registry digests without pulling or
+recreating containers. Adopting Envoy requires an explicit configuration and
+image change in addition to the validation above.
 
 ## Production backup
 
