@@ -4,10 +4,12 @@ import { requireAuthOr401 } from '@/app/api/_lib/require-auth';
 import { enforceUserRateLimit } from '@/lib/api-rate-limit';
 import { buildAccountExport, AccountExportError } from '@/lib/account-export';
 import { getSupabaseAdminClient } from '@/lib/supabase-admin';
+import { logCriticalEvent } from '@/lib/critical-diagnostics';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
+  const startedAt = Date.now();
   const auth = await requireAuthOr401(request);
   if (auth.response) return auth.response;
   const limited = await enforceUserRateLimit(auth.user.id, 'accountExport');
@@ -17,6 +19,7 @@ export async function GET(request: Request) {
 
   try {
     const result = await buildAccountExport(admin, auth.user, packageJson.version);
+    logCriticalEvent('account_export', 'export', 'success', { durationMs: Date.now() - startedAt });
     const stamp = result.payload.exportedAt.slice(0, 10);
     return new NextResponse(result.json, {
       headers: {
@@ -26,6 +29,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
+    logCriticalEvent('account_export', 'export', 'failed', { durationMs: Date.now() - startedAt });
     if (error instanceof AccountExportError) {
       return NextResponse.json({ error: error.message }, { status: error.status, headers: { 'Cache-Control': 'no-store' } });
     }

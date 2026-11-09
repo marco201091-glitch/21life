@@ -43,7 +43,10 @@ type Labels = {
   archidektSyncWaiting: string;
   archidektSyncCompleted: string;
   archidektSyncPartial: string;
+  archidektSyncLimited: string;
+  archidektSyncEmpty: string;
   archidektSyncRetry: string;
+  archidektSyncRefreshRetry: string;
   archidektSyncFailed: string;
   searchDecks: string;
   noDecksMatchSearch: string;
@@ -71,7 +74,8 @@ type Props = {
   onLayoutChange: (variant: TableLayoutVariant) => void;
   onStartingLifeChange: (life: number) => void;
   onSelectParticipant?: (participantKey: ParticipantKey) => void;
-  archidektSyncRequest?: { userId: string; status: 'syncing' | 'completed' | 'partial' | 'failed' } | null;
+  onRetryArchidektSync?: (participantKey: ParticipantKey) => void;
+  archidektSyncRequest?: { userId: string; status: 'syncing' | 'completed' | 'partial' | 'failed' | 'refresh_failed' | 'limited' | 'empty'; message?: string } | null;
   onAssignSeat: (index: number, participantKey: ParticipantKey | null, deckId: string | null) => void;
   onReset: () => void;
   onStart: () => void;
@@ -136,6 +140,7 @@ export function LiveGameConfigurator({
   onLayoutChange,
   onStartingLifeChange,
   onSelectParticipant,
+  onRetryArchidektSync,
   archidektSyncRequest,
   onAssignSeat,
   onReset,
@@ -396,15 +401,17 @@ export function LiveGameConfigurator({
                   ? <ActivityIndicator size="small" color={colors.primaryLight} />
                   : <Ionicons name={selectedSyncStatus === 'completed' ? 'checkmark-circle-outline' : 'alert-circle-outline'} size={18} color={colors.primaryLight} />}
                 <Text style={styles.archidektSyncText}>
-                  {selectedSyncStatus === 'failed' ? labels.archidektSyncFailed
+                  {selectedSyncStatus === 'failed' || selectedSyncStatus === 'refresh_failed' ? archidektSyncRequest?.message || labels.archidektSyncFailed
                     : selectedSyncStatus === 'completed' ? labels.archidektSyncCompleted
+                      : selectedSyncStatus === 'limited' ? labels.archidektSyncLimited
+                      : selectedSyncStatus === 'empty' ? labels.archidektSyncEmpty
                       : selectedSyncStatus === 'partial' ? labels.archidektSyncPartial
                       : labels.archidektSyncWaiting}
                 </Text>
                 {selectedSyncStatus !== 'syncing' && onSelectParticipant ? <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={labels.archidektSyncRetry}
-                  onPress={() => onSelectParticipant(selectedParticipant.key)}
+                  accessibilityLabel={selectedSyncStatus === 'refresh_failed' ? labels.archidektSyncRefreshRetry : labels.archidektSyncRetry}
+                  onPress={() => (onRetryArchidektSync ?? onSelectParticipant)(selectedParticipant.key)}
                   hitSlop={8}
                 ><Ionicons name="refresh-outline" size={22} color={colors.primaryLight} /></Pressable> : null}
               </View> : null}

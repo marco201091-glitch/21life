@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ fetchDeck: vi.fn() }));
 vi.mock('@/lib/deck-importers-server', () => ({ fetchDeckFromSource: mocks.fetchDeck }));
-import { fetchArchidektSyncDecks } from '@/lib/archidekt-sync-server';
+import { ArchidektRateLimited, fetchArchidektSyncDecks } from '@/lib/archidekt-sync-server';
 
 const data = { name: 'Control', commander: 'Talrand', commanderImageUrl: 'https://images.test/talrand.jpg', commanderOptions: [{ name: 'Talrand', imageUrl: 'https://images.test/talrand.jpg', colorIdentity: ['U'] }], colorIdentity: ['U'], bracket: '3' };
 describe('fresh bounded server Archidekt import', () => {
@@ -22,6 +22,22 @@ describe('fresh bounded server Archidekt import', () => {
     expect(mocks.fetchDeck).toHaveBeenCalledTimes(1);
     expect(mocks.fetchDeck.mock.calls[0][1]).toBe('124');
   });
+  it('reports an invalid public summary as skipped alongside valid decks', async () => {
+    vi.mocked(fetch).mockResolvedValue(Response.json({ results: [{ name: 'invalid' }, { id: 123 }] }));
+    const result = await fetchArchidektSyncDecks('user');
+    expect(result.skipped).toBe(1);
+    expect(result.decks).toHaveLength(1);
+  });
+  it('imports a repeated deck only once', async () => {
+    vi.mocked(fetch).mockResolvedValue(Response.json({ results: [{ id: 123 }, { id: 123 }] }));
+    const result = await fetchArchidektSyncDecks('user');
+    expect(result.decks).toHaveLength(1);
+    expect(result.skipped).toBe(0);
+  });
+  it('fails rather than claiming success if all public summaries are malformed', async () => {
+    vi.mocked(fetch).mockResolvedValue(Response.json({ results: [{ id: 0 }] }));
+    await expect(fetchArchidektSyncDecks('user')).rejects.toThrow('No Archidekt decks');
+  });
   it('treats an empty valid profile as a completed empty import', async () => {
     vi.mocked(fetch).mockResolvedValue(Response.json({ results: [] }));
     expect(await fetchArchidektSyncDecks('user')).toEqual({ decks: [], skipped: 0 });
@@ -29,6 +45,10 @@ describe('fresh bounded server Archidekt import', () => {
   it('does not mistake a malformed upstream payload for an empty account', async () => {
     vi.mocked(fetch).mockResolvedValue(Response.json({ error: 'unavailable' }));
     await expect(fetchArchidektSyncDecks('user')).rejects.toThrow();
+  });
+  it('distinguishes upstream rate limiting', async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 429 }));
+    await expect(fetchArchidektSyncDecks('user')).rejects.toBeInstanceOf(ArchidektRateLimited);
   });
   it('fails if all deck imports fail rather than declaring a successful empty sync', async () => {
     mocks.fetchDeck.mockRejectedValue(new Error('403'));

@@ -165,6 +165,7 @@ export async function fetchArenaMemberDecks(
   supabase: SupabaseClient,
   groupId: string,
   memberIds: string[],
+  options?: { strict?: boolean },
 ) {
   if (memberIds.length === 0) return [] as MemberDeck[];
 
@@ -191,6 +192,7 @@ export async function fetchArenaMemberDecks(
         .limit(MEMBER_DECK_LIMIT);
 
       if (error) {
+        if (options?.strict) throw new Error('ARENA_DECKS_READ_FAILED');
         console.error('Error fetching member decks:', getSupabaseErrorMessage(error, 'Failed to fetch member decks'));
         return [] as MemberDeck[];
       }

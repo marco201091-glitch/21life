@@ -36,7 +36,7 @@ import {
 } from '@/stores/live-game-runtime-store';
 import { hapticLight, hapticMedium, hapticSuccess, hapticWarning } from '@/lib/haptics';
 import { apiPost } from '@/lib/api';
-import { syncArenaMemberArchidektDecks } from '@/lib/arena-archidekt-sync';
+import { ArenaSyncError, syncAndRefreshArenaMember } from '@/lib/arena-archidekt-sync';
 import { getLastDeckSelectionForParticipant } from '@/lib/arena-participants';
 import { getPreferredDeckId } from '@/lib/arena-deck-selection';
 import {
@@ -154,7 +154,7 @@ export default function LiveGameScreen() {
   const { showToast } = useToast();
   const { scrollContentStyle } = useScreenInsets();
 
-  const { members, guests, decks, matches, loading, group, refresh } = useArena(groupId, user?.id);
+  const { members, guests, decks, matches, loading, group, refreshMemberDecks } = useArena(groupId, user?.id);
 
   const [liveGame, setLiveGame] = useState<LiveGameRecord | null>(null);
   const [booting, setBooting] = useState(true);
@@ -170,7 +170,11 @@ export default function LiveGameScreen() {
   const [starting, setStarting] = useState(false);
   const [archidektSyncRequest, setArchidektSyncRequest] = useState<{
     userId: string;
-    status: 'syncing' | 'completed' | 'partial' | 'failed';
+    status: 'syncing' | 'completed' | 'partial' | 'failed' | 'refresh_failed' | 'limited' | 'empty';
+    message?: string;
+    wasPartial?: boolean;
+    wasEmpty?: boolean;
+    requestId?: string;
   } | null>(null);
   const archidektSyncGeneration = useRef(0);
   const [damagePulse, setDamagePulse] = useState<Record<string, number>>({});
@@ -365,18 +369,47 @@ export default function LiveGameScreen() {
     setArchidektSyncRequest({ userId: targetUserId, status: 'syncing' });
     void (async () => {
       try {
-        const result = await syncArenaMemberArchidektDecks(groupId, targetUserId);
-        if (!await refresh(false)) throw new Error('Unable to refresh arena decks.');
+        const outcome = await syncAndRefreshArenaMember(groupId, targetUserId, refreshMemberDecks, currentUserId);
+        if (generation === archidektSyncGeneration.current) setArchidektSyncRequest({
+          userId: targetUserId,
+          ...outcome,
+          ...(outcome.status === 'refresh_failed' ? { message: copy('liveGameArchidektSyncRefreshFailed') + (outcome.requestId ? `\n${language === 'it' ? 'Riferimento' : 'Reference'}: ${outcome.requestId}` : '') } : {}),
+        });
+      } catch (error) {
+        const reason = error instanceof ArenaSyncError ? error.reason : 'uncertain';
+        const message = reason === 'authentication' ? copy('liveGameArchidektSyncAuth')
+          : reason === 'permission' ? copy('liveGameArchidektSyncPermission')
+            : reason === 'configuration' ? copy('liveGameArchidektSyncConfiguration')
+              : reason === 'rate_limit' ? copy('liveGameArchidektSyncRateLimit')
+                : reason === 'upstream' ? copy('liveGameArchidektSyncUpstream')
+                  : reason === 'upstream_timeout' ? copy('liveGameArchidektSyncUpstreamTimeout')
+                  : reason === 'save' ? copy('liveGameArchidektSyncSave')
+                    : copy('liveGameArchidektSyncUncertain');
         if (generation === archidektSyncGeneration.current) {
-          setArchidektSyncRequest({ userId: targetUserId, status: result.skipped ? 'partial' : 'completed' });
-        }
-      } catch {
-        if (generation === archidektSyncGeneration.current) {
-          setArchidektSyncRequest({ userId: targetUserId, status: 'failed' });
+          const reference = error instanceof ArenaSyncError && error.requestId ? `\n${language === 'it' ? 'Riferimento' : 'Reference'}: ${error.requestId}` : '';
+          setArchidektSyncRequest({ userId: targetUserId, status: 'failed', message: message + reference });
         }
       }
     })();
-  }, [currentUserId, groupId, members, refresh]);
+  }, [copy, currentUserId, groupId, language, members, refreshMemberDecks]);
+
+  const handleRetryArchidektSync = useCallback((participantKey: ParticipantKey) => {
+    const target = participantKey.startsWith('user:') ? participantKey.slice('user:'.length) : null;
+    if (!target || archidektSyncRequest?.userId !== target || archidektSyncRequest.status !== 'refresh_failed') {
+      handleSelectSetupParticipant(participantKey);
+      return;
+    }
+    const generation = ++archidektSyncGeneration.current;
+    const partial = archidektSyncRequest.wasPartial;
+    const empty = archidektSyncRequest.wasEmpty;
+    const requestId = archidektSyncRequest.requestId;
+    setArchidektSyncRequest({ userId: target, status: 'syncing' });
+    void refreshMemberDecks(target).then((limited) => {
+      if (generation === archidektSyncGeneration.current) setArchidektSyncRequest({ userId: target, status: partial ? 'partial' : limited ? 'limited' : empty ? 'empty' : 'completed' });
+    }).catch(() => {
+      if (generation === archidektSyncGeneration.current) setArchidektSyncRequest({ userId: target, status: 'refresh_failed', wasPartial: partial, wasEmpty: empty, requestId, message: copy('liveGameArchidektSyncRefreshFailed') + (requestId ? `\n${language === 'it' ? 'Riferimento' : 'Reference'}: ${requestId}` : '') });
+    });
+  }, [archidektSyncRequest, copy, handleSelectSetupParticipant, language, refreshMemberDecks]);
 
   const resetSetup = useCallback(() => {
     applySeatSetups(clearLiveGameSeats(seatSetups));
@@ -1768,6 +1801,7 @@ export default function LiveGameScreen() {
               onLayoutChange={setLayoutVariant}
               onStartingLifeChange={applyStartingLife}
               onSelectParticipant={handleSelectSetupParticipant}
+              onRetryArchidektSync={handleRetryArchidektSync}
               archidektSyncRequest={archidektSyncRequest}
               onAssignSeat={handleAssignSeat}
               onReset={resetSetup}
@@ -1786,7 +1820,10 @@ export default function LiveGameScreen() {
                 archidektSyncWaiting: copy('liveGameArchidektSyncWaiting'),
                 archidektSyncCompleted: copy('liveGameArchidektSyncCompleted'),
                 archidektSyncPartial: copy('liveGameArchidektSyncPartial'),
+                archidektSyncLimited: copy('liveGameArchidektSyncLimited'),
+                archidektSyncEmpty: copy('liveGameArchidektSyncEmpty'),
                 archidektSyncRetry: copy('liveGameArchidektSyncRetry'),
+                archidektSyncRefreshRetry: copy('liveGameArchidektSyncRefreshRetry'),
                 archidektSyncFailed: copy('liveGameArchidektSyncFailed'),
                 searchDecks: copy('searchDecks'),
                 noDecksMatchSearch: copy('noDecksMatchSearch'),

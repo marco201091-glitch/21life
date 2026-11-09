@@ -2,6 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { fetchArenaMatches, fetchArenaMemberDecks, MATCHES_SELECT } from '@/lib/arena-queries';
 
 describe('arena queries', () => {
+  it('reports catalog errors to a strict refresh instead of returning an empty successful list', async () => {
+    const chain: Record<string, unknown> = {};
+    for (const method of ['select', 'eq', 'or', 'order']) chain[method] = () => chain;
+    chain.limit = async () => ({ data: null, error: { message: 'private database details' } });
+    const client = { rpc: vi.fn().mockResolvedValue({ error: { message: 'rpc unavailable' } }), from: vi.fn().mockReturnValue(chain) };
+    await expect(fetchArenaMemberDecks(client as never, 'group', ['user'], { strict: true })).rejects.toThrow('ARENA_DECKS_READ_FAILED');
+  });
   it('selects each nested participant profile and guest relation once', () => {
     const participantProjection = MATCHES_SELECT.split('match_participants (')[1];
     expect(participantProjection).toBeTruthy();

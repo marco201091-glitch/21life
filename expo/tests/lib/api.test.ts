@@ -14,6 +14,11 @@ describe('API client', () => {
     refreshSession.mockResolvedValue({ data: { session: null } });
   });
 
+  it('preserves a request reference from a server response', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 502, headers: { 'X-Request-Id': 'diagnostic-reference' } }));
+    expect((await apiGet('/protected')).requestId).toBe('diagnostic-reference');
+  });
+
   it('adds the current bearer token to GET requests', async () => {
     getSession.mockResolvedValue({ data: { session: { access_token: 'token-1' } } });
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(
