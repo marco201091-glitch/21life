@@ -1,0 +1,2 @@
+# Riavvio mensile dopo la pulizia APT: prima domenica di ogni mese (UTC).
+30 4 * * 0 root [ $(date +\%d) -le 7 ] && /sbin/reboot
