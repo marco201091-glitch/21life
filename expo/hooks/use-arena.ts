@@ -89,6 +89,13 @@ export function useArena(groupId: string | undefined, userId: string | undefined
     return loadedDecks;
   }, [groupId]);
 
+  const refreshMemberDecks = useCallback(async (memberId: string) => {
+    if (!groupId) throw new Error('ARENA_DECKS_READ_FAILED');
+    const loaded = await fetchArenaMemberDecks(supabase, groupId, [memberId], { strict: true });
+    setDecks((current) => [...current.filter((deck) => deck.user_id !== memberId), ...loaded]);
+    return loaded.length >= 120;
+  }, [groupId]);
+
   const refresh = useCallback(async (showLoading = true) => {
     if (!groupId || !userId) {
       setLoading(false);
@@ -511,6 +518,7 @@ export function useArena(groupId: string | undefined, userId: string | undefined
     playerStats,
     loading,
     refresh,
+    refreshMemberDecks,
     loadMoreMatches,
     refreshMatches,
     createMatch,

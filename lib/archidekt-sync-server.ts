@@ -3,11 +3,13 @@ import { fetchDeckFromSource } from '@/lib/deck-importers-server';
 import { buildCanonicalDeckSourceUrl, deckDataToColorFields, getDefaultImportedCommanderOption, resolveImportedDeckCommanderImage } from '@/lib/deck-importers';
 
 type DeckSummary = { id: number; private?: boolean };
+export class ArchidektImportTimeout extends Error {}
+export class ArchidektRateLimited extends Error {}
 export async function fetchArchidektSyncDecks(username: string) {
   const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout>;
   const deadline = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => { controller.abort(); reject(new Error('Archidekt import timed out.')); }, 90_000);
+    timer = setTimeout(() => { controller.abort(); reject(new ArchidektImportTimeout('Archidekt import timed out.')); }, 90_000);
   });
   const importDecks = async () => {
     const url = new URL('https://archidekt.com/api/decks/v3/');
@@ -17,6 +19,7 @@ export async function fetchArchidektSyncDecks(username: string) {
     url.searchParams.set('pageSize', '80');
     const summaries: DeckSummary[] = [];
     const seen = new Set<number>();
+    let invalidSummaries = 0;
     let page = 1;
     while (true) {
       url.searchParams.set('page', String(page));
@@ -24,11 +27,14 @@ export async function fetchArchidektSyncDecks(username: string) {
         cache: 'no-store', signal: controller.signal,
         headers: { Accept: 'application/json', 'User-Agent': '21Life/9.0 (https://app.phyrexianarena.dpdns.org)' },
       });
+      if (response.status === 429) throw new ArchidektRateLimited('Archidekt rate limit');
       if (!response.ok) throw new Error(`Archidekt profile request failed (${response.status}).`);
       const payload = await response.json();
       if (!Array.isArray(payload.results)) throw new Error('Invalid Archidekt profile response.');
       for (const deck of payload.results as DeckSummary[]) {
-        if (Number.isSafeInteger(deck?.id) && deck.id > 0 && deck.private !== true && !seen.has(deck.id)) {
+        if (deck?.private === true) continue;
+        if (!Number.isSafeInteger(deck?.id) || deck.id <= 0) { invalidSummaries++; continue; }
+        if (!seen.has(deck.id)) {
           seen.add(deck.id); summaries.push(deck);
         }
       }
@@ -40,7 +46,7 @@ export async function fetchArchidektSyncDecks(username: string) {
       page = nextPage;
     }
     const decks: Array<Record<string, unknown>> = [];
-    let skipped = 0; let next = 0;
+    let skipped = invalidSummaries; let rateLimited = 0; let next = 0;
     await Promise.all(Array.from({ length: Math.min(4, summaries.length) }, async () => {
       while (next < summaries.length) {
         if (controller.signal.aborted) throw new Error('Archidekt import timed out.');
@@ -55,13 +61,17 @@ export async function fetchArchidektSyncDecks(username: string) {
             source_url: buildCanonicalDeckSourceUrl('archidekt', String(summary.id)),
             source_type: 'archidekt', bracket: data.bracket, ...deckDataToColorFields(data),
           });
-        } catch {
+        } catch (error) {
           if (controller.signal.aborted) throw new Error('Archidekt import timed out.');
+          if (error instanceof Error && error.message === 'Failed to fetch deck from Archidekt (429)') rateLimited++;
           skipped++;
         }
       }
     }));
-    if (summaries.length > 0 && decks.length === 0) throw new Error('No Archidekt decks could be imported.');
+    if ((summaries.length > 0 || invalidSummaries > 0) && decks.length === 0) {
+      if (rateLimited > 0 && rateLimited === summaries.length && invalidSummaries === 0) throw new ArchidektRateLimited('Archidekt rate limit');
+      throw new Error('No Archidekt decks could be imported.');
+    }
     return { decks, skipped };
   };
   try { return await Promise.race([importDecks(), deadline]); }

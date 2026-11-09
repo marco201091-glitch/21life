@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { processPushDeliveries } from "@/lib/push-delivery-worker";
+import { logCriticalEvent } from "@/lib/critical-diagnostics";
 export const runtime = "nodejs";
 export const maxDuration = 120;
 export async function POST(request: Request) {
@@ -19,8 +20,12 @@ export async function POST(request: Request) {
   if (!admin)
     return NextResponse.json({ error: "Unavailable" }, { status: 503 });
   try {
-    return NextResponse.json(await processPushDeliveries(admin));
+    const start = Date.now();
+    const result = await processPushDeliveries(admin);
+    if (result.processed > 0) logCriticalEvent('push_delivery', 'worker', 'success', { processed: result.processed, durationMs: Date.now() - start });
+    return NextResponse.json(result);
   } catch {
+    logCriticalEvent('push_delivery', 'worker', 'failed');
     return NextResponse.json(
       { error: "Push processing failed" },
       { status: 503 },

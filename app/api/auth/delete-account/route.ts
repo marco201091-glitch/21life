@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { logCriticalEvent } from '@/lib/critical-diagnostics';
 import { requireAuthenticatedUser } from '@/app/api/_lib/auth';
 import { applyUserRateLimit } from '@/app/api/_lib/with-rate-limit';
 import { isDemoEmail } from '@/lib/demo';
@@ -76,6 +77,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Account confirmation does not match.' }, { status: 403 });
   }
 
+  let stage: 'rate_limits' | 'storage_list' | 'storage_remove' | 'session_revoke' | 'auth_delete' = 'rate_limits';
   try {
     const { error: rateLimitDeleteError } = await adminClient
       .from('api_rate_limits')
@@ -83,28 +85,33 @@ export async function POST(request: Request) {
       .like('bucket_key', `%:user:${user.id}`);
     if (rateLimitDeleteError) throw rateLimitDeleteError;
 
+    stage = 'storage_list';
     const avatarBucket = adminClient.storage.from('avatars');
     const { data: avatarFiles, error: avatarListError } = await avatarBucket.list(user.id, { limit: 100 });
     if (avatarListError) throw avatarListError;
 
     if (avatarFiles?.length) {
+      stage = 'storage_remove';
       const { error: avatarDeleteError } = await avatarBucket.remove(
         avatarFiles.map((file) => `${user.id}/${file.name}`),
       );
       if (avatarDeleteError) throw avatarDeleteError;
     }
 
+    stage = 'session_revoke';
     const authHeader = request.headers.get('authorization') || '';
     const accessToken = authHeader.slice('Bearer '.length).trim();
     const { error: signOutError } = await adminClient.auth.admin.signOut(accessToken, 'global');
     if (signOutError) throw signOutError;
 
+    stage = 'auth_delete';
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
     if (deleteError) throw deleteError;
 
+    logCriticalEvent('account_delete', 'delete', 'success');
     return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error('Account deletion failed:', error);
+  } catch {
+    logCriticalEvent('account_delete', stage, 'failed');
     return NextResponse.json({ error: 'Account deletion failed.' }, { status: 500 });
   }
 }

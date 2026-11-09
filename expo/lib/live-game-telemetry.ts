@@ -39,6 +39,11 @@ export function recordLiveGameMutationSync(input: {
 export function sanitizeLiveGameTelemetryError(error: unknown) {
   const raw = error instanceof Error ? error.message : String(error);
   return raw
+    .replace(/\bBearer\s+[^\s,;]+/gi, 'Bearer [token]')
+    .replace(/\b(?:ExponentPushToken|ExpoPushToken)\[[^\]]+\]/g, '[token]')
+    .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, '[token]')
+    .replace(/(["']?(?:password|token|secret|authorization|api[_-]?key)["']?\s*:\s*["'])[^"']*(["'])/gi, '$1[redacted]$2')
+    .replace(/\b(password|token|secret|authorization|api[_-]?key)\s*[=:]\s*[^\s,;]+/gi, '$1=[redacted]')
     .replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, '[email]')
     .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi, '[id]')
     .replace(/https?:\/\/\S+/gi, '[url]')
