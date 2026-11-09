@@ -10,7 +10,7 @@ const policy = JSON.parse(readFileSync(new URL('./dependency-audit-policy.json',
 if (!Number.isFinite(Date.parse(policy.expiresAt))) throw new Error('Audit exception policy has invalid expiry.');
 
 function acceptedToolingAdvisories(payload, { project, lockfile, now = new Date(), installedDir } = {}) {
-  if (project !== policy.project || !Number.isFinite(Number(now)) || (Number(now) >= Date.parse(policy.expiresAt) && !(installedDir && verifyDependencyPatches(installedDir)))) return [];
+  if (project !== policy.project || !Number.isFinite(Number(now)) || (Number(now) >= Date.parse(policy.expiresAt) && !(installedDir && verifyDependencyPatches(installedDir, Object.keys(policy.advisories))))) return [];
   const entries = Object.entries(payload.vulnerabilities ?? {}).filter(([, v]) => severityRank[v.severity] >= severityRank.high);
   if (!entries.length || payload.metadata.vulnerabilities.critical > 0 || entries.length !== payload.metadata.vulnerabilities.high) return [];
   const reachable = new Set(entries.map(([name]) => name));
@@ -65,7 +65,7 @@ export function summarizeAudit(payload, options = {}) {
   ), 'info');
 
   const acceptedAdvisories = acceptedToolingAdvisories(payload, options);
-  const mitigated = acceptedAdvisories.length > 0 && !!options.installedDir && verifyDependencyPatches(options.installedDir);
+  const mitigated = acceptedAdvisories.length > 0 && !!options.installedDir && verifyDependencyPatches(options.installedDir, acceptedAdvisories);
   return {
     ...(acceptedAdvisories.length ? (mitigated ? { mitigatedAdvisories: acceptedAdvisories, mitigation: 'SHA-256 verified source patches' } : { acceptedAdvisories, exceptionExpiresAt: policy.expiresAt }) : {}),
     counts,

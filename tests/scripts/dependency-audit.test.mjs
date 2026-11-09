@@ -93,7 +93,7 @@ test('a high dependency cannot hide an unreviewed moderate root', () => {
   assert.equal(summarizeAudit(a,o).blocking,true);
 });
 
-test('verified Expo tooling patches mitigate only the reviewed node-forge graph and keep it visible', () => {
+test('an unrelated installed patch cannot be reported as a node-forge mitigation', () => {
   const summary = summarizeAudit(approvedReport(), {
     ...approvedOptions(),
     now: new Date('2026-10-26T12:00:00Z'),
@@ -101,8 +101,8 @@ test('verified Expo tooling patches mitigate only the reviewed node-forge graph 
   });
   assert.equal(summary.blocking, false);
   assert.equal(summary.counts.high, 5);
-  assert.equal(summary.acceptedAdvisories, undefined);
-  assert.deepEqual(summary.mitigatedAdvisories, ['https://github.com/advisories/GHSA-86w9-cpqp-85rv']);
+  assert.deepEqual(summary.acceptedAdvisories, ['https://github.com/advisories/GHSA-86w9-cpqp-85rv']);
+  assert.equal(summary.mitigatedAdvisories, undefined);
 });
 
 test('Expo tooling patch acceptance fails closed after its review date', () => {
@@ -113,6 +113,6 @@ test('Expo tooling patch acceptance fails closed after its review date', () => {
 
 test('patched installed source is required after exception expiry', {skip: !existsSync(resolve(process.cwd(), 'expo', 'node_modules'))}, () => {
  const o={...approvedOptions(),now:new Date('2026-11-10T12:00:00Z'),installedDir:resolve(process.cwd(), 'expo')};
- assert.equal(summarizeAudit(approvedReport(),o).blocking,false);
+ assert.equal(summarizeAudit(approvedReport(),o).blocking,true);
  assert.equal(summarizeAudit(approvedReport(),{...o,installedDir:'missing'}).blocking,true);
  });
