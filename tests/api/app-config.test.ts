@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+  latest: null as string | null,
   admin: true,
   error: null as { code?: string } | null,
   data: {
@@ -12,6 +13,8 @@ const mocks = vi.hoisted(() => ({
     release_notes: [{ version: '9.0.4', it: 'Nota IT', en: 'Note EN' }],
   },
 }));
+
+vi.mock('@/lib/latest-release', () => ({ getLatestReleasedVersion: async () => mocks.latest }));
 
 vi.mock('@/lib/supabase-admin', () => ({
   getSupabaseAdminClient: () => mocks.admin ? {
@@ -32,6 +35,7 @@ function request(version: string) {
 
 beforeEach(() => {
   mocks.admin = true;
+  mocks.latest = null;
   mocks.error = null;
   mocks.data = {
     minimum_supported_version: '8.1.0',
@@ -44,6 +48,16 @@ beforeEach(() => {
 });
 
 describe('app config API', () => {
+  it('reports an update from the latest published release, independently of the recommendation', async () => {
+    mocks.latest = '9.1.3';
+    expect(await (await GET(request('9.1.2'))).json()).toMatchObject({ latestReleasedVersion: '9.1.3', recommendedVersion: '9.1.3', supportState: 'update_available', releaseUpdateAvailable: true });
+    expect(await (await GET(request('9.1.3'))).json()).toMatchObject({ releaseUpdateAvailable: false });
+    expect(await (await GET(request('9.1.4'))).json()).toMatchObject({ releaseUpdateAvailable: false });
+  });
+
+  it('does not invent an update when the release source is unavailable', async () => {
+    expect(await (await GET(request('9.1.2'))).json()).toMatchObject({ latestReleasedVersion: null, releaseUpdateAvailable: false });
+  });
   it.each([
     ['8.0.0', 'unsupported'],
     ['8.1.0', 'update_available'],
