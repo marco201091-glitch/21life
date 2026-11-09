@@ -174,7 +174,10 @@ export async function fetchArenaMemberDecks(
     p_user_ids: memberIds,
     p_limit_per_user: MEMBER_DECK_LIMIT,
   });
-  if (!error) return ((data || []) as MemberDeck[]).filter((deck) => deck.source_type !== 'occasional');
+  if (!error) {
+    if (options?.strict && !Array.isArray(data)) throw new Error('ARENA_DECKS_READ_FAILED');
+    return ((data || []) as MemberDeck[]).filter((deck) => deck.source_type !== 'occasional');
+  }
 
   // Compatibility fallback while a new deployment is waiting for migrations.
   const decks: MemberDeck[] = [];

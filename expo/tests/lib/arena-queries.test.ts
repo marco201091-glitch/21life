@@ -9,6 +9,10 @@ describe('arena queries', () => {
     const client = { rpc: vi.fn().mockResolvedValue({ error: { message: 'rpc unavailable' } }), from: vi.fn().mockReturnValue(chain) };
     await expect(fetchArenaMemberDecks(client as never, 'group', ['user'], { strict: true })).rejects.toThrow('ARENA_DECKS_READ_FAILED');
   });
+  it('does not treat a missing RPC payload as a confirmed empty catalog', async () => {
+    const client = { rpc: vi.fn().mockResolvedValue({ data: null, error: null }) };
+    await expect(fetchArenaMemberDecks(client as never, 'group', ['user'], { strict: true })).rejects.toThrow('ARENA_DECKS_READ_FAILED');
+  });
   it('selects each nested participant profile and guest relation once', () => {
     const participantProjection = MATCHES_SELECT.split('match_participants (')[1];
     expect(participantProjection).toBeTruthy();
