@@ -54,6 +54,20 @@ describe('fresh bounded server Archidekt import', () => {
     mocks.fetchDeck.mockRejectedValue(new Error('403'));
     await expect(fetchArchidektSyncDecks('user')).rejects.toThrow();
   });
+  it('reports upstream rate limiting when deck details cannot be fetched', async () => {
+    mocks.fetchDeck.mockRejectedValue(new Error('Failed to fetch deck from Archidekt (429)'));
+    await expect(fetchArchidektSyncDecks('user')).rejects.toBeInstanceOf(ArchidektRateLimited);
+  });
+  it('does not attribute mixed invalid summaries and rate limiting to one cause', async () => {
+    vi.mocked(fetch).mockResolvedValue(Response.json({ results: [{ id: 123 }, { id: 0 }] }));
+    mocks.fetchDeck.mockRejectedValue(new Error('Failed to fetch deck from Archidekt (429)'));
+    await expect(fetchArchidektSyncDecks('user')).rejects.toThrow('No Archidekt decks');
+  });
+  it('does not misclassify mixed upstream deck errors as rate limiting', async () => {
+    vi.mocked(fetch).mockResolvedValue(Response.json({ results: [{ id: 123 }, { id: 124 }] }));
+    mocks.fetchDeck.mockRejectedValueOnce(new Error('Failed to fetch deck from Archidekt (429)')).mockRejectedValueOnce(new Error('403'));
+    await expect(fetchArchidektSyncDecks('user')).rejects.toThrow('No Archidekt decks');
+  });
   it('preserves successful imports and reports failed decks', async () => {
     vi.mocked(fetch).mockResolvedValue(Response.json({ results: [{ id: 123 }, { id: 124 }] }));
     mocks.fetchDeck.mockRejectedValueOnce(new Error('403')).mockResolvedValueOnce(data);

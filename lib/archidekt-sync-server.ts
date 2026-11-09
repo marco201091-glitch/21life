@@ -46,7 +46,7 @@ export async function fetchArchidektSyncDecks(username: string) {
       page = nextPage;
     }
     const decks: Array<Record<string, unknown>> = [];
-    let skipped = invalidSummaries; let next = 0;
+    let skipped = invalidSummaries; let rateLimited = 0; let next = 0;
     await Promise.all(Array.from({ length: Math.min(4, summaries.length) }, async () => {
       while (next < summaries.length) {
         if (controller.signal.aborted) throw new Error('Archidekt import timed out.');
@@ -61,13 +61,17 @@ export async function fetchArchidektSyncDecks(username: string) {
             source_url: buildCanonicalDeckSourceUrl('archidekt', String(summary.id)),
             source_type: 'archidekt', bracket: data.bracket, ...deckDataToColorFields(data),
           });
-        } catch {
+        } catch (error) {
           if (controller.signal.aborted) throw new Error('Archidekt import timed out.');
+          if (error instanceof Error && error.message === 'Failed to fetch deck from Archidekt (429)') rateLimited++;
           skipped++;
         }
       }
     }));
-    if ((summaries.length > 0 || invalidSummaries > 0) && decks.length === 0) throw new Error('No Archidekt decks could be imported.');
+    if ((summaries.length > 0 || invalidSummaries > 0) && decks.length === 0) {
+      if (rateLimited > 0 && rateLimited === summaries.length && invalidSummaries === 0) throw new ArchidektRateLimited('Archidekt rate limit');
+      throw new Error('No Archidekt decks could be imported.');
+    }
     return { decks, skipped };
   };
   try { return await Promise.race([importDecks(), deadline]); }
