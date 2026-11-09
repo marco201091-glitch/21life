@@ -48,16 +48,16 @@ describe('arena Archidekt sync', () => {
   it('distinguishes a successful save from a subsequent failed catalog refresh', async () => {
     apiPost.mockResolvedValue({ status: 200, data: { inserted: 1, updated: 0, unchanged: 0, skipped: 0 } });
     const refresh = vi.fn().mockRejectedValue(new Error('offline'));
-    await expect(syncAndRefreshArenaMember('arena', 'player', refresh)).resolves.toEqual({ status: 'refresh_failed', wasPartial: false, wasEmpty: false });
+    await expect(syncAndRefreshArenaMember('arena', 'player', refresh)).resolves.toEqual({ status: 'refresh_failed', skipped: 0, wasPartial: false, wasEmpty: false });
     expect(refresh).toHaveBeenCalledWith('player');
   });
   it('preserves partial results if the list refresh fails', async () => {
     apiPost.mockResolvedValue({ status: 200, data: { inserted: 1, updated: 0, unchanged: 0, skipped: 2 } });
-    await expect(syncAndRefreshArenaMember('arena', 'player', async () => { throw new Error('offline'); })).resolves.toEqual({ status: 'refresh_failed', wasPartial: true, wasEmpty: false });
+    await expect(syncAndRefreshArenaMember('arena', 'player', async () => { throw new Error('offline'); })).resolves.toEqual({ status: 'refresh_failed', skipped: 2, wasPartial: true, wasEmpty: false });
   });
   it('warns when the deck list reaches its visible limit', async () => {
     apiPost.mockResolvedValue({ status: 200, data: { inserted: 1, updated: 0, unchanged: 0, skipped: 0 } });
-    await expect(syncAndRefreshArenaMember('arena', 'player', async () => true)).resolves.toEqual({ status: 'limited', wasPartial: false, wasEmpty: false });
+    await expect(syncAndRefreshArenaMember('arena', 'player', async () => true)).resolves.toEqual({ status: 'limited', skipped: 0, wasPartial: false, wasEmpty: false });
   });
   it.each([
     [{ inserted: 0, updated: 0, unchanged: 0, skipped: 0 }, 'empty'],

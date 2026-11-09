@@ -63,8 +63,8 @@ export async function syncAndRefreshArenaMember(groupId: string, userId: string,
   const wasEmpty = result.inserted + result.updated + result.unchanged === 0 && result.skipped === 0;
   try {
     const limited = await refresh(userId);
-    return { status: result.skipped ? 'partial' as const : limited ? 'limited' as const : wasEmpty ? 'empty' as const : 'completed' as const, wasPartial: result.skipped > 0, wasEmpty, ...(result.requestId ? { requestId: result.requestId } : {}) };
+    return { status: result.skipped ? 'partial' as const : limited ? 'limited' as const : wasEmpty ? 'empty' as const : 'completed' as const, skipped: result.skipped, wasPartial: result.skipped > 0, wasEmpty, ...(result.requestId ? { requestId: result.requestId } : {}) };
   } catch {
-    return { status: 'refresh_failed' as const, wasPartial: result.skipped > 0, wasEmpty, ...(result.requestId ? { requestId: result.requestId } : {}) };
+    return { status: 'refresh_failed' as const, skipped: result.skipped, wasPartial: result.skipped > 0, wasEmpty, ...(result.requestId ? { requestId: result.requestId } : {}) };
   }
 }

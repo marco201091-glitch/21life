@@ -175,6 +175,7 @@ export default function LiveGameScreen() {
     wasPartial?: boolean;
     wasEmpty?: boolean;
     requestId?: string;
+    skipped?: number;
   } | null>(null);
   const archidektSyncGeneration = useRef(0);
   const [damagePulse, setDamagePulse] = useState<Record<string, number>>({});
@@ -373,6 +374,7 @@ export default function LiveGameScreen() {
         if (generation === archidektSyncGeneration.current) setArchidektSyncRequest({
           userId: targetUserId,
           ...outcome,
+          ...(outcome.status === 'partial' ? { message: language === 'it' ? `Sincronizzazione parziale: ${outcome.skipped} ${outcome.skipped === 1 ? 'mazzo non aggiornato' : 'mazzi non aggiornati'}. Riprova.` : `Partial sync: ${outcome.skipped} ${outcome.skipped === 1 ? 'deck was' : 'decks were'} not updated. Retry.` } : {}),
           ...(outcome.status === 'refresh_failed' ? { message: copy('liveGameArchidektSyncRefreshFailed') + (outcome.requestId ? `\n${language === 'it' ? 'Riferimento' : 'Reference'}: ${outcome.requestId}` : '') } : {}),
         });
       } catch (error) {
@@ -403,11 +405,12 @@ export default function LiveGameScreen() {
     const partial = archidektSyncRequest.wasPartial;
     const empty = archidektSyncRequest.wasEmpty;
     const requestId = archidektSyncRequest.requestId;
+    const skipped = archidektSyncRequest.skipped;
     setArchidektSyncRequest({ userId: target, status: 'syncing' });
     void refreshMemberDecks(target).then((limited) => {
-      if (generation === archidektSyncGeneration.current) setArchidektSyncRequest({ userId: target, status: partial ? 'partial' : limited ? 'limited' : empty ? 'empty' : 'completed' });
+      if (generation === archidektSyncGeneration.current) setArchidektSyncRequest({ userId: target, status: partial ? 'partial' : limited ? 'limited' : empty ? 'empty' : 'completed', ...(partial ? { message: language === 'it' ? `Sincronizzazione parziale: ${skipped} ${skipped === 1 ? 'mazzo non aggiornato' : 'mazzi non aggiornati'}. Riprova.` : `Partial sync: ${skipped} ${skipped === 1 ? 'deck was' : 'decks were'} not updated. Retry.` } : {}) });
     }).catch(() => {
-      if (generation === archidektSyncGeneration.current) setArchidektSyncRequest({ userId: target, status: 'refresh_failed', wasPartial: partial, wasEmpty: empty, requestId, message: copy('liveGameArchidektSyncRefreshFailed') + (requestId ? `\n${language === 'it' ? 'Riferimento' : 'Reference'}: ${requestId}` : '') });
+      if (generation === archidektSyncGeneration.current) setArchidektSyncRequest({ userId: target, status: 'refresh_failed', wasPartial: partial, wasEmpty: empty, skipped, requestId, message: copy('liveGameArchidektSyncRefreshFailed') + (requestId ? `\n${language === 'it' ? 'Riferimento' : 'Reference'}: ${requestId}` : '') });
     });
   }, [archidektSyncRequest, copy, handleSelectSetupParticipant, language, refreshMemberDecks]);
 

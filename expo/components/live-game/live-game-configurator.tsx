@@ -405,7 +405,7 @@ export function LiveGameConfigurator({
                     : selectedSyncStatus === 'completed' ? labels.archidektSyncCompleted
                       : selectedSyncStatus === 'limited' ? labels.archidektSyncLimited
                       : selectedSyncStatus === 'empty' ? labels.archidektSyncEmpty
-                      : selectedSyncStatus === 'partial' ? labels.archidektSyncPartial
+                      : selectedSyncStatus === 'partial' ? archidektSyncRequest?.message || labels.archidektSyncPartial
                       : labels.archidektSyncWaiting}
                 </Text>
                 {selectedSyncStatus !== 'syncing' && onSelectParticipant ? <Pressable
