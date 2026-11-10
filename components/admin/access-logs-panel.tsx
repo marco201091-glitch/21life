@@ -175,7 +175,7 @@ export function AccessLogsPanel({ embedded = false }: AccessLogsPanelProps) {
           <div className="w-full sm:w-44">
             <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t({ it: 'Origine', en: 'Source' })}</label>
             <Select value={sourceFilter} onValueChange={(value) => setSourceFilter(value as 'all' | AccessLogSource)}>
-              <SelectTrigger className="border-border bg-background/50 text-foreground"><SelectValue /></SelectTrigger>
+              <SelectTrigger aria-label={t({ it: "Origine", en: "Source" })} className="border-border bg-background/50 text-foreground"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t({ it: 'Tutte', en: 'All' })}</SelectItem>
                 <SelectItem value="web">Web</SelectItem>
@@ -188,7 +188,7 @@ export function AccessLogsPanel({ embedded = false }: AccessLogsPanelProps) {
               {t({ it: 'Periodo', en: 'Period' })}
             </label>
             <Select value={period} onValueChange={(value) => setPeriod(value as AccessLogPeriod)}>
-              <SelectTrigger className="border-border bg-background/50 text-foreground">
+              <SelectTrigger aria-label={t({ it: "Periodo", en: "Period" })} className="border-border bg-background/50 text-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
