@@ -1,12 +1,9 @@
 {
   "project": "expo",
-  "approvedOn": "2026-10-05",
-  "expiresAt": "2026-10-19T00:00:00+02:00",
+  "approvedOn": "2026-10-26",
+  "expiresAt": "2026-11-09T00:00:00+01:00",
+  "rationale": "node-forge 1.4.0 has no upstream fixed release yet. Dev applies a minimal source patch during Expo postinstall, verifies original and patched SHA-256, and tests rejection of malformed RSA DigestInfo while preserving valid signature verification. Reports retain the high advisory as mitigated only when installed patch bytes verify; otherwise the exact graph is accepted only until review expiry.",
   "advisories": {
-    "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm": {
-      "package": "braces",
-      "version": "3.0.3"
-    },
     "https://github.com/advisories/GHSA-86w9-cpqp-85rv": {
       "package": "node-forge",
       "version": "1.4.0"
@@ -19,8 +16,6 @@
       },
       "via": [
         "@expo/code-signing-certificates",
-        "@expo/metro",
-        "@expo/metro-config",
         "node-forge"
       ]
     },
@@ -32,51 +27,6 @@
         "node-forge"
       ]
     },
-    "@expo/metro": {
-      "nodes": {
-        "node_modules/@expo/metro": "56.0.2"
-      },
-      "via": [
-        "metro",
-        "metro-config",
-        "metro-file-map",
-        "metro-transform-worker"
-      ]
-    },
-    "@expo/metro-config": {
-      "nodes": {
-        "node_modules/@expo/metro-config": "57.0.13"
-      },
-      "via": [
-        "@expo/metro"
-      ]
-    },
-    "@react-native/community-cli-plugin": {
-      "nodes": {
-        "node_modules/@react-native/community-cli-plugin": "0.86.3"
-      },
-      "via": [
-        "@react-native/metro-config",
-        "metro",
-        "metro-config"
-      ]
-    },
-    "@react-native/metro-config": {
-      "nodes": {
-        "node_modules/@react-native/metro-config": "0.86.3"
-      },
-      "via": [
-        "metro-config"
-      ]
-    },
-    "@react-native/virtualized-lists": {
-      "nodes": {
-        "node_modules/@react-native/virtualized-lists": "0.86.3"
-      },
-      "via": [
-        "react-native"
-      ]
-    },
     "@sentry/react-native": {
       "nodes": {
         "node_modules/@sentry/react-native": "7.11.0"
@@ -85,64 +35,12 @@
         "expo"
       ]
     },
-    "braces": {
-      "nodes": {
-        "node_modules/braces": "3.0.3"
-      },
-      "via": [
-        "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm"
-      ]
-    },
     "expo": {
       "nodes": {
         "node_modules/expo": "57.0.31"
       },
       "via": [
-        "@expo/cli",
-        "@expo/metro",
-        "@expo/metro-config"
-      ]
-    },
-    "metro": {
-      "nodes": {
-        "node_modules/metro": "0.84.5"
-      },
-      "via": [
-        "metro-config",
-        "metro-file-map",
-        "metro-transform-worker"
-      ]
-    },
-    "metro-config": {
-      "nodes": {
-        "node_modules/metro-config": "0.84.5"
-      },
-      "via": [
-        "metro"
-      ]
-    },
-    "metro-file-map": {
-      "nodes": {
-        "node_modules/metro-file-map": "0.84.5"
-      },
-      "via": [
-        "micromatch"
-      ]
-    },
-    "metro-transform-worker": {
-      "nodes": {
-        "node_modules/metro-transform-worker": "0.84.5"
-      },
-      "via": [
-        "metro"
-      ]
-    },
-    "micromatch": {
-      "nodes": {
-        "node_modules/micromatch": "4.0.8"
-      },
-      "via": [
-        "braces"
+        "@expo/cli"
       ]
     },
     "node-forge": {
@@ -152,42 +50,7 @@
       "via": [
         "https://github.com/advisories/GHSA-86w9-cpqp-85rv"
       ]
-    },
-    "react-native": {
-      "nodes": {
-        "node_modules/react-native": "0.86.3"
-      },
-      "via": [
-        "@react-native/community-cli-plugin",
-        "@react-native/virtualized-lists"
-      ]
-    },
-    "react-native-reanimated": {
-      "nodes": {
-        "node_modules/react-native-reanimated": "4.5.1"
-      },
-      "via": [
-        "react-native",
-        "react-native-worklets"
-      ]
-    },
-    "react-native-view-shot": {
-      "nodes": {
-        "node_modules/react-native-view-shot": "5.1.0"
-      },
-      "via": [
-        "react-native"
-      ]
-    },
-    "react-native-worklets": {
-      "nodes": {
-        "node_modules/react-native-worklets": "0.10.1"
-      },
-      "via": [
-        "@react-native/metro-config",
-        "react-native"
-      ]
     }
   },
-  "reviewedOn": "2026-10-09"
+  "reviewedOn": "2026-10-26"
 }

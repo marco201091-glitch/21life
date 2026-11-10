@@ -23,4 +23,12 @@ describe('native live-game telemetry', () => {
       force: true,
     })).toBe(true);
   });
+
+  it('removes credentials and push tokens from telemetry', () => {
+    const result = sanitizeLiveGameTelemetryError('password=hunter2 Bearer sensitive-value ExponentPushToken[private-token] {"secret":"private-json-value"}');
+    expect(result).not.toContain('hunter2');
+    expect(result).not.toContain('sensitive-value');
+    expect(result).not.toContain('private-token');
+    expect(result).not.toContain('private-json-value');
+  });
 });

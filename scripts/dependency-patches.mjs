@@ -9,8 +9,9 @@ export const patches = JSON.parse(
   ),
 );
 const hash = (source) => createHash("sha256").update(source).digest("hex");
-export function verifyDependencyPatches(projectDir) {
+export function verifyDependencyPatches(projectDir, requiredAdvisories = []) {
   try {
+    if (requiredAdvisories.some((advisory) => !patches.some((patch) => patch.advisory === advisory))) return false;
     const lock = JSON.parse(
       readFileSync(resolve(projectDir, "package-lock.json"), "utf8"),
     );

@@ -7,6 +7,7 @@ export interface ApiResult<T> {
   data?: T;
   error?: string;
   status: number;
+  requestId?: string;
 }
 
 export interface ApiRequestOptions {
@@ -36,10 +37,12 @@ async function buildHeaders(
 
 async function parseResponse<T>(response: Response): Promise<ApiResult<T>> {
   const payload = await response.json().catch(() => ({})) as T & { error?: string };
+  const requestId = response.headers.get('X-Request-Id');
   return {
     data: payload,
     error: typeof payload?.error === 'string' ? payload.error : undefined,
     status: response.status,
+    ...(requestId ? { requestId } : {}),
   };
 }
 

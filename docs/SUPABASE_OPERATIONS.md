@@ -69,16 +69,42 @@ Before upgrading:
 Kong can remain explicitly pinned during this validation. Envoy should be
 adopted only after Dokploy routing no longer depends on Kong-specific behavior.
 
-The production compose pins every service to an exact image tag
-(`kong/kong:3.9.1`, `supabase/postgres:17.6.1.136`, `supabase/storage-api:v1.60.4`,
-…), and the weekly `/opt/scripts/supabase-update.sh` only re-pulls those same
-pinned tags. The gateway therefore cannot switch to Envoy on its own: adopting
-it requires an explicit tag change in addition to the validation above. That
-script also force-recreates the whole production stack every Sunday at 01:00
-UTC, which is a planned weekly restart and shows up as a short uptime on the
-containers — not an incident.
+The production compose pins service image tags. The weekly
+`/opt/scripts/supabase-update.sh` checks registry digests without pulling or
+recreating containers. Adopting Envoy requires an explicit configuration and
+image change in addition to the validation above.
 
 ## Production backup
+
+Host maintenance uses `dokploy-nightly-cleanup.timer` as the single Docker
+cleanup schedule. Its service first applies Dokploy deployment retention, then
+runs `scripts/vm-docker-cleanup.sh` installed at `/opt/scripts/`. Tagged images
+are retained for rollback; no Docker volumes are pruned. The former
+`docker-cleanup` and `phyrexian-docker-cleanup` cron entries are disabled.
+
+The existing weekly `supabase-update` cron now runs the read-only
+`scripts/supabase-check-updates.sh`, installed as `/opt/scripts/supabase-update.sh`
+to preserve the cron path. It compares running-image digests with registry
+manifests using Docker Buildx and logs `CURRENT`, `REVIEW`, or `UNKNOWN` to
+`/var/log/supabase-update.log`. It never pulls or recreates containers; unknown
+registry results exit nonzero. Applying Supabase updates remains an explicit
+maintenance action with a verified backup.
+
+The 2026-10-07 maintenance rollback files are under
+`/var/backups/21life-maintenance-20261007` (root-only), with an encrypted off-site
+copy in the configured backup remote's `maintenance-20261007` directory.
+
+`supabase-gateway-recovery.service` runs after Docker at boot. It retries starting
+the existing production/Dev Kong container only when Docker reports a failed
+startup because its Swarm network was not found. It does not recreate containers
+or start intentionally stopped gateways. This addresses the network startup race
+observed during the 2026-10-07 reboot.
+
+Ubuntu unattended upgrades apply security updates daily and reboot at 03:30 UTC
+when required. The separate monthly reboot schedule, maintained in
+`scripts/monthly-reboot.cron`, runs at 04:30 UTC on the first Sunday of every
+month. Health checks run every five minutes and monitor both local and encrypted
+off-site backup freshness; the backup age limit is 30 hours.
 
 The local backup protects against accidental data loss. Configure the optional
 encrypted off-site copy before relying on it for host or provider failure; see
