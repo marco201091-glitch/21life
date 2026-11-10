@@ -358,7 +358,7 @@ export default function SettingsScreen() {
         onPress={() => void handleExportAccount()}
         style={styles.logout}
       />
-      <Button label={copy('logout')} variant="ghost" onPress={() => void signOut()} style={styles.logout} />
+      <Button label={copy('logout')} variant="ghost" onPress={() => void signOut().catch(() => showAppAlert(copy('error'), language==='it' ? 'Impossibile scollegare le notifiche. Controlla la connessione e riprova.' : 'Could not disconnect notifications. Check your connection and try again.'))} style={styles.logout} />
       <Button
         label={copy('deleteAccount')}
         variant="destructive"

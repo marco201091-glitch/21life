@@ -7,6 +7,6 @@ describe('mobile production dependencies', () => {
     const packageJson = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf8')) as {
       overrides?: Record<string, string>;
     };
-    expect(packageJson.overrides?.['decode-uri-component']).toBe('0.5.0');
+    expect(packageJson.overrides?.['decode-uri-component']).toBe('0.5.1');
   });
 });

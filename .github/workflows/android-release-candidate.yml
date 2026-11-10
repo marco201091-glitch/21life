@@ -79,6 +79,7 @@ jobs:
       - name: Build verified signed APK
         shell: pwsh
         env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
           RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
@@ -96,6 +97,9 @@ jobs:
           if (-not $env:SENTRY_AUTH_TOKEN -or -not $env:SENTRY_ORG -or -not $env:SENTRY_MOBILE_PROJECT -or -not $env:SENTRY_DSN) {
             throw "Missing Sentry release configuration"
           }
+          if (-not $env:GOOGLE_SERVICES_JSON_BASE64) { throw "Missing Firebase Android configuration" }
+          $env:GOOGLE_SERVICES_FILE = Join-Path $env:RUNNER_TEMP "google-services.json"
+          [IO.File]::WriteAllBytes($env:GOOGLE_SERVICES_FILE, [Convert]::FromBase64String($env:GOOGLE_SERVICES_JSON_BASE64))
           $env:PRODUCTION_DOMAIN_GENERATION = '21life'
           $domains = node scripts/build-domains.mjs production | ConvertFrom-Json
           $turnstile = Invoke-RestMethod -Uri "$($domains.api)/api/auth/turnstile/config" -TimeoutSec 15

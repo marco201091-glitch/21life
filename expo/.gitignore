@@ -7,6 +7,9 @@ web-build/
 .qa-android-export/
 .qa-ios-export/
 .qa-ios-*-config.json
+google-services.dev.json
+google-services.json
+.secrets/
 *.jks
 *.p8
 *.p12

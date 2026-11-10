@@ -46,6 +46,7 @@ interface ArchidektCardData {
 
 interface ArchidektCard {
   card: ArchidektCardData;
+  quantity?: number;
   isCommander?: boolean;
   categories?: string[];
   flippedDefault?: boolean | null;
@@ -60,6 +61,9 @@ function archidektCardCategories(card: ArchidektCard) {
 }
 
 function isArchidektCommanderCard(card: ArchidektCard) {
+  // A companion can also be assigned to Archidekt's Commander category.
+  // Its explicit per-deck role takes precedence over that category.
+  if (card.companion === true) return false;
   return (
     card.isCommander === true ||
     archidektCardCategories(card).some((cat) => typeof cat === 'string' && cat.toLowerCase().includes('commander'))
@@ -552,21 +556,37 @@ async function fetchFromArchidektFresh(deckId: string, signal?: AbortSignal): Pr
     ? Promise.resolve(storedBracket)
     : fetchEstimatedArchidektBracket(deckId, signal);
 
-  const commanderCards = cards.filter(isArchidektCommanderCard);
+  let commanderCards = cards.filter(isArchidektCommanderCard);
+  const companionNames = new Set(cards.filter((card) => card.companion === true)
+    .flatMap(archidektCardNames).map((name) => name.trim().toLowerCase()));
+  const commanderCardNames = new Set(commanderCards.flatMap(archidektCardNames)
+    .map((name) => name.trim().toLowerCase()));
   const leaderCards = commanderCards.filter((card) => !isArchidektBackgroundCard(card));
   const backgroundCards = commanderCards.filter(isArchidektBackgroundCard);
-  const primaryLeaderCard = leaderCards[0] || commanderCards[0];
+  let primaryLeaderCard = leaderCards[0] || commanderCards[0];
 
   const commanderNames = expandCommanderNames([
     ...(Array.isArray(data.commanders)
       ? data.commanders.map((commander) => (commander as { name?: string })?.name)
+        .filter((name): name is string => typeof name === 'string' && name.trim().toLowerCase() !== 'unknown commander' && (!companionNames.has(name.trim().toLowerCase()) || commanderCardNames.has(name.trim().toLowerCase())))
       : []),
     ...leaderCards.flatMap((card) => archidektCardNames(card)),
     ...backgroundCards.flatMap((card) => archidektCardNames(card)),
   ].filter((name): name is string => Boolean(name)));
 
-  const uniqueCommanderNames = commanderNames.length > 0
-    ? commanderNames
+  // A single physical card is an unambiguous special case even if Archidekt
+  // has not assigned it a commander role. Do not guess for larger decks.
+  const noIdentifiedCommander = commanderNames.length === 0
+    || commanderNames.every((name) => name.trim().toLowerCase() === 'unknown commander');
+  const onlyCard = cards.length === 1 && cards[0]?.quantity === 1 ? cards[0] : null;
+  if (noIdentifiedCommander && onlyCard && archidektCardNames(onlyCard).length > 0) {
+    commanderCards = [onlyCard];
+    primaryLeaderCard = onlyCard;
+  }
+  const uniqueCommanderNames = noIdentifiedCommander && primaryLeaderCard
+    ? expandCommanderNames(archidektCardNames(primaryLeaderCard))
+    : commanderNames.length > 0
+      ? commanderNames
     : expandCommanderNames(primaryLeaderCard ? archidektCardNames(primaryLeaderCard) : []);
 
   const commander = uniqueCommanderNames.length > 0
@@ -622,7 +642,7 @@ const fetchFromMoxfieldPersistent = unstable_cache(
 
 const fetchFromArchidektPersistent = unstable_cache(
   fetchFromArchidektFresh,
-  ['archidekt-deck-v7'],
+  ['archidekt-deck-v8'],
   { revalidate: 5 * 60 },
 );
 

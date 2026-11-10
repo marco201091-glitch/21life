@@ -165,6 +165,7 @@ export async function fetchArenaMemberDecks(
   supabase: SupabaseClient,
   groupId: string,
   memberIds: string[],
+  options?: { strict?: boolean },
 ) {
   if (memberIds.length === 0) return [] as MemberDeck[];
 
@@ -173,7 +174,10 @@ export async function fetchArenaMemberDecks(
     p_user_ids: memberIds,
     p_limit_per_user: MEMBER_DECK_LIMIT,
   });
-  if (!error) return ((data || []) as MemberDeck[]).filter((deck) => deck.source_type !== 'occasional');
+  if (!error) {
+    if (options?.strict && !Array.isArray(data)) throw new Error('ARENA_DECKS_READ_FAILED');
+    return ((data || []) as MemberDeck[]).filter((deck) => deck.source_type !== 'occasional');
+  }
 
   // Compatibility fallback while a new deployment is waiting for migrations.
   const decks: MemberDeck[] = [];
@@ -191,6 +195,7 @@ export async function fetchArenaMemberDecks(
         .limit(MEMBER_DECK_LIMIT);
 
       if (error) {
+        if (options?.strict) throw new Error('ARENA_DECKS_READ_FAILED');
         console.error('Error fetching member decks:', getSupabaseErrorMessage(error, 'Failed to fetch member decks'));
         return [] as MemberDeck[];
       }

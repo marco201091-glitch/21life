@@ -28,9 +28,10 @@ if ! pgrep -f 'GradleDaemon|org\.gradle\.launcher|gradlew' >/dev/null; then
   done < <(find /home /root -xdev -type d -path '*/.gradle/caches' -prune -print0 2>/dev/null)
 fi
 
-docker container prune -f
-docker image prune -af
-docker network prune -f
+docker container prune -f --filter 'until=168h'
+# Only dangling images: retain tagged images for rollback.
+docker image prune -f --filter 'until=168h'
+docker network prune -f --filter 'until=168h'
 # Keep a short cache window for a same-day rollback/redeploy without retaining days of layers.
 docker builder prune -af --filter 'until=12h'
 journalctl --vacuum-time=7d

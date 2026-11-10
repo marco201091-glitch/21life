@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 const {
   disableReactNativeJavaAlignment,
+  enableFdroidMinification,
   injectFdroidJvmTargets,
   injectFdroidReleaseBuild,
 } = require('../../plugins/with-fdroid-release-build');
@@ -27,6 +28,12 @@ describe('F-Droid release build plugin', () => {
       key: 'react.internal.disableJavaVersionAlignment',
       value: 'true',
     });
+  });
+
+  it('enables R8 for F-Droid release builds without duplicating the property', () => {
+    const properties = [{ type: 'property', key: 'android.enableMinifyInReleaseBuilds', value: 'false' }];
+    expect(enableFdroidMinification(properties)).toEqual([{ type: 'property', key: 'android.enableMinifyInReleaseBuilds', value: 'true' }]);
+    expect(enableFdroidMinification([])).toEqual([{ type: 'property', key: 'android.enableMinifyInReleaseBuilds', value: 'true' }]);
   });
 
   it('keeps signing conditional for unsigned F-Droid releases', () => {

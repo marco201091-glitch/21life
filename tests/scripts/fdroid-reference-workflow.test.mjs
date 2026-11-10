@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
-const workflow = readFileSync('.github/workflows/fdroid-reproducible-release.yml', 'utf8');
+const workflow = readFileSync('.github/workflows/fdroid-reproducible-release.yml', 'utf8').replace(/\r\n/g, '\n');
 const block = workflow.match(/name: Validate F-Droid tag and release configuration[\s\S]*?        run: \|\n([\s\S]*?)(?=\n      -)/)[1];
 const validation = block.split('version=')[0].split('\n').map(line => line.replace(/^          /, '')).join('\n');
 const bash = process.platform === 'win32' ? 'C:/Program Files/Git/bin/bash.exe' : 'bash';

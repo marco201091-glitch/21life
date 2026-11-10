@@ -1,0 +1,12 @@
+[
+  {
+    "package": "braces",
+    "version": "3.0.3",
+    "file": "lib/parse.js",
+    "before": "      stack.push(block);",
+    "after": "      if (stack.length >= 129) {\n        throw new RangeError('Brace nesting limit exceeded (128)');\n      }\n      stack.push(block);",
+    "advisory": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+    "originalSha256": "e572166565f15fa6ad9865ae49d678218e32aabfd1b3720f6d0d43d39800d310",
+    "patchedSha256": "e0b1c4689ee7929605414deca24ffb3de10243efaa002d180f6172aa750718b5"
+  }
+]
