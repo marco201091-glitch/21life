@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/app/api/_lib/require-auth', () => ({ requireAuthOr401: mocks.auth }));
 vi.mock('@/lib/api-rate-limit', () => ({ enforceUserRateLimit: mocks.limit }));
 vi.mock('@/lib/supabase-admin', () => ({ getSupabaseAdminClient: mocks.getAdmin }));
-vi.mock('@/lib/archidekt-sync-server', () => ({ fetchArchidektSyncDecks: mocks.fetchDecks }));
+vi.mock('@/lib/archidekt-sync-server', () => ({ fetchArchidektSyncDecks: mocks.fetchDecks, ArchidektImportTimeout: class ArchidektImportTimeout extends Error {}, ArchidektRateLimited: class ArchidektRateLimited extends Error {} }));
 import { POST } from '@/app/api/arena-archidekt-sync/route';
 
 const requester = '11111111-1111-4111-8111-111111111111';
@@ -63,6 +63,12 @@ describe('arena member Archidekt sync authorization', () => {
   it('returns completion even when no deck changed', async () => {
     mocks.rpc.mockResolvedValue({ data: { inserted: 0, updated: 0, unchanged: 1 }, error: null });
     expect(await (await POST(request())).json()).toEqual({ inserted: 0, updated: 0, unchanged: 1, skipped: 0 });
+  });
+  it('does not claim success when the database response cannot confirm the saved result', async () => {
+    mocks.rpc.mockResolvedValue({ data: null, error: null });
+    const response = await POST(request());
+    expect(response.status).toBe(500);
+    expect(await response.json()).toMatchObject({ code: 'SAVE_RESULT_UNCERTAIN' });
   });
   it('reports partial imports explicitly', async () => {
     mocks.fetchDecks.mockResolvedValue({ decks: [row], skipped: 2 });

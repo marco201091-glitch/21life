@@ -19,10 +19,28 @@ the download; the mobile request allows 120 seconds. Excessive catalogs (over
 explicitly. Failed downloads preserve existing decks. Partial imports report the
 number skipped; zero changed decks can still be a completed synchronization.
 
-The wizard refreshes its arena catalog before reporting completion. It displays
-completed, partial or failed outcomes, with an accessible refresh action.
-Responses for an earlier player selection cannot replace the current status.
+Commander extraction ignores cards explicitly marked as companions even when
+they are also in the Commander category. If no commander is identified and the
+deck contains exactly one physical card, that card is used as the commander;
+larger ambiguous decks are not guessed. The next successful sync updates existing
+Archidekt deck records in place, retaining their identifiers and history.
+
+The wizard refreshes the selected member's catalog before reporting completion.
+If saving succeeds but reading the list fails, the message reports a saved sync
+and retries the list read without re-importing. The client distinguishes session,
+permission, configuration, rate-limit and upstream failures, and reports an
+uncertain outcome when the request or save result cannot be confirmed. In-flight
+requests for the same arena/member are shared. A list of 120 decks is flagged as
+potentially truncated. Responses for an earlier player selection cannot replace the current status.
 Requester and target rate limits protect upstream resources.
+
+Structured server diagnostics cover import/save outcomes and durations, push
+worker failures and processed counts, and account export/deletion stages. They
+do not include user IDs, deck names, credentials, request bodies or raw errors.
+Events go to application logs; their retention and availability depend on the
+deployment's log configuration. Live-game telemetry additionally redacts common
+credentials and push tokens. These logs cannot prove that a notification was
+displayed or resolve an operation whose response was lost.
 
 Existing clients retain their self-service RPC and legacy Realtime queue. Their
 wizard still uses the old phone-dependent flow until the client is updated.

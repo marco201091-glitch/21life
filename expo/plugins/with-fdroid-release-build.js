@@ -75,6 +75,14 @@ function disableReactNativeJavaAlignment(properties) {
   ];
 }
 
+function enableFdroidMinification(properties) {
+  const key = 'android.enableMinifyInReleaseBuilds';
+  const existing = properties.find(item => item.type === 'property' && item.key === key);
+  if (existing) existing.value = 'true';
+  else properties.push({ type: 'property', key, value: 'true' });
+  return properties;
+}
+
 module.exports = function withFdroidReleaseBuild(config) {
   if (process.env.APP_VARIANT !== 'fdroid' && process.env.EXPO_PUBLIC_FDROID_BUILD !== 'true') {
     return config;
@@ -82,6 +90,7 @@ module.exports = function withFdroidReleaseBuild(config) {
 
   let nextConfig = withGradleProperties(config, (gradleConfig) => {
     gradleConfig.modResults = disableReactNativeJavaAlignment(gradleConfig.modResults);
+    gradleConfig.modResults = enableFdroidMinification(gradleConfig.modResults);
     return gradleConfig;
   });
 
@@ -109,3 +118,5 @@ module.exports = function withFdroidReleaseBuild(config) {
 module.exports.injectFdroidReleaseBuild = injectFdroidReleaseBuild;
 module.exports.injectFdroidJvmTargets = injectFdroidJvmTargets;
 module.exports.disableReactNativeJavaAlignment = disableReactNativeJavaAlignment;
+
+module.exports.enableFdroidMinification = enableFdroidMinification;

@@ -1,0 +1,15 @@
+[Unit]
+Description=21Life push delivery worker (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/21life/push-%i.env
+ExecStart=/usr/bin/node /opt/21life/run-push-worker.mjs
+TimeoutStartSec=115
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+DynamicUser=true

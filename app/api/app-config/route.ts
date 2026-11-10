@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import packageJson from '@/package.json';
 import { getSupabaseAdminClient } from '@/lib/supabase-admin';
-import { getClientSupportState } from '@/lib/version-policy';
+import { compareAppVersions, getClientSupportState } from '@/lib/version-policy';
+import { getLatestReleasedVersion } from '@/lib/latest-release';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -20,6 +21,7 @@ export async function GET(request: Request) {
   const admin = getSupabaseAdminClient();
   let config = FALLBACK;
   let runtimeConfigurationSource: 'database' | 'fallback' = 'fallback';
+  const latestRelease = getLatestReleasedVersion();
 
   if (admin) {
     const { data, error } = await admin
@@ -42,14 +44,21 @@ export async function GET(request: Request) {
     }
   }
 
+  const latestReleasedVersion = await latestRelease;
+  const recommendedVersion = latestReleasedVersion && compareAppVersions(latestReleasedVersion, config.recommendedVersion) > 0
+    ? latestReleasedVersion
+    : config.recommendedVersion;
   return NextResponse.json({
     ...config,
+    recommendedVersion,
     runtimeConfigurationSource,
     currentVersion: requestedVersion,
+    latestReleasedVersion,
+    releaseUpdateAvailable: latestReleasedVersion !== null && compareAppVersions(requestedVersion, latestReleasedVersion) < 0,
     supportState: getClientSupportState(
       requestedVersion,
       config.minimumSupportedVersion,
-      config.recommendedVersion,
+      recommendedVersion,
     ),
   }, {
     headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600' },

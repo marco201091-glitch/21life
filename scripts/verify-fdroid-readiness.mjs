@@ -42,6 +42,9 @@ if (!appConfig.includes("'./plugins/with-fdroid-blocked-permissions'") || !fdroi
 if (!env.includes('EXPO_PUBLIC_FDROID_BUILD')) {
   failures.push('Expo env helpers must expose EXPO_PUBLIC_FDROID_BUILD');
 }
+if (!fdroidReleasePlugin.includes('android.enableMinifyInReleaseBuilds')) {
+  failures.push('F-Droid release must enable R8 minification');
+}
 if (!fdroidReleasePlugin.includes('fdroidBuild') || !fdroidReleasePlugin.includes('!isFdroidBuild')) {
   failures.push('F-Droid release build plugin must make release signing conditional');
 }

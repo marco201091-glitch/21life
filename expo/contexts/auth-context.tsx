@@ -1,3 +1,4 @@
+import { revokeCurrentDevice } from '@/lib/push-device';
 import type { Session, User } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { AppState, Platform } from 'react-native';
@@ -54,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    await revokeCurrentDevice();
     await supabase.auth.signOut();
   };
 

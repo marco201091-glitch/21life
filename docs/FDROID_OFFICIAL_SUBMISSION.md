@@ -1,5 +1,9 @@
 # F-Droid official submission checklist
 
+## 9.2.0 alignment
+
+The 9.2.0 / 90200 candidate incorporates the 9.2 production changes and enables Android R8 minification specifically for the F-Droid release, as requested by the reviewer. The F-Droid variant still excludes native push, Firebase and Sentry. The signed reproducible reference and the independent GitLab pipeline remain required before updating the official submission; historical 9.1.2 evidence remains separate.
+
 ## 9.1.2 alignment (2026-10-13)
 
 The 9.1.2 / 90102 candidate aligns with production source and preserves all F-Droid review constraints. See `FDROID_9_1_2_ALIGNMENT.md`. Quality, reference APK publication and the independent GitLab build are separate gates. Until the new reference exists, the official MR remains pinned to the verified 9.0.5 source `f6d23f4db0b539586b6349f91b4a12513c5ff977`; pipeline2914442626 passed all nine jobs. Do not claim 9.1.2 is published or accepted before its gates pass.
