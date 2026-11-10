@@ -26,8 +26,12 @@ Builds:
     commit: fdroid-v9.2.0
     subdir: expo
     sudo:
+      - echo 'deb [check-valid-until=no] https://snapshot.debian.org/archive/debian/20261001T000000Z/
+        forky main' > /etc/apt/sources.list.d/forky.list
       - apt-get update
-      - apt-get install -y nodejs npm
+      - apt-get install -y -t forky nodejs npm
+      - test "$(node --version)" = v24.21.0
+      - test "$(npm --version)" = 12.0.2
     init:
       - cd ..
       - npm ci
