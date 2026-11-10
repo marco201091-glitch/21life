@@ -49,7 +49,8 @@ Builds:
       - npx --no-install expo prebuild --platform android --clean --no-install
       - sed -i 's/-Xmx2048m/-Xmx4g/' android/gradle.properties
       - sed -i 's/MaxMetaspaceSize=512m/MaxMetaspaceSize=1g/' android/gradle.properties
-      - echo 'org.gradle.workers.max=1' >> android/gradle.properties
+      - printf '\norg.gradle.workers.max=1\n' >> android/gradle.properties
+      - grep -qx 'android.enableMinifyInReleaseBuilds=true' android/gradle.properties
       - cd ..
       - npm run verify:fdroid
       - cd expo

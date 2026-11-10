@@ -26,6 +26,9 @@ if ((fdroidMetadata.match(/versionName:/g) ?? []).length !== 1) {
 if (!fdroidMetadata.includes('    scandelete:\n      - node_modules\n      - expo/node_modules')) {
   failures.push('F-Droid source scanner must delete dependency binaries before building');
 }
+if (!fdroidMetadata.includes(String.raw`printf '\norg.gradle.workers.max=1\n'`) || !fdroidMetadata.includes("grep -qx 'android.enableMinifyInReleaseBuilds=true'")) {
+  failures.push('F-Droid recipe must preserve and verify the generated R8 property');
+}
 if (fdroidMetadata.includes('\r') || /[ \t]+$/m.test(fdroidMetadata)) {
   failures.push('F-Droid metadata must use LF without trailing whitespace');
 }
