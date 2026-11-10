@@ -19,6 +19,12 @@ the download; the mobile request allows 120 seconds. Excessive catalogs (over
 explicitly. Failed downloads preserve existing decks. Partial imports report the
 number skipped; zero changed decks can still be a completed synchronization.
 
+Commander extraction ignores cards explicitly marked as companions even when
+they are also in the Commander category. If no commander is identified and the
+deck contains exactly one physical card, that card is used as the commander;
+larger ambiguous decks are not guessed. The next successful sync updates existing
+Archidekt deck records in place, retaining their identifiers and history.
+
 The wizard refreshes the selected member's catalog before reporting completion.
 If saving succeeds but reading the list fails, the message reports a saved sync
 and retries the list read without re-importing. The client distinguishes session,
