@@ -19,15 +19,15 @@ export function LegalDocumentPage({ document }: LegalDocumentPageProps) {
   const contactEmail = getLegalContactEmail();
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="safe-top sticky top-0 z-10 border-b border-border/50 bg-card/50 backdrop-blur">
+    <div className="web-page flex min-h-screen flex-col bg-background">
+      <header className="web-header safe-top sticky top-0 z-10 border-b border-border/50 bg-card/50 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-3 py-3 sm:px-4">
           <div className="flex min-w-0 items-center gap-2">
-            <Link href="/auth/login">
-              <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground">
+              <Button asChild variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground">
+                <Link href="/auth/login" aria-label={t({ it: 'Torna al login', en: 'Back to login' })}>
                 <ArrowLeft className="h-5 w-5" />
+                </Link>
               </Button>
-            </Link>
             <ManaLogo size="sm" showText className="hidden sm:flex" />
           </div>
           <p className="text-xs text-muted-foreground">

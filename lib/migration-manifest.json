@@ -464,6 +464,11 @@
       "version": "20261021150824",
       "name": "20261021150824_push_session_revocation.sql",
       "checksum": "a7963bbfb1cd5ee3ccf905dea50c9bf28ffa2086d4996e7cc1780f8424868520"
+    },
+    {
+      "version": "20261110085334",
+      "name": "20261110085334_recommend_v9_2_0_runtime_update.sql",
+      "checksum": "d9d1320c9212e00495cc2769c342183eb9eff974ad675cd79ecfbe2444d35e81"
     }
   ]
 }

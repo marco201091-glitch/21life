@@ -2378,14 +2378,15 @@ export default function ProfilePage() {
   const accountPanelInputClass = 'border-emerald-500/25 bg-emerald-950/35 text-foreground placeholder:text-emerald-300/35 focus-visible:ring-emerald-400/35';
 
   return (
-    <div className="min-h-screen">
-      <header className="phyrexian-divider safe-top sticky top-0 z-10 border-b">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-3 sm:px-4 sm:py-4">
+    <div className="web-page min-h-screen">
+      <header className="web-header phyrexian-divider safe-top sticky top-0 z-10 border-b">
+        <div className="web-container mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-3 sm:px-4 sm:py-4">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => router.push('/dashboard')}
+              aria-label={t({ it: 'Torna alla home', en: 'Back to home' })}
               className="text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -2396,13 +2397,13 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[92rem] px-3 py-5 sm:px-4 sm:py-8">
+      <main className="web-container mx-auto max-w-[92rem] px-3 py-5 sm:px-4 sm:py-8">
         {/* Profile Info */}
         <MotionPanel>
           <Card className="phyrexian-panel-strong mb-8 overflow-hidden">
             <CardContent className="relative pt-6">
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-red-700" />
-              <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-teal-400/10 blur-3xl" />
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-red-700 lg:bg-none lg:bg-primary/50" />
+              <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-teal-400/10 blur-3xl lg:hidden" />
               <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
               <div className="flex shrink-0 flex-col items-center gap-4 sm:w-48 sm:items-stretch sm:border-r sm:border-emerald-400/15 sm:pr-6">
                 <div className="flex justify-center" aria-hidden="true">
@@ -2667,7 +2668,7 @@ export default function ProfilePage() {
         )}
 
         {!adminMode && (
-          <section className="mb-8 overflow-hidden rounded-2xl border border-cyan-400/20 bg-gradient-to-br from-cyan-950/45 via-background to-violet-950/35 p-4 shadow-[0_16px_42px_rgba(6,182,212,0.08)] sm:p-5" aria-label={t({ it: 'La tua scheda giocatore', en: 'Your player card' })}>
+          <section className="web-player-card mb-8 overflow-hidden rounded-2xl border border-cyan-400/20 bg-gradient-to-br from-cyan-950/45 via-background to-violet-950/35 p-4 shadow-[0_16px_42px_rgba(6,182,212,0.08)] sm:p-5" aria-label={t({ it: 'La tua scheda giocatore', en: 'Your player card' })}>
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300/70">{t({ it: 'Scheda giocatore', en: 'Player card' })}</p><h2 className="mt-1 text-xl font-bold text-foreground">{t({ it: 'La tua Command Zone', en: 'Your Command Zone' })}</h2></div>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-300/25 bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-100"><Crown className="h-3.5 w-3.5 text-violet-300" />{personalSnapshot.games ? t({ it: 'Statistiche personali', en: 'Personal stats' }) : t({ it: 'Pronto a giocare', en: 'Ready to play' })}</span>
@@ -2756,7 +2757,7 @@ export default function ProfilePage() {
               {MANA_COLOR_ORDER.map((color) => <button key={color} type="button" onClick={() => setDeckColorFilter((current) => current.includes(color) ? current.filter((item) => item !== color) : [...current, color])} className={`grid h-7 w-7 place-items-center rounded-full text-xs font-black ${deckColorFilter.includes(color) ? 'bg-emerald-400 text-emerald-950' : 'bg-secondary text-muted-foreground'}`} title={t(MANA_COLOR_LABELS[color])}>{color}</button>)}
             </div>
             <Select value={deckSort} onValueChange={(value) => setDeckSort(value as typeof deckSort)}>
-              <SelectTrigger className="border-border bg-background/50 text-foreground">
+              <SelectTrigger aria-label={t({ it: 'Ordina mazzi', en: 'Sort decks' })} className="border-border bg-background/50 text-foreground">
                 <SelectValue placeholder={t({ it: 'Ordina per', en: 'Sort by' })} />
               </SelectTrigger>
               <SelectContent>
@@ -2822,7 +2823,7 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         ) : (
-          <MotionList className="space-y-3 sm:space-y-4">
+          <MotionList className="web-deck-grid space-y-3 sm:space-y-4">
             {filteredDecks.map((deck) => {
               const performance = deckPerformance.get(deck.id);
               const gamesPlayed = performance?.gamesPlayed ?? 0;
@@ -2837,12 +2838,7 @@ export default function ProfilePage() {
                       borderColor: mastery.color,
                       boxShadow: `0 0 24px ${mastery.color}26`,
                     } : undefined}
-                    role="button"
-                    tabIndex={0}
                     onClick={() => setDetailsDeck(deck)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') setDetailsDeck(deck);
-                    }}
                   >
                     <DeckImage
                       src={deck.commander_image}
@@ -2892,7 +2888,7 @@ export default function ProfilePage() {
                         />
                       </div>
 
-                      <div className="mt-auto flex flex-col gap-3 lg:flex-row lg:items-end">
+                      <div className="web-deck-footer mt-auto flex flex-col gap-3 lg:flex-row lg:items-end">
                         <div className="flex min-w-0 flex-1 items-center gap-4 sm:gap-7">
                           <DeckMasteryBadge gamesPlayed={gamesPlayed} wins={wins} />
                           <div className="min-w-[4.75rem] text-center">

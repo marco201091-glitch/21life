@@ -148,3 +148,134 @@
 @media (prefers-reduced-motion: reduce) {
   .life-delta-float, .life-total-pulse { animation: none; }
 }
+
+/* Desktop web shares the public site's palette. Keep phone/table layouts intact. */
+@media (min-width: 1024px) {
+  :root {
+    --background: 100 14% 4%;
+    --foreground: 75 25% 94%;
+    --card: 96 14% 7%;
+    --card-foreground: 75 25% 94%;
+    --popover: 96 14% 7%;
+    --popover-foreground: 75 25% 94%;
+    --primary: 89 84% 70%;
+    --primary-foreground: 92 35% 9%;
+    --secondary: 96 13% 10%;
+    --secondary-foreground: 75 25% 94%;
+    --muted: 96 13% 10%;
+    --muted-foreground: 86 8% 67%;
+    --accent: 96 15% 13%;
+    --accent-foreground: 75 25% 94%;
+    --border: 90 10% 19%;
+    --input: 90 10% 25%;
+    --ring: 89 84% 70%;
+    --phyrexian: 89 84% 70%;
+  }
+
+  body {
+    background-image: radial-gradient(ellipse at 80% 0%, rgb(181 243 116 / 0.035), transparent 42rem);
+    font-feature-settings: 'ss01' 1;
+  }
+
+  *::-webkit-scrollbar-thumb { background: hsl(var(--border)); }
+  *::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.6); }
+
+  .web-container {
+    width: 100%;
+    max-width: 1280px;
+    min-width: 0;
+    margin-inline: auto;
+    padding-inline: 40px;
+  }
+
+  .web-header, .phyrexian-divider {
+    background: hsl(var(--background) / 0.94);
+    border-color: hsl(var(--border));
+    backdrop-filter: blur(16px);
+  }
+
+  .web-header > .web-container { min-height: 80px; }
+  .web-header [data-web-button] { flex-shrink: 0; }
+  .web-page h1 { font-weight: 550; letter-spacing: -0.04em; line-height: 1.2; }
+  .web-page h2 { font-weight: 600; letter-spacing: -0.025em; }
+
+  [data-web-card], .phyrexian-panel, .phyrexian-panel-strong {
+    border-radius: 10px;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .phyrexian-panel-strong {
+    background: hsl(var(--card));
+    border-color: hsl(var(--border));
+  }
+
+  [data-web-button] { border-radius: 5px; }
+  /* Primary controls deliberately supersede legacy page-level brand gradients. */
+  [data-web-button="default"] {
+    background: hsl(var(--primary));
+    border: 1px solid hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    box-shadow: none;
+  }
+  [data-web-button="default"]:hover { background: #caf998; border-color: #caf998; }
+  [data-web-button="outline"]:not(:hover) { background: transparent; }
+  [data-web-button="outline"]:hover { border-color: hsl(var(--primary) / 0.6); }
+  [data-web-input] { border-radius: 5px; background: hsl(var(--background)); box-shadow: none; }
+  [data-web-input]:focus-visible { border-color: hsl(var(--primary)); }
+
+  [data-web-tabs] { border-radius: 6px; background: hsl(var(--card)); }
+  [data-web-tab] { min-height: 36px; border-radius: 4px; }
+  [data-web-tab][data-state="active"] {
+    background: hsl(var(--primary) / 0.12);
+    color: hsl(var(--primary));
+    box-shadow: inset 0 -2px hsl(var(--primary));
+  }
+
+  .web-panel-actions { flex-wrap: wrap; }
+  .web-panel-actions > * { flex: 0 1 auto; }
+  .web-panel-actions [data-web-button] { white-space: normal; }
+  .web-auth [data-web-card] { background: hsl(var(--card)); border-color: hsl(var(--border)); }
+  .web-auth-decoration { display: none; }
+  .web-auth { background: radial-gradient(ellipse at 50% 15%, rgb(181 243 116 / 0.045), transparent 40rem); }
+  .web-auth [data-web-card] > [aria-hidden="true"] { display: none; }
+  .web-guest-claim, .web-counter-setup { background: hsl(var(--background)); }
+
+  .dashboard-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .dashboard-heading > .web-panel-actions { border-top: 0; flex-shrink: 0; }
+  .dashboard-overview { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
+  .dashboard-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .dashboard-group { background: hsl(var(--card)); border-color: hsl(var(--border)); }
+  .dashboard-group:hover { background: hsl(var(--accent)); border-color: hsl(var(--primary) / 0.5); box-shadow: none; }
+  .dashboard-group-decoration { display: none; }
+  .dashboard-group-header { padding: 20px 20px 12px; }
+  .dashboard-group-title { font-size: 21px; font-weight: 600; overflow-wrap: anywhere; }
+  .dashboard-group-content { padding: 0 20px 20px; }
+  .dashboard-group-details { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .dashboard-group-details > :first-child { display: none; }
+  .dashboard-group-details > div { padding: 8px 0; background: transparent; border: 0; border-radius: 0; }
+  .dashboard-group-details .font-mono { font-size: 13px; }
+  .dashboard-group-footer { gap: 12px; }
+  .dashboard-group-footer > span { font-size: 12px; }
+  .dashboard-summary { border: 1px solid hsl(var(--border)); border-radius: 10px; background: hsl(var(--card)); padding: 24px; }
+  .dashboard-summary dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 16px; margin-top: 24px; }
+  .dashboard-summary dt { font-size: 11px; color: hsl(var(--muted-foreground)); }
+  .dashboard-summary dd { margin: 4px 0 0; font-size: 28px; font-weight: 550; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+  .dashboard-mobile-metrics { display: none; }
+  .dashboard-analytics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+  .dashboard-analytics-side { display: contents; }
+  .dashboard-analytics-side > * { margin-block: 0; }
+  .web-deck-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .web-deck-grid > * { min-width: 0; margin-block: 0; }
+  .web-deck-footer { flex-direction: column; align-items: stretch; }
+  .web-deck-footer > :last-child { align-self: flex-end; }
+  .web-page .text-emerald-300\/45 { color: hsl(var(--muted-foreground)); }
+  .web-player-card { background: hsl(var(--card)); border-color: hsl(var(--border)); box-shadow: none; }
+  .web-section-heading { padding-bottom: 20px; border-bottom: 1px solid hsl(var(--border)); }
+}
+
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .web-container { padding-inline: 28px; }
+  .dashboard-overview { grid-template-columns: minmax(0, 1fr) 280px; }
+  .dashboard-groups { grid-template-columns: minmax(0, 1fr); }
+}

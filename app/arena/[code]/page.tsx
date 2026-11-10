@@ -147,8 +147,8 @@ export default function PublicArenaPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border/70 bg-card/40 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
+      <header className="web-header border-b border-border/70 bg-card/40 backdrop-blur">
+        <div className="web-container mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
           <ManaLogo />
           <Button asChild variant="outline" className="border-border">
             <Link href="/auth/login">
@@ -158,15 +158,15 @@ export default function PublicArenaPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
-        <section className="relative mb-8 overflow-hidden rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/70 via-background to-background p-6 sm:p-8">
+      <main className="web-page web-container mx-auto max-w-6xl px-4 py-8">
+        <section className="web-player-card relative mb-8 overflow-hidden rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/70 via-background to-background p-6 sm:p-8">
           <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-500/20 blur-3xl" />
           <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
               <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">
                 {t({ it: 'Playgroup pubblico', en: 'Public playgroup' })}
               </p>
-              <h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">{data.arena.name}</h1>
+              <h1 className="mt-2 break-words text-3xl font-bold text-foreground sm:text-4xl">{data.arena.name}</h1>
               {data.arena.description && (
                 <p className="mt-3 max-w-3xl text-muted-foreground">{data.arena.description}</p>
               )}

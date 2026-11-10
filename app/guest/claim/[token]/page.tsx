@@ -80,7 +80,7 @@ export default function GuestClaimPage() {
 
   if (result) {
     return (
-      <main className="grid min-h-dvh place-items-center bg-[radial-gradient(circle_at_top,#0a150c,#050509_62%)] p-4">
+      <main className="web-page web-guest-claim grid min-h-dvh place-items-center bg-[radial-gradient(circle_at_top,#0a150c,#050509_62%)] p-4">
         <Card className="w-full max-w-lg border-emerald-400/25 bg-card/95 text-center shadow-2xl">
           <CardContent className="space-y-5 p-8">
             <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-300" />
@@ -97,15 +97,15 @@ export default function GuestClaimPage() {
   }
 
   if (!preview) {
-    return <main className="grid min-h-dvh place-items-center bg-background p-4"><Card className="max-w-md"><CardContent className="p-8 text-center"><h1 className="text-xl font-black">{copy({ it: 'Link non valido', en: 'Invalid link' })}</h1><p className="mt-2 text-sm text-muted-foreground">{error}</p></CardContent></Card></main>;
+    return <main className="web-page web-guest-claim grid min-h-dvh place-items-center bg-background p-4"><Card className="max-w-md"><CardContent className="p-8 text-center"><h1 className="text-xl font-black">{copy({ it: 'Link non valido', en: 'Invalid link' })}</h1><p className="mt-2 text-sm text-muted-foreground">{error}</p></CardContent></Card></main>;
   }
 
   return (
-    <main className="min-h-dvh bg-[radial-gradient(circle_at_top,#0a150c,#050509_62%)] px-4 py-10">
+    <main className="web-page web-guest-claim min-h-dvh bg-[radial-gradient(circle_at_top,#0a150c,#050509_62%)] px-4 py-10">
       <Card className="mx-auto w-full max-w-xl overflow-hidden border-emerald-400/25 bg-card/95 shadow-2xl">
         <CardHeader className="border-b border-border bg-emerald-500/10">
           <p className="text-xs font-black uppercase tracking-[.2em] text-emerald-300">21Life</p>
-          <CardTitle className="text-2xl">{preview.guest.displayName}, {copy({ it: 'evolvi il tuo profilo', en: 'upgrade your profile' })}</CardTitle>
+          <CardTitle className="break-words text-2xl">{preview.guest.displayName}, {copy({ it: 'evolvi il tuo profilo', en: 'upgrade your profile' })}</CardTitle>
           <p className="text-sm text-muted-foreground">{copy({ it: 'Il manager ti ha invitato a trasformare il guest in un account reale.', en: 'The manager invited you to turn this guest into a real account.' })}</p>
         </CardHeader>
         <CardContent className="space-y-5 p-5 sm:p-7">

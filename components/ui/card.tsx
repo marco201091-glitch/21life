@@ -8,6 +8,7 @@ const Card = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
+    data-web-card=""
     className={cn(
       'rounded-2xl border border-border/80 bg-card/80 text-card-foreground shadow-[0_14px_42px_rgba(0,0,0,0.24)] backdrop-blur-md',
       className
