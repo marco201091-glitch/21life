@@ -1,0 +1,93 @@
+:root {
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-ui: cubic-bezier(.2, .8, .2, 1);
+}
+
+/* A single, finite entrance. Content is visible without JavaScript. */
+@keyframes arrive {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes emblem-arrive {
+  from { opacity: 0; transform: translateY(22px) rotate(-5deg) scale(.94); }
+  to { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
+}
+@keyframes ring-arrive {
+  from { opacity: 0; transform: rotate(-16deg) scale(.88); }
+  to { opacity: 1; transform: rotate(0) scale(1); }
+}
+html[data-motion="on"] :is(.hero-kicker, .hero h1, .hero .lead, .hero .actions, .hero-platforms, .hero-bottom, .page-hero > *) {
+  animation: arrive 720ms var(--ease-out) backwards;
+}
+.hero h1, .page-hero h1 { animation-delay: 70ms !important; }
+.hero .lead, .page-hero > p { animation-delay: 140ms !important; }
+.hero .actions { animation-delay: 210ms !important; }
+.hero-platforms { animation-delay: 280ms !important; }
+.hero-bottom { animation-delay: 360ms !important; }
+html[data-motion="on"] .hero-art > img { animation: emblem-arrive 1100ms var(--ease-out) 100ms backwards; }
+html[data-motion="on"] .art-ring { animation: ring-arrive 1300ms var(--ease-out) 180ms backwards; }
+html[data-motion="on"] .ring-two { animation-delay: 280ms; }
+html[data-motion="on"] :is(.art-coordinate, .art-caption) { animation: arrive 700ms var(--ease-out) 450ms backwards; }
+
+[data-reveal] { transition: opacity 640ms var(--ease-out), transform 640ms var(--ease-out); }
+[data-reveal="pending"] { opacity: 0; transform: translateY(22px); }
+[data-reveal="shown"] { opacity: 1; transform: none; }
+/* Focus must not jump a moving card between pointer down and pointer up. */
+[data-reveal]:focus-within { opacity: 1; }
+.feature-card:nth-child(2) { transition-delay: 65ms; }
+.feature-card:nth-child(3) { transition-delay: 130ms; }
+
+.btn, .lang, .menu, .copy-row button {
+  transition: transform 180ms var(--ease-ui), background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+.btn:active:not(.disabled), .lang:active, .menu:active, .copy-row button:active { transform: translateY(1px) scale(.98); }
+.btn > span { display: inline-block; transition: transform 220ms var(--ease-out); }
+.brand-emblem { transition: transform 400ms var(--ease-out); }
+.feature-icon { transition: transform 360ms var(--ease-out); }
+.feature-link, .text-link, .quiet-link, .footer-nav a { transition: color 180ms ease; }
+.btn:focus-visible, .lang:focus-visible, .menu:focus-visible, .copy-row button:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 5px;
+}
+.navlinks a::after { transform-origin: left; transition: transform 240ms var(--ease-out); }
+.navlinks a:not([aria-current])::after { content: ''; position: absolute; bottom: 18px; left: 0; right: 0; height: 1px; background: var(--accent); transform: scaleX(0); }
+.navlinks a:focus-visible::after { transform: scaleX(1); }
+header { transition: border-color 240ms ease; }
+header.is-scrolled { border-color: #536440; }
+
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover:not(.disabled) { transform: translateY(-2px); box-shadow: 0 5px 22px #b5f37412; }
+  .btn:hover > span { transform: translate(2px, -2px); }
+  .brand:hover .brand-emblem { transform: rotate(-7deg); }
+  .feature-card:hover .feature-icon, .download-card:hover .feature-icon { transform: translateY(-3px) rotate(-3deg); }
+  .navlinks a:hover::after { transform: scaleX(1); }
+}
+
+.faq summary::after { display: inline-block; transition: transform 220ms var(--ease-ui); }
+.faq details[open] summary::after { content: '+'; transform: rotate(135deg); }
+.faq details[open] p { animation: arrive 260ms var(--ease-out); }
+@supports (interpolate-size: allow-keywords) {
+  .faq details { interpolate-size: allow-keywords; }
+  .faq details::details-content { block-size: 0; opacity: 0; overflow: clip; transition: block-size 280ms var(--ease-out), opacity 220ms ease, content-visibility 280ms allow-discrete; }
+  .faq details[open]::details-content { block-size: auto; opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  html[data-motion] .navlinks { display: flex; visibility: hidden; opacity: 0; transform: translateY(-8px); pointer-events: none; transition: opacity 180ms ease, transform 240ms var(--ease-out), visibility 240ms; }
+  html[data-motion] .navlinks.open { visibility: visible; opacity: 1; transform: none; pointer-events: auto; }
+  .feature-card:nth-child(n) { transition-delay: 0ms; }
+  [data-reveal="pending"] { transform: translateY(14px); }
+}
+
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: page-out 160ms ease both; }
+::view-transition-new(root) { animation: page-in 260ms var(--ease-out) both; }
+@keyframes page-out { to { opacity: 0; } }
+@keyframes page-in { from { opacity: 0; } to { opacity: 1; } }
+
+html[data-motion="off"] [data-reveal] { opacity: 1; transform: none; transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  [data-reveal] { opacity: 1; transform: none; }
+}

@@ -1,0 +1,33 @@
+import { chromium } from '@playwright/test';
+import assert from 'node:assert/strict';
+const browser=await chromium.launch();
+try {
+ const page=await browser.newPage({viewport:{width:1440,height:1000}});
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:4319');
+ await page.waitForSelector('html[data-motion="on"]',{timeout:3000});
+ assert.notEqual(await page.locator('.hero h1').evaluate(n=>getComputedStyle(n).animationName),'none','Hero entrance');
+ assert.ok(await page.locator('[data-reveal="pending"]').count()>0,'Below-fold reveals armed');
+ const card=page.locator('.feature-card').first();await card.scrollIntoViewIfNeeded();
+ await page.waitForFunction(()=>document.querySelector('.feature-card').dataset.reveal==='shown');
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.waitForFunction(()=>document.documentElement.dataset.motion==='off');
+ assert.equal(await page.locator('[data-reveal="pending"]').count(),0,'Preference change reveals everything');
+ assert.equal(await page.evaluate(()=>document.getAnimations().filter(a=>a.playState==='running').length),0,'No active animation under reduced motion');
+ await page.locator('[data-lang]').click();
+ await page.waitForFunction(()=>document.documentElement.lang==='it');
+ assert.equal(await page.locator('html').getAttribute('data-motion'),'off','Language switch preserves motion preference');
+ await page.setViewportSize({width:390,height:844});
+ assert.equal(await page.locator('#navigation').evaluate(n=>n.inert),true,'Closed mobile menu is not focusable');
+ await page.locator('[data-menu]').click();assert.equal(await page.locator('#navigation').evaluate(n=>n.inert),false);
+ await page.locator('#navigation a').first().focus();
+ await page.keyboard.press('Escape');assert.equal(await page.locator('#navigation').evaluate(n=>n.inert),true);
+ assert.equal(await page.locator('[data-menu]').evaluate(n=>n===document.activeElement),true,'Escape returns focus to menu control');
+ await page.goto('http://127.0.0.1:4319/supporto/');await page.locator('summary').first().click();assert.equal(await page.locator('details').first().getAttribute('open'),'');
+ assert.deepEqual(errors,[]);
+ const fallback=await browser.newPage();await fallback.addInitScript(()=>window.IntersectionObserver=undefined);await fallback.goto('http://127.0.0.1:4319');await fallback.waitForSelector('html[data-motion="off"]');assert.equal(await fallback.locator('[data-reveal="pending"]').count(),0);
+ const failedObserver=await browser.newPage();await failedObserver.addInitScript(()=>window.IntersectionObserver=class {constructor(){throw new Error('Observer unavailable')}});await failedObserver.goto('http://127.0.0.1:4319');await failedObserver.waitForSelector('html[data-motion="off"]');assert.equal(await failedObserver.locator('[data-reveal="pending"]').count(),0,'Observer failure keeps content visible');
+ const staticPage=await browser.newPage({javaScriptEnabled:false});await staticPage.goto('http://127.0.0.1:4319/supporto/');await staticPage.locator('summary').first().click();assert.equal(await staticPage.locator('details').first().getAttribute('open'),'','FAQ works without scripts');
+ const idle=await browser.newPage();await idle.goto('http://127.0.0.1:4319');await idle.waitForTimeout(2000);assert.equal(await idle.evaluate(()=>document.getAnimations().filter(a=>a.playState==='running').length),0,'No continuous animation at rest');
+ console.log('Motion: intro/reveal/reduced-motion changes/language/menu/FAQ/fallback passed.');
+} finally {await browser.close();}
