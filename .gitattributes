@@ -30,3 +30,7 @@ supabase/migrations/20260729070641_v7_favorite_decks_first_in_arena_pickers.sql 
 supabase/migrations/20261021145111_reliable_push_delivery.sql -text whitespace=cr-at-eol
 supabase/migrations/20261021150824_push_session_revocation.sql -text whitespace=cr-at-eol
 supabase/migrations/20261110085334_recommend_v9_2_0_runtime_update.sql -text
+
+# Keep the historical deck migration identical to the checksum applied on Dev.
+supabase/migrations/20261111145921_preserve_deleted_deck_history.sql -text whitespace=cr-at-eol,-blank-at-eof
+supabase/migrations/20261111151357_preserve_deck_delete_service_maintenance.sql -text whitespace=cr-at-eol
