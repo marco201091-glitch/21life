@@ -98,6 +98,25 @@ describe('arena stats row adapters', () => {
     await expect(fetchArenaStatsParticipants(client as never, 'group-1')).rejects.toThrow('fallback failed');
   });
 
+  it('keeps a deleted deck in the fallback statistics using its match snapshot', async () => {
+    const query = {
+      select: vi.fn(),
+      eq: vi.fn().mockResolvedValue({ data: [{
+        match_id: 'match-1', user_id: 'user-1', deck_id: 'deleted-deck',
+        decks: null, arena_guest_decks: null, profiles: null, arena_guests: null,
+        deck_name_snapshot: 'Historic deck', commander_snapshot: 'Jodah',
+        commander_image_snapshot: 'image', deck_bracket_snapshot: '3',
+        color_identity_snapshot: ['W', 'U'],
+        matches: { played_at: '2026-08-01T10:00:00.000Z' },
+      }], error: null }),
+    };
+    query.select.mockReturnValue(query);
+    const client = { rpc: vi.fn().mockResolvedValue({ error: new Error('unavailable') }), from: vi.fn(() => query) };
+
+    const result = await fetchArenaStatsParticipants(client as never, 'group-1');
+    expect(result[0]).toMatchObject({ deck_id: 'deleted-deck', deck_name: 'Historic deck', deck_commander: 'Jodah', deck_commander_image: 'image', deck_bracket: '3', deck_color_identity: ['W', 'U'] });
+  });
+
   it('builds player, commander and color aggregates for users and guests', () => {
     const rows = [
       row(),
