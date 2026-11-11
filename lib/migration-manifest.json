@@ -469,6 +469,16 @@
       "version": "20261110085334",
       "name": "20261110085334_recommend_v9_2_0_runtime_update.sql",
       "checksum": "d9d1320c9212e00495cc2769c342183eb9eff974ad675cd79ecfbe2444d35e81"
+    },
+    {
+      "version": "20261111145921",
+      "name": "20261111145921_preserve_deleted_deck_history.sql",
+      "checksum": "86460789e7e6055e39266752cfa985f443a0d7445153c90266078ce1fbe15641"
+    },
+    {
+      "version": "20261111151357",
+      "name": "20261111151357_preserve_deck_delete_service_maintenance.sql",
+      "checksum": "6d3393ecad607579ffae9db14ececcded1e197273814361cc3206058e0249598"
     }
   ]
 }
