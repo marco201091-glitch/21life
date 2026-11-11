@@ -9,6 +9,11 @@ import {
 } from '@/lib/oauth-return-origin';
 
 describe('oauth-return-origin', () => {
+  it('uses the current production and Test domains as defaults', () => {
+    expect(PRODUCTION_SITE_ORIGIN).toBe('https://app.21life.win');
+    expect(TEST_SITE_ORIGIN).toBe('https://test.21life.win');
+    expect(getSafeOAuthReturnOrigin('https://test.phyrexianarena.dpdns.org/auth/callback')).toBe('https://test.phyrexianarena.dpdns.org');
+  });
   it('accepts the new 21Life origins alongside installed-client origins', () => {
     for (const origin of ['https://app.21life.win', 'https://dev.21life.win', 'https://test.21life.win', 'https://app.phyrexianarena.dpdns.org', 'https://dev.phyrexianarena.dpdns.org']) {
       expect(getSafeOAuthReturnOrigin(`${origin}/auth/callback`)).toBe(origin);

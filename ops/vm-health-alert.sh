@@ -71,7 +71,7 @@ else
 fi
 
 for endpoint in \
-  https://app.phyrexianarena.dpdns.org/api/health \
+  https://app.21life.win/api/health \
   https://dev.21life.win/api/ready
 do
   status=$(curl --silent --show-error --output /dev/null --max-time 8 --write-out '%{http_code}' "$endpoint" || true)

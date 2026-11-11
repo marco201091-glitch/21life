@@ -58,7 +58,7 @@ export interface CommanderArtOption {
 
 const SCRYFALL_HEADERS = {
   Accept: 'application/json',
-  'User-Agent': '21Life/9.0 (https://app.phyrexianarena.dpdns.org)',
+  'User-Agent': '21Life/9.1 (https://app.21life.win)',
 };
 
 const SCRYFALL_MAX_RETRIES = 2;

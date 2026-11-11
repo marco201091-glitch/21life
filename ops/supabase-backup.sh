@@ -23,7 +23,7 @@ DB_CONTAINER=${DB_CONTAINER:-supabase-db}
 STORAGE_CONTAINER=${STORAGE_CONTAINER:-supabase-storage}
 HEALTH_ENV=${HEALTH_ENV:-/etc/phyrexian-health-alert.env}
 OFFSITE_ENV=${OFFSITE_ENV:-/etc/phyrexian-backup-offsite.env}
-MAIL_FROM=${MAIL_FROM:-21Life <noreply@phyrexianarena.dpdns.org>}
+MAIL_FROM=${MAIL_FROM:-21Life <noreply@21life.win>}
 
 if [[ -r "$HEALTH_ENV" ]]; then
   set -a

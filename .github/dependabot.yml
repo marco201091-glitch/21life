@@ -5,6 +5,10 @@ updates:
     schedule:
       interval: weekly
     target-branch: Dev
+    # Match the supported runtime; upgrade Node and its types together.
+    ignore:
+      - dependency-name: '@types/node'
+        versions: ['>=25']
     groups:
       web-patch-and-minor:
         update-types: [minor, patch]
@@ -13,6 +17,12 @@ updates:
     schedule:
       interval: weekly
     target-branch: Dev
+    # Native majors must follow an Expo SDK compatibility upgrade.
+    ignore:
+      - dependency-name: react-native-gesture-handler
+        update-types: ['version-update:semver-major']
+      - dependency-name: react-native-view-shot
+        update-types: ['version-update:semver-major']
     groups:
       expo-patch-and-minor:
         update-types: [minor, patch]
@@ -21,6 +31,9 @@ updates:
     schedule:
       interval: weekly
     target-branch: Dev
+    groups:
+      codeql:
+        patterns: ['github/codeql-action*']
   - package-ecosystem: docker
     directory: /
     schedule:
