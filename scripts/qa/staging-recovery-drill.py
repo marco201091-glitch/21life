@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import re
+import runpy
 import shutil
 import subprocess
 import tarfile
@@ -94,6 +95,16 @@ WHERE table_schema IN ('public', 'auth', 'storage') AND table_type='BASE TABLE';
         # No configuration/secret is read from source services during restore.
         producer = root / 'supabase-backup-package.py'
         producer.write_text(fixture['producer_source'])
+        producer_api = runpy.run_path(str(producer))
+        readonly_query = producer_api['read_source_sql']
+        before_guard = readonly_query(source_db, "SELECT nspacl::text FROM pg_namespace WHERE nspname='app_private';")
+        try:
+            readonly_query(source_db, "DO $$ BEGIN EXECUTE 'GRANT USAGE ON SCHEMA app_private TO postgres'; END $$;")
+        except RuntimeError:
+            pass
+        else:
+            raise AssertionError('Backup source read-only guard did not reject mutation')
+        assert readonly_query(source_db, "SELECT nspacl::text FROM pg_namespace WHERE nspname='app_private';") == before_guard
         backup_script = root / 'supabase-backup.sh'
         backup_script.write_text(fixture['backup_source'])
         automatic_dir = root / 'automatic-backups'
@@ -217,6 +228,7 @@ WHERE table_schema IN ('public', 'auth', 'storage') AND table_type='BASE TABLE';
         sql(restored_db, (downloaded / 'recovery-privileges.sql').read_text(), 'recovery')
         actual_security = json.loads(sql(restored_db, "SELECT coalesce(jsonb_agg(row_to_json(r) ORDER BY r.name),'[]'::jsonb) FROM\n(SELECT n.nspname||'.'||c.relname AS name, pg_get_userbyid(c.relowner) AS owner,\n ARRAY(SELECT a::text FROM unnest(coalesce(c.relacl,'{}'::aclitem[])) a ORDER BY a::text) AS acl\n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace\n WHERE n.nspname IN ('public','auth','storage') AND c.relkind IN ('r','p','v','m','S')) r;", 'recovery'))
         assert actual_security == inventory['tableSecurity'], 'Table owners/ACL mismatch'
+        assert json.loads(sql(restored_db, "SELECT coalesce(jsonb_agg(row_to_json(r) ORDER BY r.name),'[]'::jsonb) FROM (SELECT n.nspname AS name,pg_get_userbyid(n.nspowner) AS owner,ARRAY(SELECT a::text FROM unnest(coalesce(n.nspacl,'{}'::aclitem[])) a ORDER BY a::text) AS acl FROM pg_namespace n WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname<>'information_schema') r;", 'recovery')) == inventory['schemaSecurity'], 'Schema owners/ACL mismatch'
         actual_counts = json.loads(sql(restored_db, counts_query, 'recovery'))
         assert actual_counts == expected_counts, 'Restored table row counts differ from exported DB snapshot.'
         dc('up', '-d', '--no-deps', 'auth', 'rest', 'storage', 'kong')
@@ -279,10 +291,10 @@ WHERE table_schema IN ('public', 'auth', 'storage') AND table_type='BASE TABLE';
                 assert len(body) == int(stored['size']), 'Storage metadata size mismatch'
         report.update({'passed': True, 'tables_compared': len(expected_counts), 'auth_logins': 2,
                        'authorized_reads_writes': True, 'cross_user_reads_writes_denied': True,
-                       'storage_hash_verified': True, 'all_storage_files_xattrs_verified': True, 'table_owners_acl_verified': True,
+                       'storage_hash_verified': True, 'all_storage_files_xattrs_verified': True, 'table_owners_acl_verified': True, 'schema_owners_acl_verified': True,
                        'storage_files_compared': len(inventory['storageFiles']),
                        'referenced_storage_objects_verified': len(stored_objects), 'private_storage_denied': True,
-                       'encrypted_remote_roundtrip': True, 'automatic_package_version': 2,
+                       'encrypted_remote_roundtrip': True, 'automatic_package_version': 2, 'source_readonly_guard_verified': True,
                        'restore_config_from_downloaded_package': True, 'isolated_internal_network': True,
                        'outbound_email_push_disabled': True, 'checksums': checksums,
                        'backup_age_seconds': round(time.time() - captured, 2),

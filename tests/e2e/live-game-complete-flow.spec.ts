@@ -12,12 +12,13 @@ test('wizard → damage → Last Standing → recap', async ({ page, browser }) 
   await fixtureLogin(page);
   await page.getByRole('button', { name: /Open|Apri/ }).first().click();
   await page.getByRole('button', { name: /Play Game|Gioca live/ }).click();
-  await page.getByRole('button', { name: /^2$/ }).click();
+  const playerCount = Number(process.env.E2E_PLAYER_COUNT || 2);
+  await page.getByRole('button', { name: String(playerCount), exact: true }).click();
   await page.getByRole('button', { name: /Step 4|Passaggio 4/ }).click();
   const wizardA11y = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   expect(wizardA11y.violations.filter((entry) => ['serious', 'critical'].includes(entry.impact ?? ''))).toEqual([]);
 
-  for (let seatIndex = 0; seatIndex < 2; seatIndex += 1) {
+  for (let seatIndex = 0; seatIndex < playerCount; seatIndex += 1) {
     await page.getByRole('button', { name: new RegExp(`^(Seat|Posto) ${seatIndex + 1}`) }).click();
     const select = page.getByTestId('live-player-select');
     const option = select.locator('option:not([disabled])').filter({ hasNotText: /Choose player|Scegli giocatore/ }).first();

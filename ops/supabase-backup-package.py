@@ -22,6 +22,13 @@ def command(args, *, data=None, cwd=None, timeout=180):
     return result.stdout
 
 
+def read_source_sql(db_container, query):
+    """Catalog reads are server-enforced read-only, even if future SQL is wrong."""
+    return command(['docker', 'exec', '-i', db_container, 'psql', '-X', '-qAt',
+                    '-v', 'ON_ERROR_STOP=1', '-U', 'supabase_admin', '-d', 'postgres'],
+                   data=('BEGIN READ ONLY;\n' + query + '\nROLLBACK;').encode()).decode()
+
+
 def produce_package(output, compose_file, project, db_container, storage_container):
     output = Path(output).resolve()
     if output.exists() and any(output.iterdir()):
@@ -41,8 +48,7 @@ def produce_package(output, compose_file, project, db_container, storage_contain
                           if m['Destination'] == '/var/lib/storage' and m['Type'] == 'bind')
 
     def sql(query):
-        return command(['docker', 'exec', '-i', db_container, 'psql', '-X', '-qAt',
-                        '-v', 'ON_ERROR_STOP=1', '-U', 'supabase_admin', '-d', 'postgres'], data=query.encode()).decode()
+        return read_source_sql(db_container, query)
 
     # Same schema rows as the DB snapshot; caller can verify before generating any
     # new logins/writes on the restored clone.
@@ -117,7 +123,7 @@ WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname<>'information_schema';
     roles = '\n'.join('DO $roles$ BEGIN ' + line + ' EXCEPTION WHEN duplicate_object THEN NULL; END $roles$;'
                       if line.startswith('CREATE ROLE ') else line for line in roles.splitlines())
     (output / 'recovery-roles.sql').write_text(roles)
-    (output / 'recovery-privileges.sql').write_text(owners + '\n' + acl)
+    (output / 'recovery-privileges.sql').write_text("-- Reset clone schema ACLs before restoring exact grants, including extension\n-- members omitted by pg_dump. This SQL is for the isolated restore only.\nDO $schema_acl$ DECLARE r record; BEGIN\n FOR r IN SELECT n.nspname,a.grantee FROM pg_namespace n\n CROSS JOIN LATERAL aclexplode(n.nspacl) a\n WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname<>'information_schema'\n LOOP EXECUTE format('REVOKE ALL ON SCHEMA %I FROM %s CASCADE;',r.nspname,\n CASE WHEN r.grantee=0 THEN 'PUBLIC' ELSE quote_ident(pg_get_userbyid(r.grantee)) END); END LOOP;\nEND $schema_acl$;\n" + owners + '\n' + acl)
 
     # Freeze service config and init files BEFORE restore: the clone must not read
     # any source bind mounts or source environment during its recovery steps.
@@ -148,6 +154,7 @@ WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname<>'information_schema';
         'snapshotCounts': counts, 'storageFiles': storage_inventory,
         'tableSecurity': json.loads(sql("SELECT coalesce(jsonb_agg(row_to_json(r) ORDER BY r.name),'[]'::jsonb) FROM\n(SELECT n.nspname||'.'||c.relname AS name, pg_get_userbyid(c.relowner) AS owner,\n ARRAY(SELECT a::text FROM unnest(coalesce(c.relacl,'{}'::aclitem[])) a ORDER BY a::text) AS acl\n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace\n WHERE n.nspname IN ('public','auth','storage') AND c.relkind IN ('r','p','v','m','S')) r;")), 'storageUid': int(command(['docker','exec',storage_container,'id','-u'])),
         'storageGid': int(command(['docker','exec',storage_container,'id','-g'])),
+        'schemaSecurity': json.loads(sql("SELECT coalesce(jsonb_agg(row_to_json(r) ORDER BY r.name),'[]'::jsonb) FROM (SELECT n.nspname AS name,pg_get_userbyid(n.nspowner) AS owner,ARRAY(SELECT a::text FROM unnest(coalesce(n.nspacl,'{}'::aclitem[])) a ORDER BY a::text) AS acl FROM pg_namespace n WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname<>'information_schema') r;")),
         'configurationContainsSecrets': True,
         'consistency': 'Database snapshot; Storage copied separately. Object integrity must be checked on restore.'
     }))
