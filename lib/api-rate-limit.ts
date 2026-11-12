@@ -42,19 +42,15 @@ interface RateLimitResult {
   retryAfterSeconds: number;
 }
 
-function parseRateLimitResult(value: unknown): RateLimitResult {
-  if (!value || typeof value !== 'object') {
-    return { allowed: true, remaining: 0, retryAfterSeconds: 0 };
-  }
-
-  const record = value as Record<string, unknown>;
-  return {
-    allowed: record.allowed !== false,
-    remaining: typeof record.remaining === 'number' ? record.remaining : 0,
-    retryAfterSeconds: typeof record.retry_after_seconds === 'number'
-      ? record.retry_after_seconds
-      : 0,
-  };
+function parseRateLimitResult(value: unknown): RateLimitResult | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const { allowed, remaining, retry_after_seconds: retryAfterSeconds } = value as Record<string, unknown>;
+  if (typeof allowed !== 'boolean'
+    || typeof remaining !== 'number' || !Number.isSafeInteger(remaining) || remaining < 0
+    || typeof retryAfterSeconds !== 'number' || !Number.isSafeInteger(retryAfterSeconds) || retryAfterSeconds < 0
+    || (allowed && retryAfterSeconds !== 0)
+    || (!allowed && (remaining !== 0 || retryAfterSeconds < 1))) return null;
+  return { allowed, remaining, retryAfterSeconds };
 }
 
 export async function consumeRateLimit(bucketKey: string, config: RateLimitConfig): Promise<RateLimitResult> {
@@ -74,16 +70,21 @@ export async function consumeRateLimit(bucketKey: string, config: RateLimitConfi
     });
 
     if (error) {
-      console.error('Rate limit RPC failed:', error.message);
+      console.error('RATE_LIMIT_RPC_FAILED');
       if (config.failClosed) {
         return { allowed: false, remaining: 0, retryAfterSeconds: 60 };
       }
       return { allowed: true, remaining: config.maxRequests, retryAfterSeconds: 0 };
     }
 
-    return parseRateLimitResult(data);
-  } catch (error) {
-    console.error('Rate limit check failed:', error);
+    const result = parseRateLimitResult(data);
+    if (result && result.remaining <= config.maxRequests) return result;
+    console.error('RATE_LIMIT_INVALID_RESPONSE');
+    return config.failClosed
+      ? { allowed: false, remaining: 0, retryAfterSeconds: 60 }
+      : { allowed: true, remaining: config.maxRequests, retryAfterSeconds: 0 };
+  } catch {
+    console.error('RATE_LIMIT_CHECK_FAILED');
     if (config.failClosed) {
       return { allowed: false, remaining: 0, retryAfterSeconds: 60 };
     }

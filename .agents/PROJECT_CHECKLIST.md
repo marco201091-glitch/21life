@@ -1,5 +1,15 @@
 # Project checklist
 
+## DEV26 esecuzione 9.3.0 — PM 2026-11-12
+
+Mandato: eseguire docs/IMPLEMENTATION_PLAN_DEV_2026-11-12.md punti1–6 fino al refactoring approfondito, solo Dev. Versione candidata9.3.0/90300 sostituisce il vincolo9.2.0 del piano originale. Primario PM preservato; worktree ../21life-dev26, branch improvement/dev26-foundation da origin/Dev bac40b9c. Nessuna produzione/main/deploy/tag.
+
+- [ ] DEV26-00: clean npm ci web/Expo e Node24.21.0 ufficiale verificato SHA; guard toolchain e test aggiunti; quality web passata, Expo passata prima ultimo inserimento guard, doctor in corso.
+- [ ] DEV26-01: audit produzione web5/Expo9 moderate, zero high/critical; classificazione/aggiornamenti e audit completo pendenti.
+- [ ] DEV26-02: parser failClosed e log sanitizzati implementati,5test contratto passati; smoke Dev pendente.
+- [ ] DEV26-03…12: ancora da implementare/verificare secondo il piano. Nessun punto dichiarato completato.
+
+
 - [ ] Web/legal PM 2026-10-28: display `M.A.` as the web data controller and update the notice date; update the static site with Instagram link. No Expo/native changes requested.
 
 - [x] Restyle web PM2026-10-12: audit22route, desktop lime/nero, home playgroup/riepilogo affiancati e analytics2col; profilo mazzi2col, header/container/card/bottoni/form/tab uniformati e accessibilità corretta. Branch locale `style/web-site-alignment` da Dev0eec444, candidato applicativo b504b4a; root preservato, zero diff Expo/APK/IPA/backend/versioni/pipeline. Lint/typecheck/buildweb,344test+1skip,46checkPlaywright zerooverflow/errori/axeseriouscritical e5E2Eesistenti verdi; snapshottelefono invariato. Review indipendente senza findings importanti. Report `docs/WEB_UI_AUDIT_RESTYLE_2026-10-12.md`, screenshot/fixture in ignored artifacts/web-restyle. Nessun push/merge/deploy; runtime sintetico, Node24.18 sotto engines24.21 e junctionnode_modules generano warningtracingstandalone locali: documentati, nessun pacchetto release certificato.
