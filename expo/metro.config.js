@@ -1,6 +1,8 @@
 const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
+const path = require('node:path');
+config.watchFolders = [...(config.watchFolders || []), path.resolve(__dirname, '../packages/domain')];
 
 // On Windows, jest-worker child processes open a CMD window per node.exe.
 // Single worker + worker threads avoids the console spam.

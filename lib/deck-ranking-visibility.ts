@@ -1,1 +1,1 @@
-export * from '@/expo/lib/deck-ranking-visibility';
+export * from '../packages/domain/deck-ranking-visibility';

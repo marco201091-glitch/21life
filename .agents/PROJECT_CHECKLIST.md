@@ -7,7 +7,8 @@ Mandato: eseguire docs/IMPLEMENTATION_PLAN_DEV_2026-11-12.md punti1–6 fino al 
 - [ ] DEV26-00: clean npm ci web/Expo e Node24.21.0 ufficiale verificato SHA; guard toolchain e test aggiunti; quality web passata, Expo passata prima ultimo inserimento guard, doctor in corso.
 - [ ] DEV26-01: audit produzione web5/Expo9 moderate, zero high/critical; classificazione/aggiornamenti e audit completo pendenti.
 - [ ] DEV26-02: parser failClosed e log sanitizzati implementati,5test contratto passati; smoke Dev pendente.
-- [ ] DEV26-03…12: ancora da implementare/verificare secondo il piano. Nessun punto dichiarato completato.
+- [ ] DEV26-03…11: ancora da implementare/verificare secondo il piano. Nessun punto dichiarato completato.
+- [ ] DEV26-12 parziale: packages/domain per win-rate/participant-keys/ranking, wrapper compatibili e guard AST senza dipendenze platform/cicli. Quality web ed Expo PASS su Node24.21/Vitest5, ratchet originari mantenuti e floor aggiunti al dominio (104fileExpo). Build/export/E2E e refactoring quattro schermate ancora pendenti. Architettura in docs/DEV26_ARCHITECTURE.md.
 
 
 - [ ] Web/legal PM 2026-10-28: display `M.A.` as the web data controller and update the notice date; update the static site with Instagram link. No Expo/native changes requested.

@@ -48,7 +48,7 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run && npm run verify:logos",
-    "quality": "node ../scripts/verify-toolchain.mjs --expo && npm run lint && npm run typecheck && npm run test:coverage && npm run verify:logos && npm run knip:dependencies",
+    "quality": "node ../scripts/verify-domain-boundaries.mjs && node ../scripts/verify-toolchain.mjs --expo && npm run lint && npm run typecheck && npm run test:coverage && npm run verify:logos && npm run knip:dependencies",
     "knip:dependencies": "knip --dependencies",
     "test:coverage": "vitest run --coverage && node ../scripts/coverage-baseline.mjs",
     "assets:logo": "node scripts/flatten-logo.mjs",
