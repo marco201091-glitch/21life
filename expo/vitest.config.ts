@@ -9,7 +9,9 @@ export default defineConfig({
     clearMocks: true,
     coverage: {
       provider: 'v8',
-      include: ['lib/**/*.ts'],
+      // Shared domain lives outside the native app; retain its coverage floors.
+      allowExternal: true,
+      include: ['lib/**/*.ts', path.resolve(__dirname, '../packages/domain/**/*.ts').replaceAll('\\', '/')],
       exclude: ['lib/types/**'],
       reporter: ['text', 'json-summary'],
       thresholds: {

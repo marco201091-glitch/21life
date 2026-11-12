@@ -1,5 +1,44 @@
 # Backup off-site gratuito
 
+## Candidato 9.3.0: formato di recupero v2 (verificato solo Dev)
+
+Il nuovo `ops/supabase-backup-package.py` è il produttore comune al job
+`ops/supabase-backup.sh` e al drill. Non è stato installato sul job produzione:
+schedule, retention e configurazione di produzione restano invariati.
+
+Il pacchetto v2 comprende database a snapshot, Storage con xattr, ruoli senza
+password, owner/ACL, configurazione risolta dei servizi e copie dei bind mount
+di inizializzazione, inventario e checksum anche del manifest. **La configurazione
+include credenziali**: directory0700/file0600, trasferimento solo su rclone crypt,
+nessun allegato pubblico. Il job verifica i byte trasferiti con rclone check
+--download prima del marker off-site. Conservare separatamente il recupero del
+remote cifrato; un archivio irrecuperabile senza la chiave non è un backup utile.
+
+Per una futura installazione operativa servono entrambi i file affiancati e
+`RECOVERY_COMPOSE_FILE`/`RECOVERY_COMPOSE_PROJECT` espliciti; i container devono
+corrispondere alle label e alla configurazione. `BACKUP_ENVIRONMENT=dev` separa
+nomi e retention Dev da produzione. Non aggiornare soltanto lo script shell
+lasciando il produttore o la configurazione mancanti: il job fallirebbe.
+
+Il drill Dev usa il vero entrypoint automatico one-shot, scarica il pacchetto
+dal remote cifrato e recupera configurazione e bind mount dalla copia scaricata.
+Durante il restore non legge la configurazione dai servizi sorgente. Verifica
+conteggi DB, owner/ACL delle tabelle, login e REST autorizzati/diniego cross-user,
+hash e xattr di tutti i file Storage e accessibilità di ogni oggetto referenziato
+nel DB. Una discrepanza fallisce la prova. Dati privati e risorse temporanee
+vengono rimossi solo dopo successo verificato; gli errori conservano prove0700.
+
+DB e Storage restano acquisizioni distinte: cambiamenti concorrenti ai file
+possono far fallire la verifica. Non promettere snapshot atomico interservizio.
+La prova su clone nella VM esistente non certifica perdita totale dell'host o
+RPO/RTO contrattuali. Non sono state acquistate o create nuove VM.
+
+Compatibilità: il lettore riconosce legacy e v2, ma marca recupero completo solo
+il v2 con ogni componente richiesta e checksum valido. Non retroclassificare
+un legacy come completo perché possiede dump e Storage.
+
+Le sezioni seguenti descrivono anche il formato storico e i drill precedenti.
+
 Usa un account Google dedicato e un remote `rclone crypt`: il cloud riceve file e nomi cifrati. Google Drive offre fino a 15 GB gratuiti, condivisi con Gmail e Foto; verifica prima lo spazio effettivo dell'account.
 
 ## Configurazione una tantum sulla VM

@@ -9,7 +9,7 @@ export default defineConfig({
     clearMocks: true,
     coverage: {
       provider: 'v8',
-      include: ['lib/**/*.ts'],
+      include: ['lib/**/*.ts', 'packages/domain/**/*.ts'],
       exclude: ['lib/types/**'],
       reporter: ['text', 'json-summary'],
       thresholds: {

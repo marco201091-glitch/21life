@@ -39,7 +39,9 @@ try {
   if (process.env.SELFHOSTED_DEV_VM_KEY_PATH) args.push('-i', process.env.SELFHOSTED_DEV_VM_KEY_PATH);
   args.push(process.env.SELFHOSTED_DEV_VM_USER + '@' + process.env.SELFHOSTED_DEV_VM_HOST, 'sudo -n python3 -');
   const fixture = Buffer.from(JSON.stringify({ suffix, password, users, bucket,
-    storage_hash: createHash('sha256').update(content).digest('hex') })).toString('base64');
+    storage_hash: createHash('sha256').update(content).digest('hex'),
+    producer_source: readFileSync(resolve('ops/supabase-backup-package.py'), 'utf8'),
+    backup_source: readFileSync(resolve('ops/supabase-backup.sh'), 'utf8') })).toString('base64');
   const source = readFileSync(resolve('scripts/qa/staging-recovery-drill.py'), 'utf8');
   const input = source + `\nimport base64,sys\nresult=run_drill(json.loads(base64.b64decode('${fixture}')))\nsys.exit(0 if result['passed'] else 1)\n`;
   const result = spawnSync('ssh', args, { input, encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });

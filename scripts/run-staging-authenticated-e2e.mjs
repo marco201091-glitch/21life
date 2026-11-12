@@ -9,6 +9,8 @@ import { runMaestro } from '../expo/scripts/maestro-command.mjs';
 
 const envRoot = resolve(process.env.E2E_ENV_ROOT || '.');
 const driver = process.env.E2E_DRIVER || 'playwright';
+const playerCount = Number(process.env.E2E_PLAYER_COUNT || 2);
+if (!Number.isInteger(playerCount) || playerCount < 2 || playerCount > 6) throw new Error('E2E_PLAYER_COUNT must be 2–6.');
 if (!['playwright', 'maestro'].includes(driver)) throw new Error('E2E_DRIVER must be playwright or maestro.');
 if (driver === 'maestro') {
   const preflight = spawnSync(process.execPath, [resolve('expo/scripts/e2e-android-preflight.mjs')], { stdio: 'inherit' });
@@ -48,10 +50,10 @@ const groupId = randomUUID();
 let exitCode = 1;
 
 try {
-  for (let index = 0; index < 2; index += 1) {
+  for (let index = 0; index < playerCount; index += 1) {
     const username = `e2e_${randomBytes(8).toString('hex')}`;
     const { data, error } = await supabase.auth.admin.createUser({
-      email: index === 0 ? email : `second-${email}`, password, email_confirm: true,
+      email: index === 0 ? email : `player-${index}-${email}`, password, email_confirm: true,
       user_metadata: { username },
     });
     if (error || !data.user) throw new Error(`Could not provision staging E2E user: ${error?.code ?? 'no user returned'}`);

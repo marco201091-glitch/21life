@@ -43,6 +43,7 @@ description: Apply the PM-led, specification-driven workflow for 21Life. Use for
 - `app/`: Next.js 16 App Router pages, layouts, and API routes for the web application.
 - `components/`: shared web UI and feature components.
 - `lib/`: web domain logic, authentication, data access, validation, and security utilities.
+- `packages/domain/`: pure shared rules for win rate, participant identity and provisional rankings; legacy web/mobile import paths remain compatibility adapters. Both quality gates enforce platform-free imports and acyclic dependencies.
 - `tests/`: web unit, integration, security, end-to-end tests, and snapshots.
 - `expo/`: Expo SDK 57 / React Native client.
   - `expo/app/`: Expo Router screens and navigation.

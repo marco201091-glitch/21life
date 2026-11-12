@@ -40,3 +40,39 @@ test('recovery package verifies optional roles and privileges and rejects their 
     rmdirSync(directory);
   }
 });
+
+test('version 2 requires every recovery component and verifies the manifest checksum', () => {
+  const directory = mkdtempSync(join(tmpdir(), '21life-backup-v2-'));
+  const packageFiles = {
+    'database.dump': Buffer.concat([Buffer.from('PGDMP'), Buffer.alloc(1024)]),
+    'storage.tar.gz': Buffer.from('fixture'),
+    'recovery-roles.sql': Buffer.from('roles'),
+    'recovery-privileges.sql': Buffer.from('grants'),
+    'recovery-config.tar.gz': Buffer.from('PRIVATE fixture configuration'),
+    'recovery-inventory.json': Buffer.from('{}'),
+  };
+  const manifest = { schemaVersion: 2, requiredFiles: Object.keys(packageFiles) };
+  const allFiles = { ...packageFiles, 'manifest.json': Buffer.from(JSON.stringify(manifest)) };
+  try {
+    for (const [name, bytes] of Object.entries(allFiles)) writeFileSync(join(directory, name), bytes);
+    writeFileSync(join(directory, 'SHA256SUMS'), Object.entries(allFiles).map(([name, bytes]) => `${hash(bytes)}  ${name}`).join('\n'));
+    const result = readBackupPackage(directory);
+    assert.equal(result.recoveryVersion, 2);
+    assert.equal(result.completeRecoveryPackage, true);
+    writeFileSync(join(directory, 'manifest.json'), JSON.stringify({ ...manifest, sourceProject: 'tampered' }));
+    assert.throws(() => readBackupPackage(directory), /checksum/i);
+    writeFileSync(join(directory, 'manifest.json'), allFiles['manifest.json']);
+    unlinkSync(join(directory, 'recovery-config.tar.gz'));
+    assert.throws(() => readBackupPackage(directory), /ENOENT|missing/i);
+    writeFileSync(join(directory, 'recovery-config.tar.gz'), allFiles['recovery-config.tar.gz']);
+    writeFileSync(join(directory, 'manifest.json'), JSON.stringify({ schemaVersion: 3 }));
+    assert.throws(() => readBackupPackage(directory), /unsupported/i);
+    writeFileSync(join(directory, 'manifest.json'), JSON.stringify({ schemaVersion: 2, requiredFiles: ['database.dump'] }));
+    assert.throws(() => readBackupPackage(directory), /incomplete/i);
+  } finally {
+    for (const name of [...Object.keys(allFiles), 'SHA256SUMS']) {
+      try { unlinkSync(join(directory, name)); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+    }
+    rmdirSync(directory);
+  }
+});

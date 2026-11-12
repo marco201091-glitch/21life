@@ -2,7 +2,9 @@
 
 # 21Life
 
-[![Android 9.2.0](https://img.shields.io/badge/Android-v9.2.0-7c3aed?style=flat-square)](https://21life.win/download/)
+Development candidate: **9.3.0**. This branch does not attest a published 9.3.0 release.
+
+[![Android 9.3.0](https://img.shields.io/badge/Android-v9.3.0-7c3aed?style=flat-square)](https://21life.win/download/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 **Your Commander table, from the first life total to the last match statistic.**
