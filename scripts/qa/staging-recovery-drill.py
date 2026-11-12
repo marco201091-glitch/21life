@@ -14,7 +14,7 @@ import subprocess
 import tarfile
 import time
 import traceback
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit, quote
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 
@@ -90,72 +90,35 @@ WHERE table_schema IN ('public', 'auth', 'storage') AND table_type='BASE TABLE';
         assert remotes[remote_name]['type'] == 'crypt', 'Drill requires an encrypted remote.'
         destination = remote_base + '/' + project
 
-        package = root / 'source-package'
-        package.mkdir(mode=0o700)
-        snapshot_sql = ("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;\n"
-                        "SELECT jsonb_build_object('snapshot',pg_export_snapshot(),'pid',pg_backend_pid());\n"
-                        + counts_query + "\nSELECT pg_sleep(180);\nROLLBACK;\n")
-        snapshot = subprocess.Popen(['docker', 'exec', '-i', '-e', 'PGAPPNAME=' + project, source_db, 'psql', '-X', '-qAt',
-                                     '-v', 'ON_ERROR_STOP=1', '-U', 'postgres', '-d', 'postgres'],
-                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        snapshot.stdin.write(snapshot_sql.encode())
-        snapshot.stdin.flush()
-        snapshot_info = json.loads(snapshot.stdout.readline())
-        expected_counts = json.loads(snapshot.stdout.readline())
-        dump = command(['docker', 'exec', source_db, 'pg_dump', '-U', 'postgres', '-d', 'postgres',
-                        '--format=custom', '--no-owner', '--no-privileges', '--snapshot=' + snapshot_info['snapshot']])
-        (package / 'database.dump').write_bytes(dump)
-        sql(source_db, 'SELECT pg_terminate_backend(' + str(int(snapshot_info['pid'])) + ');')
-        snapshot.communicate(timeout=15)
-        snapshot = None
-        storage_mount = next(mount for mount in config['services']['storage']['volumes']
-                             if mount['target'] == '/var/lib/storage')
-        assert storage_mount['type'] == 'bind'
-        storage_source = Path(storage_mount['source']).resolve()
-        assert source in storage_source.parents, 'Unexpected staging Storage source.'
-        # Storage metadata lives in xattrs; a plain tar loses it and GET fails.
-        storage = command(['tar', '--xattrs', '--xattrs-include=*', '-C', str(storage_source), '-czf', '-', '.'])
-        (package / 'storage.tar.gz').write_bytes(storage)
-        # Privileges/ownership are recovered separately from the data dump.
-        # This catalog snapshot never enters the repository or public artifacts.
-        acl_dump = command(['docker', 'exec', source_db, 'pg_dump', '-U', 'postgres', '-d', 'postgres',
-                            '--schema-only', '--no-owner']).decode()
-        acl = '\n'.join(line for line in acl_dump.splitlines()
-                        if line.startswith(('GRANT ', 'REVOKE ', 'ALTER DEFAULT PRIVILEGES ')))
-        owners = sql(source_db, """
-SELECT format('ALTER SCHEMA %I OWNER TO %I;', nspname, pg_get_userbyid(nspowner))
-FROM pg_namespace WHERE nspname NOT LIKE 'pg_%' AND nspname <> 'information_schema';
-SELECT format('ALTER %s %s OWNER TO %I;', CASE relkind WHEN 'S' THEN 'SEQUENCE' WHEN 'v' THEN 'VIEW'
- WHEN 'm' THEN 'MATERIALIZED VIEW' ELSE 'TABLE' END, c.oid::regclass, pg_get_userbyid(relowner))
-FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
-WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname<>'information_schema' AND relkind IN ('r','p','S','v','m')
-AND NOT EXISTS(SELECT 1 FROM pg_depend WHERE objid=c.oid AND classid='pg_class'::regclass AND deptype='e')
-AND NOT (relkind='S' AND EXISTS(SELECT 1 FROM pg_depend WHERE objid=c.oid
- AND classid='pg_class'::regclass AND refclassid='pg_class'::regclass AND deptype IN ('a','i')));
-SELECT format('ALTER %s %s OWNER TO %I;', CASE prokind WHEN 'p' THEN 'PROCEDURE' ELSE 'FUNCTION' END,
- p.oid::regprocedure, pg_get_userbyid(proowner)) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
-WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname<>'information_schema'
-AND NOT EXISTS(SELECT 1 FROM pg_depend WHERE objid=p.oid AND classid='pg_proc'::regclass AND deptype='e');
-""")
-        recovery_acl = owners + '\n' + acl
-        globals_dump = command(['docker', 'exec', source_db, 'pg_dumpall', '-U', 'supabase_admin',
-                                '--roles-only', '--no-role-passwords']).decode()
-        globals_sql = '\n'.join(
-            'DO $roles$ BEGIN ' + line + ' EXCEPTION WHEN duplicate_object THEN NULL; END $roles$;'
-            if line.startswith('CREATE ROLE ') else line
-            for line in globals_dump.splitlines())
-        (package / 'recovery-roles.sql').write_text(globals_sql)
-        (package / 'recovery-privileges.sql').write_text(recovery_acl)
-
-        checksums = {name: hashlib.sha256((package / name).read_bytes()).hexdigest()
-                     for name in ['database.dump', 'storage.tar.gz', 'recovery-roles.sql', 'recovery-privileges.sql']}
-        (package / 'SHA256SUMS').write_text(''.join(digest + '  ' + name + '\n' for name, digest in checksums.items()))
-        captured = time.time()
-        (package / 'manifest.json').write_text(json.dumps({'name': project, 'timestamp': captured,
-                                                         'source_project': 'supabase-dev', 'database_bytes': len(dump)}))
+        # Execute the same shell entrypoint and producer used by automatic jobs.
+        # No configuration/secret is read from source services during restore.
+        producer = root / 'supabase-backup-package.py'
+        producer.write_text(fixture['producer_source'])
+        backup_script = root / 'supabase-backup.sh'
+        backup_script.write_text(fixture['backup_source'])
+        automatic_dir = root / 'automatic-backups'
+        command(['env', 'BACKUP_ENVIRONMENT=dev', 'BACKUP_DISABLE_ALERTS=1',
+                 'HEALTH_ENV=/dev/null', 'OFFSITE_ENV=/dev/null', 'OFFSITE_RCLONE_DESTINATION=',
+                 'BACKUP_DIR=' + str(automatic_dir), 'DB_CONTAINER=' + source_db,
+                 'STORAGE_CONTAINER=' + source_storage,
+                 'RECOVERY_COMPOSE_FILE=' + str(source / 'docker-compose.yml'),
+                 'RECOVERY_COMPOSE_PROJECT=supabase-dev',
+                 'RECOVERY_PACKAGE_GENERATOR=' + str(producer), 'bash', str(backup_script)], timeout=300)
+        packages = list(automatic_dir.glob('supabase-dev-*'))
+        assert len(packages) == 1, 'Automatic package not uniquely identified'
+        package = packages[0]
+        manifest = json.loads((package / 'manifest.json').read_text())
+        assert manifest['schemaVersion'] == 2
+        inventory = json.loads((package / 'recovery-inventory.json').read_text())
+        expected_counts = inventory['snapshotCounts']
+        captured = manifest['completedAt']
+        checksums = {line.split('  ', 1)[1]: line.split('  ', 1)[0]
+                     for line in (package / 'SHA256SUMS').read_text().splitlines()}
+        assert set(checksums) == set(manifest['requiredFiles']) | {'manifest.json'}
         uploaded = True  # A partially failed upload also needs scoped cleanup.
         command(['rclone', 'copy', str(package), destination, '--checksum', '--transfers', '1',
                  '--checkers', '2', '--contimeout', '15s', '--timeout', '1m', '--retries', '2'])
+        command(['rclone', 'check', str(package), destination, '--download', '--one-way', '--checkers', '2'])
         downloaded = root / 'downloaded-package'
         downloaded.mkdir(mode=0o700)
         restore_started = time.monotonic()
@@ -165,6 +128,18 @@ AND NOT EXISTS(SELECT 1 FROM pg_depend WHERE objid=p.oid AND classid='pg_proc'::
         assert all(hashlib.sha256((downloaded / name).read_bytes()).hexdigest() == digest
                    for name, digest in checksums.items()), 'Downloaded backup checksum mismatch.'
 
+        recovered_config = root / 'recovered-config'
+        recovered_config.mkdir(mode=0o700)
+        with tarfile.open(downloaded / 'recovery-config.tar.gz') as archive:
+            for member in archive.getmembers():
+                target = (recovered_config / member.name).resolve()
+                assert target == recovered_config or recovered_config in target.parents
+                assert member.isfile() or member.isdir(), 'Unsafe configuration member'
+            archive.extractall(recovered_config, filter='data')
+        config = json.loads((recovered_config / 'compose.json').read_text())
+        mount_map = json.loads((recovered_config / 'mount-map.json').read_text())
+        inventory = json.loads((downloaded / 'recovery-inventory.json').read_text())
+        storage_uid, storage_gid = inventory['storageUid'], inventory['storageGid']
         services = {}
         for name in ['db', 'auth', 'rest', 'storage', 'kong']:
             service = copy.deepcopy(config['services'][name])
@@ -186,6 +161,7 @@ AND NOT EXISTS(SELECT 1 FROM pg_depend WHERE objid=p.oid AND classid='pg_proc'::
                     mount['type'] = 'bind'
                     mount.pop('bind', None)
                 else:
+                    mount['source'] = str(recovered_config / mount_map[name + ':' + mount['target']])
                     mount['read_only'] = True
             environment = service.get('environment', {})
             for key in ['GOTRUE_DB_DATABASE_URL', 'PGRST_DB_URI', 'DATABASE_URL']:
@@ -218,6 +194,10 @@ AND NOT EXISTS(SELECT 1 FROM pg_depend WHERE objid=p.oid AND classid='pg_proc'::
                  '-C', str(storage_dir), '--no-same-owner'])
         for path in [storage_dir, *storage_dir.rglob('*')]:
             os.chown(path, storage_uid, storage_gid)
+        for relative_name, expected in inventory['storageFiles'].items():
+            file = storage_dir / relative_name
+            assert file.is_file() and hashlib.sha256(file.read_bytes()).hexdigest() == expected['sha256'], 'Storage file changed or missing'
+            assert {name: os.getxattr(file, name).hex() for name in os.listxattr(file)} == expected['xattrs'], 'Storage xattr mismatch'
         dc('up', '-d', '--no-deps', 'db')
         restored_db = project + '-db'
         deadline = time.monotonic() + 90
@@ -235,6 +215,8 @@ AND NOT EXISTS(SELECT 1 FROM pg_depend WHERE objid=p.oid AND classid='pg_proc'::
         command(['docker', 'exec', '-i', restored_db, 'pg_restore', '-U', 'supabase_admin', '-d', 'recovery',
                  '--no-owner', '--no-privileges', '--exit-on-error'], data=(downloaded / 'database.dump').read_bytes())
         sql(restored_db, (downloaded / 'recovery-privileges.sql').read_text(), 'recovery')
+        actual_security = json.loads(sql(restored_db, "SELECT coalesce(jsonb_agg(row_to_json(r) ORDER BY r.name),'[]'::jsonb) FROM\n(SELECT n.nspname||'.'||c.relname AS name, pg_get_userbyid(c.relowner) AS owner,\n ARRAY(SELECT a::text FROM unnest(coalesce(c.relacl,'{}'::aclitem[])) a ORDER BY a::text) AS acl\n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace\n WHERE n.nspname IN ('public','auth','storage') AND c.relkind IN ('r','p','v','m','S')) r;", 'recovery'))
+        assert actual_security == inventory['tableSecurity'], 'Table owners/ACL mismatch'
         actual_counts = json.loads(sql(restored_db, counts_query, 'recovery'))
         assert actual_counts == expected_counts, 'Restored table row counts differ from exported DB snapshot.'
         dc('up', '-d', '--no-deps', 'auth', 'rest', 'storage', 'kong')
@@ -288,10 +270,20 @@ AND NOT EXISTS(SELECT 1 FROM pg_depend WHERE objid=p.oid AND classid='pg_proc'::
         assert status == 200 and hashlib.sha256(body).hexdigest() == fixture['storage_hash'], 'Restored Storage download failed.'
         status, _ = request(base, object_path, key, token=tokens[1])
         assert status in (400, 401, 403, 404), 'Private Storage was readable cross-user.'
+        stored_objects = json.loads(sql(restored_db,
+            "SELECT coalesce(jsonb_agg(jsonb_build_object('bucket',bucket_id,'name',name,'size',metadata->'size')), '[]'::jsonb) FROM storage.objects;", 'recovery'))
+        for stored in stored_objects:
+            status, body = request(base, '/storage/v1/object/' + quote(stored['bucket'], safe='') + '/' + quote(stored['name'], safe='/'), service_key)
+            assert status == 200, 'Database references missing/unreadable Storage object'
+            if stored['size'] is not None:
+                assert len(body) == int(stored['size']), 'Storage metadata size mismatch'
         report.update({'passed': True, 'tables_compared': len(expected_counts), 'auth_logins': 2,
                        'authorized_reads_writes': True, 'cross_user_reads_writes_denied': True,
-                       'storage_hash_verified': True, 'private_storage_denied': True,
-                       'encrypted_remote_roundtrip': True, 'isolated_internal_network': True,
+                       'storage_hash_verified': True, 'all_storage_files_xattrs_verified': True, 'table_owners_acl_verified': True,
+                       'storage_files_compared': len(inventory['storageFiles']),
+                       'referenced_storage_objects_verified': len(stored_objects), 'private_storage_denied': True,
+                       'encrypted_remote_roundtrip': True, 'automatic_package_version': 2,
+                       'restore_config_from_downloaded_package': True, 'isolated_internal_network': True,
                        'outbound_email_push_disabled': True, 'checksums': checksums,
                        'backup_age_seconds': round(time.time() - captured, 2),
                        'restore_seconds': round(time.monotonic() - restore_started, 2),

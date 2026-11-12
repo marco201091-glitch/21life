@@ -4,10 +4,11 @@
 
 Mandato: eseguire docs/IMPLEMENTATION_PLAN_DEV_2026-11-12.md punti1–6 fino al refactoring approfondito, solo Dev. Versione candidata9.3.0/90300 sostituisce il vincolo9.2.0 del piano originale. Primario PM preservato; worktree ../21life-dev26, branch improvement/dev26-foundation da origin/Dev bac40b9c. Nessuna produzione/main/deploy/tag.
 
-- [ ] DEV26-00: clean npm ci web/Expo e Node24.21.0 ufficiale verificato SHA; guard toolchain e test aggiunti; quality web passata, Expo passata prima ultimo inserimento guard, doctor fallito: schema Expo API non raggiungibile per DNS exp.host EAI_AGAIN,20/21check; non bypassato.
-- [ ] DEV26-01: audit produzione web5/Expo9 moderate, zero high/critical; classificazione/aggiornamenti e audit completo pendenti.
-- [ ] DEV26-02: parser failClosed e log sanitizzati implementati,5test contratto passati; smoke Dev pendente.
-- [ ] DEV26-03…11: ancora da implementare/verificare secondo il piano. Nessun punto dichiarato completato.
+- [x] DEV26-00: baseline riproducibile Node24.21.0/SHA ufficiale e npm11.16.0 locale; clean ci web/Expo dopo aggiornamento lock, quality entrambi PASS; Doctor21/21 PASS con fallback DNS solo nel processo per exp.host, TLS invariato. Nessun bypass o modifica rete workstation.
+- [x] DEV26-01: audit completo e produzione web/Expo, due advisory distinti moderate di glob/minimatch nel tooling; zero high/critical. Aggiornamento TypeScript ESLint entro range e clean ci verificati; nessuna major/eccezione. Dettagli docs/DEV26_DEPENDENCIES.md; moderate compatibili non correggibili restano follow-up espliciti.
+- [x] DEV26-02: parser failClosed e log sanitizzati;5test contratto PASS, smoke RPC Dev reale allow/deny PASS con bucket casuale e cleanup verificato. Suite auth/export esistenti verdi.
+- [x] DEV26-03: generatore comune pacchetto automatico v2, checksum manifest/config/ruoli/ACL/xattrs, crypt e rclone check/download; restore Dev dal vero entrypoint automatico PASS,58tabelle/ownerACL/4fileStorage+xattrs/4oggettiDB/loginREST e diniego cross-user. Config recuperata da pacchetto scaricato; cleanup account/bucket/stack/volumi/cloud/dati privati verificato. Restore20.67s/totale44.11s ultimo drill (non SLA). Nessuna modifica schedule/prod; perdita totale VM non simulata. Quattro test lettore incluse corruzione/incompletezza PASS.
+- [ ] DEV26-04…11: ancora da implementare/verificare secondo il piano; E2E autenticati locali in preparazione. Il punto6 resta prioritario e non è completato.
 - [ ] DEV26-12 parziale: packages/domain per win-rate/participant-keys/ranking, wrapper compatibili e guard AST senza dipendenze platform/cicli. Quality web ed Expo PASS su Node24.21/Vitest5, ratchet originari mantenuti e floor aggiunti al dominio (104fileExpo). Buildweb PASS (52pagine, budget2.77/18MiB) e exportAndroid PASS (budget9.24/12MiB), env sintetiche isolate; non sono prove runtime autenticate. Quality finale394web+352Expo+51script PASS, ratchet106web/104Expo. E2E, iOS e refactoring quattro schermate ancora pendenti. Architettura in docs/DEV26_ARCHITECTURE.md.
 
 

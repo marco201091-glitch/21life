@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, lstatSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 
 export function verifyBackupChecksums(checksums, files) {
@@ -28,17 +28,33 @@ export function readBackupPackage(input) {
   const storageBytes = readFileSync(storagePath);
   const files = { [basename(dumpPath)]: bytes, [basename(storagePath)]: storageBytes };
   let manifest = null;
+  let recoveryVersion = 1;
   if (offsite) {
-    for (const name of ['recovery-roles.sql', 'recovery-privileges.sql']) {
-      const file = join(path, name);
-      if (existsSync(file)) files[name] = readFileSync(file);
-    }
     manifest = JSON.parse(readFileSync(join(dirname(dumpPath), 'manifest.json'), 'utf8'));
     if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) throw new Error('Invalid backup manifest.');
+    if (manifest.schemaVersion !== undefined && ![1, 2].includes(manifest.schemaVersion)) throw new Error('Unsupported backup schema version.');
+    recoveryVersion = manifest.schemaVersion ?? 1;
+    const optional = ['recovery-roles.sql', 'recovery-privileges.sql'];
+    if (recoveryVersion === 2) {
+      const required = ['database.dump', 'storage.tar.gz', ...optional, 'recovery-config.tar.gz', 'recovery-inventory.json'];
+      if (!Array.isArray(manifest.requiredFiles) || manifest.requiredFiles.length !== required.length
+        || required.some(name => !manifest.requiredFiles.includes(name))) throw new Error('Incomplete recovery manifest.');
+      for (const name of required) {
+        if (!lstatSync(join(path, name)).isFile()) throw new Error('Missing or linked recovery file.');
+        files[name] = readFileSync(join(path, name));
+      }
+      files['manifest.json'] = readFileSync(join(path, 'manifest.json'));
+    } else {
+      for (const name of optional) {
+        if (existsSync(join(path, name))) files[name] = readFileSync(join(path, name));
+      }
+    }
     verifyBackupChecksums(readFileSync(join(path, 'SHA256SUMS'), 'utf8'), files);
   } else {
     verifyBackupChecksums([dumpPath, storagePath].map((file) => readFileSync(`${file}.sha256`, 'utf8').trim()).join('\n'), files);
   }
   if (bytes.length < 1024 || bytes.subarray(0, 5).toString('ascii') !== 'PGDMP') throw new Error('Backup is not a PostgreSQL custom-format dump.');
-  return { dumpPath, storagePath, bytes, storageBytes, manifest, format: offsite ? 'offsite-package' : 'legacy-dev' };
+  return { dumpPath, storagePath, bytes, storageBytes, manifest, recoveryVersion,
+    completeRecoveryPackage: recoveryVersion === 2,
+    format: offsite ? 'offsite-package' : 'legacy-dev' };
 }

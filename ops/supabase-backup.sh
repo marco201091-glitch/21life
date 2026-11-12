@@ -39,7 +39,9 @@ if [[ -r "$OFFSITE_ENV" ]]; then
 fi
 
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
-NAME="supabase-production-$STAMP"
+BACKUP_ENVIRONMENT=${BACKUP_ENVIRONMENT:-production}
+[[ "$BACKUP_ENVIRONMENT" == dev || "$BACKUP_ENVIRONMENT" == production ]] || exit 1
+NAME="supabase-$BACKUP_ENVIRONMENT-$STAMP"
 WORK_DIR=""
 OFFSITE_DESTINATION=${OFFSITE_RCLONE_DESTINATION:-}
 OFFSITE_RETENTION=${OFFSITE_RETENTION:-$RETENTION}
@@ -47,6 +49,7 @@ OFFSITE_RETENTION=${OFFSITE_RETENTION:-$RETENTION}
 alert() {
   local subject=$1 body=$2
   logger -t supabase-backup -p daemon.err "$body"
+  [[ "${BACKUP_DISABLE_ALERTS:-0}" == 1 ]] && return 0
   if [[ -z "${RESEND_API_KEY:-}" || -z "${ALERT_EMAIL:-}" ]]; then
     logger -t supabase-backup -p daemon.warning "alert email non configurato: $HEALTH_ENV"
     return 0
@@ -85,19 +88,23 @@ copy_offsite() {
     echo 'OFFSITE_RETENTION deve essere almeno 1' >&2
     return 1
   }
+  # Version 2 contains recovery credentials: never send it to a plain remote.
+  rclone config dump | python3 -c 'import json,sys; c=json.load(sys.stdin); sys.exit(0 if c.get(sys.argv[1],{}).get("type")=="crypt" else 1)' "${OFFSITE_DESTINATION%%:*}"
 
   rclone copy "$BACKUP_DIR/$NAME" "$OFFSITE_DESTINATION/$NAME" \
     --checksum --transfers 1 --checkers 4 --contimeout 15s --timeout 1m \
     --retries 2 --low-level-retries 2
+  rclone check "$BACKUP_DIR/$NAME" "$OFFSITE_DESTINATION/$NAME" --download --one-way \
+    --checkers 2 --contimeout 15s --timeout 1m
 
   # Elimina solo directory con il nome prodotto da questo script.
   mapfile -t offsite_stale < <(
     rclone lsf --dirs-only "$OFFSITE_DESTINATION" \
-      | sed -n 's#^\(supabase-production-[0-9TZ]*\)/$#\1#p' \
+      | sed -n "s#^\(supabase-$BACKUP_ENVIRONMENT-[0-9TZ]*\)/\$#\1#p" \
       | sort -r | tail -n "+$((OFFSITE_RETENTION + 1))"
   )
   for dir in "${offsite_stale[@]:-}"; do
-    [[ "$dir" =~ ^supabase-production-[0-9]{8}T[0-9]{6}Z$ ]] || continue
+    [[ "$dir" =~ ^supabase-$BACKUP_ENVIRONMENT-[0-9]{8}T[0-9]{6}Z$ ]] || continue
     rclone purge "$OFFSITE_DESTINATION/$dir"
   done
 
@@ -125,22 +132,16 @@ chmod 0700 "$BACKUP_DIR"
 
 WORK_DIR=$(mktemp -d "$BACKUP_DIR/.work.XXXXXX")
 
-# 1. Dump del database.
-#    Utente supabase_admin: e' il vero superuser del cluster. Con "postgres"
-#    il dump non copre gli schemi di proprieta' di supabase_admin (vault e
-#    altri), che restano fuori dal backup.
-docker exec "$DB_CONTAINER" pg_dump -U supabase_admin -d postgres \
-  --format=custom --no-owner --no-privileges > "$WORK_DIR/database.dump"
-
-# 2. Archivio dello Storage.
-docker exec "$STORAGE_CONTAINER" tar -C /var/lib/storage -czf - . > "$WORK_DIR/storage.tar.gz"
-
-# 3. Integrita' e metadati.
-(cd "$WORK_DIR" && sha256sum database.dump storage.tar.gz > SHA256SUMS)
-
+# Version 2 includes role/ACL recovery, xattrs and PRIVATE configuration.
+# Install the producer alongside this script; do not upgrade a scheduled job
+# without setting its explicit Compose file/project and encrypted destination.
+: "${RECOVERY_COMPOSE_FILE:?Explicit Compose file required}"
+: "${RECOVERY_COMPOSE_PROJECT:?Explicit Compose project required}"
+GENERATOR=${RECOVERY_PACKAGE_GENERATOR:-$(dirname "$(readlink -f "$0")")/supabase-backup-package.py}
+python3 "$GENERATOR" --output "$WORK_DIR" --compose-file "$RECOVERY_COMPOSE_FILE" \
+  --project "$RECOVERY_COMPOSE_PROJECT" --db-container "$DB_CONTAINER" --storage-container "$STORAGE_CONTAINER"
+(cd "$WORK_DIR" && sha256sum --check SHA256SUMS >/dev/null)
 db_bytes=$(stat -c %s "$WORK_DIR/database.dump")
-printf '{"name":"%s","createdAt":"%s","databaseBytes":%s,"retention":%s}\n' \
-  "$NAME" "$STAMP" "$db_bytes" "$RETENTION" > "$WORK_DIR/manifest.json"
 
 chmod 0600 "$WORK_DIR"/*
 
@@ -158,13 +159,14 @@ copy_offsite
 
 # 6. Retention: conserva solo i backup completi piu' recenti.
 mapfile -t stale < <(
-  find "$BACKUP_DIR" -maxdepth 1 -type d -name 'supabase-production-*' -printf '%f\n' \
+  find "$BACKUP_DIR" -maxdepth 1 -type d -name "supabase-$BACKUP_ENVIRONMENT-*" -printf '%f\n' \
     | sort -r | tail -n "+$((RETENTION + 1))"
 )
 for dir in "${stale[@]:-}"; do
   [[ -n "$dir" ]] || continue
+  [[ "$dir" =~ ^supabase-$BACKUP_ENVIRONMENT-[0-9]{8}T[0-9]{6}Z$ ]] || continue
   rm -rf -- "$BACKUP_DIR/$dir"
 done
 
-kept=$(find "$BACKUP_DIR" -maxdepth 1 -type d -name 'supabase-production-*' | wc -l)
+kept=$(find "$BACKUP_DIR" -maxdepth 1 -type d -name "supabase-$BACKUP_ENVIRONMENT-*" | wc -l)
 echo "[$(date -u '+%Y-%m-%d %H:%M UTC')] Backup completato: $NAME (db $(numfmt --to=iec "$db_bytes")) — conservati $kept/$RETENTION"
