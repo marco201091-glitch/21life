@@ -38,7 +38,9 @@ export function RuntimeConfigProvider({ children }: { children: ReactNode }) {
       .then((next) => {
         if (!active || !next) return;
         setConfig(next);
-        if (!['/dashboard', '/profile', '/counter'].includes(pathname) && !pathname.startsWith('/table/')) return;
+        // Never interrupt the arena grid or a running tracker with a release
+        // notice: on a phone the alert sheet covers the setup controls.
+        if (!['/dashboard', '/profile', '/counter'].includes(pathname)) return;
         if (next.releaseUpdateAvailable && next.latestReleasedVersion) {
           const key = `release-update:${next.latestReleasedVersion}`;
           if (!localStorage.getItem(key)) {

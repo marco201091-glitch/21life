@@ -2,7 +2,7 @@
 
 # 21Life
 
-[![Android 9.2.0](https://img.shields.io/badge/Android-v9.2.0-7c3aed?style=flat-square)](https://21life.win/download/)
+[![Android 9.2.1](https://img.shields.io/badge/Android-v9.2.1-7c3aed?style=flat-square)](https://21life.win/download/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 **Your Commander table, from the first life total to the last match statistic.**
@@ -66,7 +66,12 @@ The website's download page lists Android and Web only.
 
 See the [guide](https://21life.win/guida/) and [FAQ](https://21life.win/supporto/) for more detail.
 
-## What's new in 9.2.0
+## What's new in 9.2.1
+
+- Fixed live-game resume for eliminated players and after a transient network or session refresh. A running tracker is no longer dropped back to the playgroup by mistake, and a player who was already in an active game can always reopen it.
+- The web tracker setup wizard now fits phone and tablet screens: the table board is capped to the viewport height and the navigation actions stay reachable.
+
+### From 9.2.0
 
 - More reliable Archidekt synchronization in the game setup, with clearer outcomes and recovery when a deck list cannot refresh.
 - Companion cards are distinguished from commanders; a single-card deck can identify its card when the commander is unknown.

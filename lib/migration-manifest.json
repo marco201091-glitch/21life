@@ -469,6 +469,11 @@
       "version": "20261110085334",
       "name": "20261110085334_recommend_v9_2_0_runtime_update.sql",
       "checksum": "d9d1320c9212e00495cc2769c342183eb9eff974ad675cd79ecfbe2444d35e81"
+    },
+    {
+      "version": "20261114110000",
+      "name": "20261114110000_recommend_v9_2_1_runtime_update.sql",
+      "checksum": "3a33d890210448d253c9104d41297c1566ac56d4b3d850298c336e9ef2f49a4d"
     }
   ]
 }

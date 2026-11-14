@@ -555,9 +555,9 @@ export default function LiveGameScreen() {
         if (!failed) {
           setSyncStatus(mutationQueueRef.current.length ? 'pending' : 'synced');
         }
-        if (user) {
+        if (currentUserId) {
           void persistLiveGameTelemetry(supabase, {
-            userId: user.id,
+            userId: currentUserId,
             liveGameId: liveGameRef.current?.id ?? null,
             sessionId: telemetrySessionRef.current,
             platform: 'expo',
@@ -570,7 +570,7 @@ export default function LiveGameScreen() {
     });
     syncPromiseRef.current = tracked;
     return tracked;
-  }, [flushOutbox, groupId, saveJournal, setOptimisticRecord, user]);
+  }, [currentUserId, flushOutbox, groupId, saveJournal, setOptimisticRecord]);
 
   const flushArchivedOutbox = useCallback(() => {
     const pendingSync = syncPromiseRef.current;
@@ -614,8 +614,11 @@ export default function LiveGameScreen() {
     });
   }, [syncJournal]);
 
+  // Depend on the stable user id, not the session object: Supabase replaces
+  // `user` on every token refresh and the old dependency re-ran this bootstrap
+  // mid-game, tearing down the live table when the lookup was transiently empty.
   useEffect(() => {
-    if (!groupId || !user) return;
+    if (!groupId || !currentUserId) return;
     let mounted = true;
     void (async () => {
       let cached = await withLiveGameTimeout(
@@ -623,7 +626,7 @@ export default function LiveGameScreen() {
         3_000,
       ).catch(() => null);
       if (!mounted) return;
-      const participantKey = toUserParticipantKey(user.id);
+      const participantKey = toUserParticipantKey(currentUserId);
       if (cached && !cached.record.state.players.some(
         (player) => player.participantKey === participantKey,
       )) {
@@ -682,17 +685,52 @@ export default function LiveGameScreen() {
       }
     })();
     return () => { mounted = false; };
-  }, [groupId, saveJournal, setOptimisticRecord, syncJournal, user]);
+  }, [currentUserId, groupId, saveJournal, setOptimisticRecord, syncJournal]);
 
   const refreshAuthoritativeState = useCallback(async () => {
     const current = liveGameRef.current;
-    if (!groupId || !user || !current || needsCreateRef.current || syncRunningRef.current) return;
-    const remote = await fetchActiveLiveGame(supabase, groupId, toUserParticipantKey(user.id));
+    if (!groupId || !currentUserId || !current || needsCreateRef.current || syncRunningRef.current) return;
+    const remote = await fetchActiveLiveGame(supabase, groupId, toUserParticipantKey(currentUserId));
     if (!remote || remote.id !== current.id) return;
     serverRecordRef.current = remote;
     setOptimisticRecord(replayQueuedMutations(remote, mutationQueueRef.current));
     await saveJournal();
-  }, [groupId, saveJournal, setOptimisticRecord, user]);
+  }, [currentUserId, groupId, saveJournal, setOptimisticRecord]);
+
+  // A single failed boot lookup (network change, timeout, expired session)
+  // used to leave the setup screen while the server still considered this
+  // player busy in an active game: resume was unavailable and a new game was
+  // rejected. Retry the authoritative lookup while no local game is loaded.
+  const resumeRemoteGame = useCallback(async () => {
+    if (!groupId || !currentUserId || liveGameRef.current) return;
+    const remote = await withLiveGameTimeout(
+      fetchActiveLiveGame(supabase, groupId, toUserParticipantKey(currentUserId)),
+    );
+    if (!remote || liveGameRef.current) return;
+    sessionClosedRef.current = false;
+    serverRecordRef.current = remote;
+    mutationQueueRef.current = [];
+    syncBatchStartedAtRef.current = null;
+    pendingFinalizationRef.current = null;
+    pendingCancelRef.current = false;
+    needsCreateRef.current = false;
+    historyRef.current = createLiveGameHistory();
+    setUndoDepth(0);
+    setRedoDepth(0);
+    setPendingSyncCount(0);
+    setSyncStatus('synced');
+    setOptimisticRecord(remote);
+    await saveJournal();
+    void syncJournal();
+  }, [currentUserId, groupId, saveJournal, setOptimisticRecord, syncJournal]);
+
+  useEffect(() => {
+    if (booting || liveGame) return undefined;
+    const timer = setTimeout(() => {
+      void resumeRemoteGame().catch(() => undefined);
+    }, 1_500);
+    return () => clearTimeout(timer);
+  }, [booting, liveGame, resumeRemoteGame]);
 
   useEffect(() => {
     if (!liveGame?.id || needsCreateRef.current) return undefined;
@@ -773,16 +811,21 @@ export default function LiveGameScreen() {
   useEffect(() => {
     const interval = setInterval(() => {
       void NetInfo.fetch().then((state) => {
-        if (state.isConnected === true && state.isInternetReachable !== false) { void syncJournal(); setSetupRetry(current => current + 1); }
+        if (state.isConnected === true && state.isInternetReachable !== false) {
+          void syncJournal();
+          void resumeRemoteGame().catch(() => undefined);
+          setSetupRetry(current => current + 1);
+        }
       });
     }, 10_000);
     const appStateSubscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
+        void resumeRemoteGame().catch(() => undefined);
         void refreshAuthoritativeState().catch(() => undefined).finally(() => syncJournal());
         if (liveGameRef.current) applyLiveGameImmersive();
-      } else if (user) {
+      } else if (currentUserId) {
         void persistLiveGameTelemetry(supabase, {
-          userId: user.id,
+          userId: currentUserId,
           liveGameId: liveGameRef.current?.id ?? null,
           sessionId: telemetrySessionRef.current,
           platform: 'expo',
@@ -795,7 +838,7 @@ export default function LiveGameScreen() {
       if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
       appStateSubscription.remove();
     };
-  }, [refreshAuthoritativeState, syncJournal, user]);
+  }, [currentUserId, refreshAuthoritativeState, resumeRemoteGame, syncJournal]);
 
   const liveGameId = liveGame?.id ?? null;
   const liveGamePlayerCount = liveGame?.state.players.length ?? 0;
