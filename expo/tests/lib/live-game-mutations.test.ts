@@ -220,7 +220,7 @@ describe('live game mutations', () => {
   it('normalizes malformed persisted players instead of throwing at the table', () => {
     const parsed = parseLiveGameState({
       version: 'broken',
-      players: [null, 'invalid', {
+      players: [null, 'invalid', { participantKey: 'x' }, {
         participantKey: keys[0],
         life: 'not-a-number',
         counters: null,

@@ -527,7 +527,7 @@ export function WebLiveGame({
       groupId,
       `user:${userId}` as ParticipantKey,
     );
-    if (!remote || remote.id !== current.id) return;
+    if (!remote || remote.id !== current.id || recordRef.current?.id !== current.id) return;
     serverRef.current = remote;
     setOptimisticRecord(replay(remote, queueRef.current));
     persist(recordRef.current);
@@ -645,6 +645,8 @@ export function WebLiveGame({
   useEffect(() => {
     if (!activeRecordId || needsCreateRef.current) return;
     return subscribeToLiveGame(supabase, activeRecordId, (remote) => {
+      // Ignore events from a channel whose removal is still in flight.
+      if (recordRef.current?.id !== activeRecordId) return;
       if (remote.status !== 'active') {
         if (pendingFinalizationRef.current || pendingCancelRef.current) return;
         serverRef.current = null;

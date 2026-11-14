@@ -763,6 +763,11 @@ function nonNegativeNumber(value: unknown): number {
 function normalizeLiveGamePlayer(raw: unknown): LiveGamePlayer | null {
   if (!isRecord(raw)) return null;
   const player = raw as Partial<LiveGamePlayer>;
+  const participantKey = typeof player.participantKey === 'string' ? player.participantKey : '';
+  // The participant projection only accepts keys in this range (see the
+  // live_games trigger); drop the row instead of creating a seat keyed by
+  // `undefined`, which would break every keyed lookup at the table.
+  if (participantKey.length < 6 || participantKey.length > 64) return null;
   const commanderDamageFrom = Object.fromEntries(
     Object.entries(isRecord(player.commanderDamageFrom) ? player.commanderDamageFrom : {})
       .filter(([key]) => key.length > 0)
@@ -770,6 +775,14 @@ function normalizeLiveGamePlayer(raw: unknown): LiveGamePlayer | null {
   ) as Record<ParticipantKey, number>;
   return {
     ...(player as LiveGamePlayer),
+    participantKey: participantKey as ParticipantKey,
+    slot: typeof player.slot === 'number' && Number.isFinite(player.slot) ? player.slot : 0,
+    deckId: typeof player.deckId === 'string' ? player.deckId : '',
+    displayName: typeof player.displayName === 'string' && player.displayName
+      ? player.displayName
+      : participantKey,
+    commander: typeof player.commander === 'string' ? player.commander : '',
+    commanderImage: typeof player.commanderImage === 'string' ? player.commanderImage : null,
     life: typeof player.life === 'number' && Number.isFinite(player.life) ? player.life : 0,
     infect: nonNegativeNumber(player.infect),
     commanderDamageFrom,

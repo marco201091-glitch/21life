@@ -25,16 +25,20 @@ async function fetchActiveGameById(
   groupId: string,
   liveGameId: string,
 ): Promise<LiveGameRecord | null> {
+  // A participant row has an ON DELETE CASCADE foreign key to live_games, so
+  // the row must exist. If it is not visible, this is a transient RLS/read
+  // failure: throw so the caller keeps the local journal instead of treating
+  // it as "the game ended".
   const { data, error } = await supabase
     .from('live_games')
     .select('*')
     .eq('id', liveGameId)
     .eq('group_id', groupId)
-    .eq('status', 'active')
     .maybeSingle();
 
   if (error) throw error;
-  return data ? toLiveGameRecord(data) : null;
+  if (!data) throw new Error('Live game is not readable');
+  return data.status === 'active' ? toLiveGameRecord(data) : null;
 }
 
 /**
@@ -65,8 +69,10 @@ export async function fetchActiveLiveGame(
   if (participantError) throw participantError;
 
   if (participant) {
-    const game = await fetchActiveGameById(supabase, groupId, participant.live_game_id);
-    if (game) return game;
+    // The participation is authoritative: if its game is no longer active the
+    // player has nothing to resume. Do not fall back to an unrelated old game
+    // created by the same user.
+    return fetchActiveGameById(supabase, groupId, participant.live_game_id);
   }
 
   const creatorId = participantKey.startsWith('user:')
