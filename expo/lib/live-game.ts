@@ -752,34 +752,72 @@ export function getLiveGameResultWarnings(
   return warnings;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function nonNegativeNumber(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, value) : 0;
+}
+
+function normalizeLiveGamePlayer(raw: unknown): LiveGamePlayer | null {
+  if (!isRecord(raw)) return null;
+  const player = raw as Partial<LiveGamePlayer>;
+  const commanderDamageFrom = Object.fromEntries(
+    Object.entries(isRecord(player.commanderDamageFrom) ? player.commanderDamageFrom : {})
+      .filter(([key]) => key.length > 0)
+      .map(([key, damage]) => [key, nonNegativeNumber(damage)]),
+  ) as Record<ParticipantKey, number>;
+  return {
+    ...(player as LiveGamePlayer),
+    life: typeof player.life === 'number' && Number.isFinite(player.life) ? player.life : 0,
+    infect: nonNegativeNumber(player.infect),
+    commanderDamageFrom,
+    counters: {
+      energy: nonNegativeNumber(player.counters?.energy),
+      experience: nonNegativeNumber(player.counters?.experience),
+      commanderTax: nonNegativeNumber(player.counters?.commanderTax),
+      monarch: Boolean(player.counters?.monarch),
+      initiative: Boolean(player.counters?.initiative),
+    },
+    isEliminated: Boolean(player.isEliminated),
+    eliminatedAt: typeof player.eliminatedAt === 'string' ? player.eliminatedAt : null,
+  };
+}
+
+/**
+ * Normalizes every persisted player field. Renderers and event handlers read
+ * `counters` and `commanderDamageFrom` directly, so a legacy or partially
+ * written row must never surface as an undefined dereference at the table.
+ */
 export function parseLiveGameState(raw: unknown): LiveGameState {
-  if (!raw || typeof raw !== 'object') return { version: 0, players: [], events: [] };
+  if (!isRecord(raw)) return { version: 0, players: [], events: [] };
   const value = raw as Partial<LiveGameState>;
-  const events = Array.isArray(value.events) ? value.events as LiveGameEvent[] : [];
-  const summary = value.summary?.schemaVersion === 1
+  const events = Array.isArray(value.events)
+    ? value.events.filter(isRecord) as unknown as LiveGameEvent[]
+    : [];
+  const summaryValue = isRecord(value.summary) ? value.summary as Partial<LiveGameSummary> : null;
+  const summary: LiveGameSummary = summaryValue?.schemaVersion === 1
     ? {
-        ...value.summary,
-        byParticipant: Object.fromEntries(Object.entries(value.summary.byParticipant).map(([key, metrics]) => [
-          key,
-          metrics ? {
-            ...emptyParticipantSummary(),
-            ...metrics,
-          } : metrics,
-        ])),
+        schemaVersion: 1,
+        totalEvents: nonNegativeNumber(summaryValue.totalEvents),
+        firstOccurredAt: typeof summaryValue.firstOccurredAt === 'string' ? summaryValue.firstOccurredAt : null,
+        lastOccurredAt: typeof summaryValue.lastOccurredAt === 'string' ? summaryValue.lastOccurredAt : null,
+        byParticipant: Object.fromEntries(
+          Object.entries(isRecord(summaryValue.byParticipant) ? summaryValue.byParticipant : {})
+            .filter(([, metrics]) => isRecord(metrics))
+            .map(([key, metrics]) => [
+              key,
+              { ...emptyParticipantSummary(), ...(metrics as Partial<LiveGameParticipantSummary>) },
+            ]),
+        ) as Partial<Record<ParticipantKey, LiveGameParticipantSummary>>,
       }
     : summarizeLiveGameEvents(events);
   return {
-    version: typeof value.version === 'number' ? value.version : 0,
-    players: Array.isArray(value.players) ? (value.players as LiveGamePlayer[]).map((player) => ({
-      ...player,
-      counters: {
-        energy: Math.max(0, player.counters?.energy ?? 0),
-        experience: Math.max(0, player.counters?.experience ?? 0),
-        commanderTax: Math.max(0, player.counters?.commanderTax ?? 0),
-        monarch: Boolean(player.counters?.monarch),
-        initiative: Boolean(player.counters?.initiative),
-      },
-    })) : [],
+    version: nonNegativeNumber(value.version),
+    players: Array.isArray(value.players)
+      ? value.players.map(normalizeLiveGamePlayer).filter((player): player is LiveGamePlayer => player !== null)
+      : [],
     layoutVariant: value.layoutVariant === 'opposed' ? 'opposed' : 'classic',
     startingPlayerKey: typeof value.startingPlayerKey === 'string'
       ? value.startingPlayerKey as ParticipantKey

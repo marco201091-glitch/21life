@@ -217,6 +217,39 @@ describe('live game mutations', () => {
     });
   });
 
+  it('normalizes malformed persisted players instead of throwing at the table', () => {
+    const parsed = parseLiveGameState({
+      version: 'broken',
+      players: [null, 'invalid', {
+        participantKey: keys[0],
+        life: 'not-a-number',
+        counters: null,
+        commanderDamageFrom: 'invalid',
+      }],
+      events: [null, { type: 'damage' }],
+      summary: { schemaVersion: 1, byParticipant: null },
+    });
+
+    expect(parsed.version).toBe(0);
+    expect(parsed.players).toHaveLength(1);
+    expect(parsed.players[0]).toMatchObject({
+      participantKey: keys[0],
+      life: 0,
+      infect: 0,
+      commanderDamageFrom: {},
+      isEliminated: false,
+      eliminatedAt: null,
+    });
+    expect(parsed.players[0]?.counters).toMatchObject({
+      energy: 0,
+      experience: 0,
+      commanderTax: 0,
+      monarch: false,
+      initiative: false,
+    });
+    expect(parsed.summary?.byParticipant).toEqual({});
+  });
+
   it('restores a player snapshot without overwriting another player', () => {
     const state = makeState();
     const snapshot = state.players[0]!;
