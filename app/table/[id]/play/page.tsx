@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { WebLiveGame, type WebTrackerParticipant } from '@/components/live-game/web-live-game';
 import { AppLoader } from '@/components/ui/app-loader';
@@ -47,13 +47,17 @@ export default function WebLiveGamePage() {
   const { user, loading: authLoading } = useAuth();
   const { copy } = useLanguage();
   const groupId = params.id;
+  // Stable across Supabase token refreshes: depending on `user` re-ran the
+  // catalog load on every refresh, and a transient empty read redirected an
+  // in-progress tracker to the dashboard.
+  const userId = user?.id ?? null;
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [arenaName, setArenaName] = useState('');
   const [participants, setParticipants] = useState<WebTrackerParticipant[]>([]);
 
   const load = useCallback(async (silent = false) => {
-    if (!user || !groupId) return;
+    if (!userId || !groupId) return;
     if (!silent) { setLoading(true); setLoadError(false); }
     try {
       const [{ data: group, error: groupError }, { data: guests, error: guestsError }] = await Promise.all([
@@ -82,12 +86,15 @@ export default function WebLiveGamePage() {
       if (groupError) throw groupError;
       if (guestsError) throw guestsError;
       if (!group) {
-        router.replace('/dashboard');
+        // Never navigate an in-progress tracker away on an empty read. A
+        // deleted arena and a transient auth/RLS gap look identical here, so
+        // show the retry state instead of guessing.
+        if (!silent) setLoadError(true);
         return;
       }
       const payload = group as unknown as GroupPayload;
-      if (!payload.group_members.some((member) => member.user_id === user.id)) {
-        router.replace(`/table/${groupId}`);
+      if (!payload.group_members.some((member) => member.user_id === userId)) {
+        if (!silent) router.replace(`/table/${groupId}`);
         return;
       }
       const memberIds = payload.group_members.map((member) => member.user_id);
@@ -103,7 +110,7 @@ export default function WebLiveGamePage() {
       if (decksError) throw decksError;
 
       const userDecks = (decks ?? []) as UserDeck[];
-      const restoredIds = loadWebLiveGameSetup(groupId, user.id).seats.flatMap(seat => seat.deckId ? [seat.deckId] : []);
+      const restoredIds = loadWebLiveGameSetup(groupId, userId).seats.flatMap(seat => seat.deckId ? [seat.deckId] : []);
       if (restoredIds.length) {
         const { data: restored, error: restoreError } = await supabase.from('decks')
           .select('id,user_id,name,commander,commander_image,is_favorite,source_type')
@@ -150,24 +157,36 @@ export default function WebLiveGamePage() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [groupId, router, user]);
+  }, [groupId, router, userId]);
 
-  useEffect(() => { void load(); }, [load]);
+  const loadedSessionRef = useRef<string | null>(null);
+  useEffect(() => {
+    const key = userId && groupId ? `${userId}:${groupId}` : null;
+    // Only the first load for this account/group may treat an empty read as
+    // "the arena is gone". Any later re-run (router identity or a token
+    // refresh) stays silent, so a running tracker cannot be ejected.
+    const initial = key !== null && loadedSessionRef.current !== key;
+    loadedSessionRef.current = key;
+    void load(!initial);
+  }, [groupId, load, userId]);
 
   useEffect(() => {
-    if (!user || !groupId) return;
+    if (!userId || !groupId) return;
     return subscribeToArenaCatalog(supabase, groupId, () => {
       void load(true);
     });
-  }, [groupId, load, user]);
+  }, [groupId, load, userId]);
 
   if (authLoading || loading || !user) {
     return <AppLoader label={copy({ it: 'Caricamento tracker...', en: 'Loading tracker...' })} />;
   }
 
   if (loadError) return <div className="mx-auto max-w-md space-y-4 p-6">
-    <p role="alert">{copy({ en: 'Could not load players and selected decks. Check your connection and retry.', it: 'Impossibile caricare giocatori e mazzi selezionati. Controlla la connessione e riprova.' })}</p>
-    <button type="button" onClick={() => void load()} className="rounded-xl border border-border p-3">{copy({ en: 'Retry', it: 'Riprova' })}</button>
+    <p role="alert">{copy({ en: 'Could not load this arena. It may no longer be available, or the connection failed. Retry before entering the tracker.', it: 'Impossibile caricare questa arena. Potrebbe non essere più disponibile o la connessione è fallita. Riprova prima di entrare nel tracker.' })}</p>
+    <div className="flex flex-wrap gap-3">
+      <button type="button" onClick={() => void load()} className="rounded-xl border border-border p-3">{copy({ en: 'Retry', it: 'Riprova' })}</button>
+      <button type="button" onClick={() => router.push('/dashboard')} className="rounded-xl border border-border p-3 text-muted-foreground">{copy({ en: 'Back to dashboard', it: 'Torna alla dashboard' })}</button>
+    </div>
   </div>;
 
   return (
