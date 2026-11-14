@@ -183,7 +183,10 @@ export default function WebLiveGamePage() {
 
   if (loadError) return <div className="mx-auto max-w-md space-y-4 p-6">
     <p role="alert">{copy({ en: 'Could not load this arena. It may no longer be available, or the connection failed. Retry before entering the tracker.', it: 'Impossibile caricare questa arena. Potrebbe non essere più disponibile o la connessione è fallita. Riprova prima di entrare nel tracker.' })}</p>
-    <button type="button" onClick={() => void load()} className="rounded-xl border border-border p-3">{copy({ en: 'Retry', it: 'Riprova' })}</button>
+    <div className="flex flex-wrap gap-3">
+      <button type="button" onClick={() => void load()} className="rounded-xl border border-border p-3">{copy({ en: 'Retry', it: 'Riprova' })}</button>
+      <button type="button" onClick={() => router.push('/dashboard')} className="rounded-xl border border-border p-3 text-muted-foreground">{copy({ en: 'Back to dashboard', it: 'Torna alla dashboard' })}</button>
+    </div>
   </div>;
 
   return (
