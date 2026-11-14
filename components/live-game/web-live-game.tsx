@@ -527,7 +527,7 @@ export function WebLiveGame({
       groupId,
       `user:${userId}` as ParticipantKey,
     );
-    if (!remote || remote.id !== current.id) return;
+    if (!remote || remote.id !== current.id || recordRef.current?.id !== current.id) return;
     serverRef.current = remote;
     setOptimisticRecord(replay(remote, queueRef.current));
     persist(recordRef.current);
@@ -645,6 +645,8 @@ export function WebLiveGame({
   useEffect(() => {
     if (!activeRecordId || needsCreateRef.current) return;
     return subscribeToLiveGame(supabase, activeRecordId, (remote) => {
+      // Ignore events from a channel whose removal is still in flight.
+      if (recordRef.current?.id !== activeRecordId) return;
       if (remote.status !== 'active') {
         if (pendingFinalizationRef.current || pendingCancelRef.current) return;
         serverRef.current = null;
@@ -1166,8 +1168,8 @@ export function WebLiveGame({
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-3xl border border-emerald-500/25 bg-card/90 shadow-2xl shadow-emerald-950/30 backdrop-blur-xl">
-            <div className="border-b border-border bg-gradient-to-r from-emerald-500/10 to-cyan-500/5 p-5 sm:p-7">
+          <div className="rounded-3xl border border-emerald-500/25 bg-card/90 shadow-2xl shadow-emerald-950/30 backdrop-blur-xl">
+            <div className="rounded-t-3xl border-b border-border bg-gradient-to-r from-emerald-500/10 to-cyan-500/5 p-5 sm:p-7">
               <h2 className="text-xl font-black">{copy({ it: 'Configura la partita', en: 'Set up the game' })}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{copy({ it: 'Scegli layout, posti e mazzi. L’ultima configurazione viene ricordata.', en: 'Choose layout, seats and decks. Your last setup is remembered.' })}</p>
             </div>
@@ -1197,7 +1199,7 @@ export function WebLiveGame({
                 </Button>
               </div>
 
-              <section className="min-h-[330px] animate-in fade-in slide-in-from-right-2">
+              <section className="min-h-[330px] animate-in fade-in slide-in-from-right-2 [@media(max-height:520px)]:min-h-0">
                 <div className="mb-5 flex items-center gap-3">
                   <span className="grid h-9 w-9 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-sm font-black shadow-lg shadow-emerald-950/40">{setupStep + 1}</span>
                   <div>
@@ -1227,7 +1229,7 @@ export function WebLiveGame({
                         key={count}
                         onClick={() => changePlayerCount(count)}
                         className={cn(
-                          'group relative aspect-square rounded-3xl border text-2xl font-black transition hover:-translate-y-1 active:scale-95',
+                          'group relative aspect-square max-h-24 rounded-3xl border text-2xl font-black transition hover:-translate-y-1 active:scale-95',
                           playerCount === count
                             ? 'border-emerald-300 bg-gradient-to-br from-emerald-500/40 to-teal-500/15 text-white shadow-xl shadow-emerald-950/40'
                             : 'border-white/10 bg-white/[.035] text-muted-foreground hover:border-emerald-400/50 hover:text-white',
@@ -1248,7 +1250,7 @@ export function WebLiveGame({
                         key={life}
                         onClick={() => setStartingLife(life)}
                         className={cn(
-                          'relative flex h-20 items-center justify-center rounded-3xl border text-2xl font-black transition hover:-translate-y-1 active:scale-95 sm:h-24',
+                          'relative flex h-16 items-center justify-center rounded-3xl border text-2xl font-black transition hover:-translate-y-1 active:scale-95 sm:h-20',
                           startingLife === life
                             ? 'border-cyan-300 bg-gradient-to-br from-cyan-500/25 to-emerald-500/15 text-cyan-50 shadow-xl shadow-cyan-950/20'
                             : 'border-white/10 bg-white/[.035] text-muted-foreground hover:border-cyan-400/45 hover:text-white',
@@ -1258,7 +1260,7 @@ export function WebLiveGame({
                         {startingLife === life ? <Check className="absolute right-4 top-4 h-4 w-4 text-cyan-200" /> : null}
                       </button>
                     ))}
-                    <label className="flex h-20 items-center gap-3 rounded-3xl border border-white/10 bg-white/[.035] px-4 focus-within:border-cyan-400/60 sm:h-24 sm:px-5">
+                    <label className="flex h-16 items-center gap-3 rounded-3xl border border-white/10 bg-white/[.035] px-4 focus-within:border-cyan-400/60 sm:h-20 sm:px-5">
                       <Heart className="h-6 w-6 text-rose-300" />
                       <span className="sr-only">{copy({ it: 'Punti vita personalizzati', en: 'Custom starting life' })}</span>
                       <input
@@ -1324,8 +1326,12 @@ export function WebLiveGame({
                 ) : null}
 
                 {setupStep === 3 ? (
-                  <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)]">
-                    <div className="relative aspect-[25/17] overflow-hidden rounded-3xl border border-emerald-400/20 bg-[radial-gradient(circle_at_center,#0a120c_0%,#08080d_68%)] shadow-inner">
+                  <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(240px,.72fr)] xl:grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)]">
+                    <div
+                      className="mx-auto w-full self-center"
+                      style={{ maxWidth: 'min(100%, calc(52vh * 25 / 17))' }}
+                    >
+                    <div className="relative aspect-[25/17] w-full overflow-hidden rounded-3xl border border-emerald-400/20 bg-[radial-gradient(circle_at_center,#0a120c_0%,#08080d_68%)] shadow-inner">
                       <div className="pointer-events-none absolute inset-2 rounded-[1.15rem] border border-emerald-100/[.06]" />
                       {setupToolbarBand ? (
                         <span
@@ -1372,6 +1378,7 @@ export function WebLiveGame({
                           </button>
                         );
                       })}
+                    </div>
                     </div>
 
                     <div className="rounded-3xl border border-white/10 bg-black/20 p-4">
@@ -1441,7 +1448,7 @@ export function WebLiveGame({
                 ) : null}
               </section>
 
-              <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row">
+              <div className="sticky bottom-0 z-20 -mx-4 -mb-4 flex flex-col-reverse gap-3 rounded-b-3xl border-t border-border bg-card/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur sm:-mx-7 sm:-mb-7 sm:flex-row sm:px-7 sm:pb-[max(1.75rem,env(safe-area-inset-bottom))]">
                 {setupStep > 0 ? <Button disabled={occasionalCreationBusy} variant="outline" onClick={() => setSetupStep((step) => step - 1)} className="w-full sm:w-auto"><ArrowLeft className="mr-2 h-4 w-4" />{copy({ it: 'Indietro', en: 'Back' })}</Button> : <span className="hidden flex-1 sm:block" />}
                 {setupStep < 3 ? (
                   <Button disabled={occasionalCreationBusy} onClick={() => setSetupStep((step) => step + 1)} className="h-12 w-full bg-gradient-to-r from-emerald-600 to-teal-600 px-7 font-black shadow-lg shadow-emerald-950/40 sm:ml-auto sm:w-auto">

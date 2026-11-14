@@ -9,6 +9,19 @@ import {
 } from '@/lib/live-game';
 import { recordLiveGameMutationSync, recordLiveGameSyncError } from '@/lib/live-game-telemetry';
 
+function toLiveGameRecord(data: Record<string, unknown>): LiveGameRecord {
+  return { ...data, state: parseLiveGameState(data.state) } as LiveGameRecord;
+}
+
+/**
+ * Resolves the game a player should resume.
+ *
+ * Eliminated players may join another active game, so `live_game_participants`
+ * can hold several rows for the same player. The only blocking row is the one
+ * that is active and not eliminated (partial unique index added in
+ * 20260928120000_release_eliminated_live_game_participants.sql); any other row
+ * would resume an ended game or one where the player cannot act.
+ */
 export async function fetchActiveLiveGame(
   client: SupabaseClient,
   groupId: string,
@@ -19,34 +32,47 @@ export async function fetchActiveLiveGame(
     .select('live_game_id')
     .eq('group_id', groupId)
     .eq('participant_key', participantKey)
+    .eq('status', 'active')
+    .eq('is_eliminated', false)
     .limit(1)
     .maybeSingle();
   if (participantError) throw participantError;
+
+  if (participant) {
+    // The participation is authoritative: if its game is no longer active the
+    // player has nothing to resume. Do not fall back to an unrelated old game
+    // created by the same user.
+    // A participant row has an ON DELETE CASCADE foreign key to live_games,
+    // so the row must exist. An invisible row is a transient RLS/read
+    // failure, not an ended game: throw so callers keep the local journal.
+    const { data, error } = await client
+      .from('live_games')
+      .select('*')
+      .eq('id', participant.live_game_id)
+      .eq('group_id', groupId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) throw new Error('Live game is not readable');
+    return data.status === 'active' ? toLiveGameRecord(data) : null;
+  }
+
   const creatorId = participantKey.startsWith('user:')
     ? participantKey.slice('user:'.length)
     : null;
-  if (!participant && !creatorId) return null;
+  if (!creatorId) return null;
 
-  let query = client
+  // Hosts who have been eliminated keep access to the game they created.
+  const { data, error } = await client
     .from('live_games')
     .select('*')
     .eq('group_id', groupId)
     .eq('status', 'active')
+    .eq('created_by', creatorId)
     .order('updated_at', { ascending: false })
-    .limit(1);
-
-  if (participant && creatorId) {
-    query = query.or(`id.eq.${participant.live_game_id},created_by.eq.${creatorId}`);
-  } else if (participant) {
-    query = query.eq('id', participant.live_game_id);
-  } else {
-    query = query.eq('created_by', creatorId!);
-  }
-
-  const { data, error } = await query
+    .limit(1)
     .maybeSingle();
   if (error) throw error;
-  return data ? { ...data, state: parseLiveGameState(data.state) } as LiveGameRecord : null;
+  return data ? toLiveGameRecord(data) : null;
 }
 
 export async function fetchBusyLiveGameParticipantKeys(
