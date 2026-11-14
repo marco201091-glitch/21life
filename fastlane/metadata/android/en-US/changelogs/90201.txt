@@ -1,0 +1,1 @@
+Fixed live-game resume for eliminated players and after a session refresh; the tracker no longer returns to the playgroup mid-game. The web setup wizard now fits phone screens.

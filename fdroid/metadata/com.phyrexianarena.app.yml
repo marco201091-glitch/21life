@@ -21,9 +21,9 @@ Repo: https://github.com/marco201091-glitch/21life.git
 Binaries: https://github.com/marco201091-glitch/21life/releases/download/fdroid-v%v/mtg-tracker-fdroid-v%v.apk
 
 Builds:
-  - versionName: 9.2.0
-    versionCode: 90200
-    commit: fdroid-v9.2.0
+  - versionName: 9.2.1
+    versionCode: 90201
+    commit: fdroid-v9.2.1
     subdir: expo
     sudo:
       - echo 'deb [check-valid-until=no] https://snapshot.debian.org/archive/debian/20261001T000000Z/
@@ -87,5 +87,5 @@ AllowedAPKSigningKeys: 5d25e32cdf901becfba81adf93189e1d755e50a90b897efa21da4c2ab
 AutoUpdateMode: Version
 UpdateCheckMode: Tags fdroid-v[0-9.]+$
 UpdateCheckData: expo/app.json|"versionCode":\s*(\d+),|.|"version":\s*"([^"]+)"
-CurrentVersion: 9.2.0
-CurrentVersionCode: 90200
+CurrentVersion: 9.2.1
+CurrentVersionCode: 90201
