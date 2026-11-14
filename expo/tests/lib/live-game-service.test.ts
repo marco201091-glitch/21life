@@ -37,7 +37,7 @@ function withSignal<T>(value: T | Promise<T>) {
 
 function selectQuery(result: unknown) {
   const query: Record<string, ReturnType<typeof vi.fn>> = {};
-  ['select', 'eq', 'limit', 'in', 'insert', 'upsert', 'update', 'abortSignal'].forEach((method) => {
+  ['select', 'eq', 'limit', 'in', 'order', 'or', 'insert', 'upsert', 'update', 'abortSignal'].forEach((method) => {
     query[method] = vi.fn().mockReturnValue(query);
   });
   query.maybeSingle = vi.fn().mockReturnValue(withSignal(result));
@@ -46,10 +46,20 @@ function selectQuery(result: unknown) {
 }
 
 describe('live game Supabase service', () => {
-  it('stops active-game lookup when the participant is not busy', async () => {
+  it('ignores participant rows that are ended or eliminated', async () => {
+    const participantQuery = selectQuery({ data: null, error: null });
+    const creatorQuery = selectQuery({ data: null, error: null });
+    const from = vi.fn().mockReturnValueOnce(participantQuery).mockReturnValueOnce(creatorQuery);
+    expect(await fetchActiveLiveGame({ from } as never, 'group-1', 'user:a')).toBeNull();
+    expect(participantQuery.eq).toHaveBeenCalledWith('status', 'active');
+    expect(participantQuery.eq).toHaveBeenCalledWith('is_eliminated', false);
+    expect(creatorQuery.eq).toHaveBeenCalledWith('created_by', 'a');
+  });
+
+  it('does not query a creator fallback for guest participants', async () => {
     const participantQuery = selectQuery({ data: null, error: null });
     const from = vi.fn().mockReturnValue(participantQuery);
-    expect(await fetchActiveLiveGame({ from } as never, 'group-1', 'user:a')).toBeNull();
+    expect(await fetchActiveLiveGame({ from } as never, 'group-1', 'guest:g1')).toBeNull();
     expect(from).toHaveBeenCalledTimes(1);
   });
 
@@ -59,7 +69,32 @@ describe('live game Supabase service', () => {
     const from = vi.fn().mockReturnValueOnce(participantQuery).mockReturnValueOnce(gameQuery);
     const loaded = await fetchActiveLiveGame({ from } as never, 'group-1', 'user:a');
     expect(loaded?.state.layoutVariant).toBe('classic');
-    expect(gameQuery.eq).toHaveBeenCalledWith('status', 'active');
+    expect(gameQuery.eq).toHaveBeenCalledWith('id', 'live-1');
+    expect(gameQuery.eq).toHaveBeenCalledWith('group_id', 'group-1');
+  });
+
+  it('does not fall back to another created game when the authoritative game ended', async () => {
+    const participantQuery = selectQuery({ data: { live_game_id: 'live-1' }, error: null });
+    const gameQuery = selectQuery({ data: record({ status: 'ended' }), error: null });
+    const from = vi.fn().mockReturnValueOnce(participantQuery).mockReturnValueOnce(gameQuery);
+    expect(await fetchActiveLiveGame({ from } as never, 'group-1', 'user:a')).toBeNull();
+    expect(from).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws instead of clearing the session when the authoritative game row is unreadable', async () => {
+    const participantQuery = selectQuery({ data: { live_game_id: 'live-1' }, error: null });
+    const gameQuery = selectQuery({ data: null, error: null });
+    const from = vi.fn().mockReturnValueOnce(participantQuery).mockReturnValueOnce(gameQuery);
+    await expect(fetchActiveLiveGame({ from } as never, 'group-1', 'user:a'))
+      .rejects.toThrow('Live game is not readable');
+  });
+
+  it('falls back to the latest active game created by an eliminated host', async () => {
+    const participantQuery = selectQuery({ data: null, error: null });
+    const creatorQuery = selectQuery({ data: record({ id: 'live-host' }), error: null });
+    const from = vi.fn().mockReturnValueOnce(participantQuery).mockReturnValueOnce(creatorQuery);
+    expect((await fetchActiveLiveGame({ from } as never, 'group-1', 'user:a'))?.id).toBe('live-host');
+    expect(creatorQuery.order).toHaveBeenCalledWith('updated_at', { ascending: false });
   });
 
   it('creates a started game and handles empty busy-player checks', async () => {

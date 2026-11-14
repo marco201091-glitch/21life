@@ -13,6 +13,44 @@ import type { PendingLiveGameFinalization } from '@/lib/live-game-offline';
 import { recordLiveGameMutationSync, recordLiveGameSyncError } from '@/lib/live-game-telemetry';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+function toLiveGameRecord(data: Record<string, unknown>): LiveGameRecord {
+  return {
+    ...data,
+    state: parseLiveGameState(data.state),
+  } as LiveGameRecord;
+}
+
+async function fetchActiveGameById(
+  supabase: SupabaseClient,
+  groupId: string,
+  liveGameId: string,
+): Promise<LiveGameRecord | null> {
+  // A participant row has an ON DELETE CASCADE foreign key to live_games, so
+  // the row must exist. If it is not visible, this is a transient RLS/read
+  // failure: throw so the caller keeps the local journal instead of treating
+  // it as "the game ended".
+  const { data, error } = await supabase
+    .from('live_games')
+    .select('*')
+    .eq('id', liveGameId)
+    .eq('group_id', groupId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error('Live game is not readable');
+  return data.status === 'active' ? toLiveGameRecord(data) : null;
+}
+
+/**
+ * Resolves the game a player should resume.
+ *
+ * Since eliminated players may join another active game, a participant can
+ * have more than one row in `live_game_participants`. Only the row that is
+ * both active and not eliminated can block a new game (see the partial unique
+ * index in 20260928120000_release_eliminated_live_game_participants.sql), so
+ * that is the authoritative resume target. Ordering or `limit(1)` alone over
+ * all rows would return an arbitrary ended/eliminated game.
+ */
 export async function fetchActiveLiveGame(
   supabase: SupabaseClient,
   groupId: string,
@@ -23,27 +61,39 @@ export async function fetchActiveLiveGame(
     .select('live_game_id')
     .eq('group_id', groupId)
     .eq('participant_key', participantKey)
+    .eq('status', 'active')
+    .eq('is_eliminated', false)
     .limit(1)
     .maybeSingle();
 
   if (participantError) throw participantError;
-  if (!participant) return null;
 
+  if (participant) {
+    // The participation is authoritative: if its game is no longer active the
+    // player has nothing to resume. Do not fall back to an unrelated old game
+    // created by the same user.
+    return fetchActiveGameById(supabase, groupId, participant.live_game_id);
+  }
+
+  const creatorId = participantKey.startsWith('user:')
+    ? participantKey.slice('user:'.length)
+    : null;
+  if (!creatorId) return null;
+
+  // Hosts who have been eliminated keep access to the game they created so
+  // they can follow or finalize it, matching the web tracker behavior.
   const { data, error } = await supabase
     .from('live_games')
     .select('*')
-    .eq('id', participant.live_game_id)
     .eq('group_id', groupId)
     .eq('status', 'active')
+    .eq('created_by', creatorId)
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (error) throw error;
-  if (!data) return null;
-
-  return {
-    ...data,
-    state: parseLiveGameState(data.state),
-  } as LiveGameRecord;
+  return data ? toLiveGameRecord(data) : null;
 }
 
 export async function createLiveGame(

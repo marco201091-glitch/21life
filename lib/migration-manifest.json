@@ -479,6 +479,11 @@
       "version": "20261111151357",
       "name": "20261111151357_preserve_deck_delete_service_maintenance.sql",
       "checksum": "6d3393ecad607579ffae9db14ececcded1e197273814361cc3206058e0249598"
+    },
+    {
+      "version": "20261114110000",
+      "name": "20261114110000_recommend_v9_2_1_runtime_update.sql",
+      "checksum": "3a33d890210448d253c9104d41297c1566ac56d4b3d850298c336e9ef2f49a4d"
     }
   ]
 }
