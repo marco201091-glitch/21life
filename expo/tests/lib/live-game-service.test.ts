@@ -69,8 +69,24 @@ describe('live game Supabase service', () => {
     const from = vi.fn().mockReturnValueOnce(participantQuery).mockReturnValueOnce(gameQuery);
     const loaded = await fetchActiveLiveGame({ from } as never, 'group-1', 'user:a');
     expect(loaded?.state.layoutVariant).toBe('classic');
-    expect(gameQuery.eq).toHaveBeenCalledWith('status', 'active');
     expect(gameQuery.eq).toHaveBeenCalledWith('id', 'live-1');
+    expect(gameQuery.eq).toHaveBeenCalledWith('group_id', 'group-1');
+  });
+
+  it('does not fall back to another created game when the authoritative game ended', async () => {
+    const participantQuery = selectQuery({ data: { live_game_id: 'live-1' }, error: null });
+    const gameQuery = selectQuery({ data: record({ status: 'ended' }), error: null });
+    const from = vi.fn().mockReturnValueOnce(participantQuery).mockReturnValueOnce(gameQuery);
+    expect(await fetchActiveLiveGame({ from } as never, 'group-1', 'user:a')).toBeNull();
+    expect(from).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws instead of clearing the session when the authoritative game row is unreadable', async () => {
+    const participantQuery = selectQuery({ data: { live_game_id: 'live-1' }, error: null });
+    const gameQuery = selectQuery({ data: null, error: null });
+    const from = vi.fn().mockReturnValueOnce(participantQuery).mockReturnValueOnce(gameQuery);
+    await expect(fetchActiveLiveGame({ from } as never, 'group-1', 'user:a'))
+      .rejects.toThrow('Live game is not readable');
   });
 
   it('falls back to the latest active game created by an eliminated host', async () => {

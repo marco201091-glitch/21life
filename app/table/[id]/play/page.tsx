@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { WebLiveGame, type WebTrackerParticipant } from '@/components/live-game/web-live-game';
 import { AppLoader } from '@/components/ui/app-loader';
@@ -86,10 +86,10 @@ export default function WebLiveGamePage() {
       if (groupError) throw groupError;
       if (guestsError) throw guestsError;
       if (!group) {
-        // A silent catalog refresh must never eject a running tracker because
-        // of a transient empty or RLS-affected read; only the initial load may
-        // decide that the arena is gone.
-        if (!silent) router.replace('/dashboard');
+        // Never navigate an in-progress tracker away on an empty read. A
+        // deleted arena and a transient auth/RLS gap look identical here, so
+        // show the retry state instead of guessing.
+        if (!silent) setLoadError(true);
         return;
       }
       const payload = group as unknown as GroupPayload;
@@ -159,7 +159,16 @@ export default function WebLiveGamePage() {
     }
   }, [groupId, router, userId]);
 
-  useEffect(() => { void load(); }, [load]);
+  const loadedSessionRef = useRef<string | null>(null);
+  useEffect(() => {
+    const key = userId && groupId ? `${userId}:${groupId}` : null;
+    // Only the first load for this account/group may treat an empty read as
+    // "the arena is gone". Any later re-run (router identity or a token
+    // refresh) stays silent, so a running tracker cannot be ejected.
+    const initial = key !== null && loadedSessionRef.current !== key;
+    loadedSessionRef.current = key;
+    void load(!initial);
+  }, [groupId, load, userId]);
 
   useEffect(() => {
     if (!userId || !groupId) return;
@@ -173,7 +182,7 @@ export default function WebLiveGamePage() {
   }
 
   if (loadError) return <div className="mx-auto max-w-md space-y-4 p-6">
-    <p role="alert">{copy({ en: 'Could not load players and selected decks. Check your connection and retry.', it: 'Impossibile caricare giocatori e mazzi selezionati. Controlla la connessione e riprova.' })}</p>
+    <p role="alert">{copy({ en: 'Could not load this arena. It may no longer be available, or the connection failed. Retry before entering the tracker.', it: 'Impossibile caricare questa arena. Potrebbe non essere più disponibile o la connessione è fallita. Riprova prima di entrare nel tracker.' })}</p>
     <button type="button" onClick={() => void load()} className="rounded-xl border border-border p-3">{copy({ en: 'Retry', it: 'Riprova' })}</button>
   </div>;
 

@@ -655,6 +655,21 @@ export default function LiveGameScreen() {
         );
         if (!mounted) return;
         if (remote && (!cached || !cached.needsCreate || remote.id === cached.record.id)) {
+          if (cached && !cached.needsCreate && remote.id !== cached.record.id
+            && (cached.mutations.length > 0 || cached.pendingFinalization || cached.pendingCancel)) {
+            // The cached game is no longer the active one, but it may still
+            // hold unsynced work. Archive it to the durable outbox instead of
+            // silently overwriting the journal; Recovery Center can retry or
+            // discard it explicitly.
+            await archiveAndClearLiveGameSession(groupId, {
+              id: cached.record.id,
+              serverRecord: cached.serverRecord,
+              needsCreate: false,
+              mutations: cached.mutations,
+              finalization: cached.pendingFinalization,
+              cancel: cached.pendingCancel,
+            }).catch(() => undefined);
+          }
           sessionClosedRef.current = false;
           serverRecordRef.current = remote;
           const queue = cached?.record.id === remote.id ? mutationQueueRef.current : [];
@@ -691,7 +706,7 @@ export default function LiveGameScreen() {
     const current = liveGameRef.current;
     if (!groupId || !currentUserId || !current || needsCreateRef.current || syncRunningRef.current) return;
     const remote = await fetchActiveLiveGame(supabase, groupId, toUserParticipantKey(currentUserId));
-    if (!remote || remote.id !== current.id) return;
+    if (!remote || remote.id !== current.id || sessionClosedRef.current || liveGameRef.current?.id !== current.id) return;
     serverRecordRef.current = remote;
     setOptimisticRecord(replayQueuedMutations(remote, mutationQueueRef.current));
     await saveJournal();
@@ -703,10 +718,14 @@ export default function LiveGameScreen() {
   // rejected. Retry the authoritative lookup while no local game is loaded.
   const resumeRemoteGame = useCallback(async () => {
     if (!groupId || !currentUserId || liveGameRef.current) return;
+    // Never resurrect a game that is being finalized or discarded, or one
+    // that already produced a recap: the server may still report it active
+    // until the queued terminal operation is flushed.
+    if (sessionClosedRef.current || pendingFinalizationRef.current || pendingCancelRef.current || completedGame) return;
     const remote = await withLiveGameTimeout(
       fetchActiveLiveGame(supabase, groupId, toUserParticipantKey(currentUserId)),
     );
-    if (!remote || liveGameRef.current) return;
+    if (!remote || liveGameRef.current || sessionClosedRef.current || completedGame) return;
     sessionClosedRef.current = false;
     serverRecordRef.current = remote;
     mutationQueueRef.current = [];
@@ -722,20 +741,23 @@ export default function LiveGameScreen() {
     setOptimisticRecord(remote);
     await saveJournal();
     void syncJournal();
-  }, [currentUserId, groupId, saveJournal, setOptimisticRecord, syncJournal]);
+  }, [completedGame, currentUserId, groupId, saveJournal, setOptimisticRecord, syncJournal]);
 
   useEffect(() => {
-    if (booting || liveGame) return undefined;
+    if (booting || liveGame || completedGame) return undefined;
     const timer = setTimeout(() => {
       void resumeRemoteGame().catch(() => undefined);
     }, 1_500);
     return () => clearTimeout(timer);
-  }, [booting, liveGame, resumeRemoteGame]);
+  }, [booting, completedGame, liveGame, resumeRemoteGame]);
 
   useEffect(() => {
     if (!liveGame?.id || needsCreateRef.current) return undefined;
     return subscribeToLiveGame(supabase, liveGame.id, (remote) => {
       if (sessionClosedRef.current) return;
+      // A channel removal is asynchronous: ignore an event delivered for a
+      // previous game after the local session already moved on.
+      if (liveGameRef.current?.id !== liveGame.id) return;
       if (remote.status !== 'active') {
         if (pendingFinalizationRef.current || pendingCancelRef.current) return;
         serverRecordRef.current = null;

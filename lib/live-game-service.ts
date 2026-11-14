@@ -39,15 +39,21 @@ export async function fetchActiveLiveGame(
   if (participantError) throw participantError;
 
   if (participant) {
+    // The participation is authoritative: if its game is no longer active the
+    // player has nothing to resume. Do not fall back to an unrelated old game
+    // created by the same user.
+    // A participant row has an ON DELETE CASCADE foreign key to live_games,
+    // so the row must exist. An invisible row is a transient RLS/read
+    // failure, not an ended game: throw so callers keep the local journal.
     const { data, error } = await client
       .from('live_games')
       .select('*')
       .eq('id', participant.live_game_id)
       .eq('group_id', groupId)
-      .eq('status', 'active')
       .maybeSingle();
     if (error) throw error;
-    if (data) return toLiveGameRecord(data);
+    if (!data) throw new Error('Live game is not readable');
+    return data.status === 'active' ? toLiveGameRecord(data) : null;
   }
 
   const creatorId = participantKey.startsWith('user:')
